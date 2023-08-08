@@ -8,20 +8,28 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
+use App\Models\GuruMapel;
+
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
+
+    protected $table = "users";
+    protected $primaryKey  = "user_id";
+    protected $guarded = ['user_id'];
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    // protected $fillable = [
+    //     'username',
+    //     'nama',
+    //     'email',
+    //     'password',
+    //     'role',
+    // ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -41,4 +49,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function guru_mapel()
+    {
+        return $this->hasMany(GuruMapel::class);
+    }
 }

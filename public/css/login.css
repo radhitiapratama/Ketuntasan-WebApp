@@ -1,0 +1,155 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
+
+:root {
+    /* --dark-blue: #101A32; */
+    --dark-blue: #2b58b1;
+    --yellow: #FFC107;
+    --green: #28A745;
+    --red: #DC3545;
+    --sky-blue: #6189F6;
+    --white: #f4f4f4;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    -webkit-user-select: none;
+    /* Safari */
+    -ms-user-select: none;
+    /* IE 10 and IE 11 */
+    user-select: none;
+    /* Standard syntax */
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* background-color: #F7F7F7; */
+    background: linear-gradient(45deg, #373B44, #4286f4);
+}
+
+.container {
+    display: flex;
+    max-width: 1200px;
+    background: #fff;
+    padding: 32px 0;
+    border-radius: 2px;
+    flex-wrap: wrap;
+}
+
+.container .col-left {
+    min-width: 250px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.col-left img {
+    width: 100%;
+    object-fit: contain;
+    height: auto;
+}
+
+.container .col-right {
+    min-width: 250px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+.col-right .wrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+}
+
+.wrapper h3 {
+    margin-top: -10px;
+    font-weight: normal;
+    font-size: 16px;
+    margin-bottom: 24px;
+}
+
+.wrapper .input-wrapper {
+    width: 80%;
+}
+
+.input-wrapper .input-box {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    margin-bottom: 32px;
+    position: relative;
+    gap: 10px;
+    border-bottom: 1px solid rgba(200, 200, 210);
+}
+
+.input-box span {
+    width: 100%;
+    height: 1px;
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    background-color: var(--dark-blue);
+    transform: scaleX(0);
+    transition: .3s;
+}
+
+.input-box input:focus~span {
+    transform: scaleX(1);
+}
+
+.input-wrapper input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 16px;
+    padding: 12px;
+}
+
+.input-box #show-pass {
+    position: absolute;
+    right: 10px;
+    cursor: pointer;
+}
+
+.wrapper .btn-login {
+    width: 80%;
+    padding: 10px;
+    background: var(--dark-blue);
+    color: var(--white);
+    border: none;
+    outline: none;
+}
+
+@media(max-width: 900px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .container .col-left {
+        margin-bottom: 32px;
+    }
+}
+
+@media(max-width : 500px) {
+    .col-right h1 {
+        font-size: 24px;
+    }
+
+    .col-right h3 {
+        font-size: 14px;
+    }
+}

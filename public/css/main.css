@@ -1,0 +1,218 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
+:root {
+    /* --primary: #101A32; */
+    --primary: #2b58b1;
+    --yellow: #FFC107;
+    --green: #28A745;
+    --dark-green: #2f7f4b;
+    --red: #DC3545;
+    --sky-blue: #6189F6;
+    --white: #fff;
+}
+
+:root {
+    --sm-rounded: 2px;
+}
+
+.nav-link.active {
+    background-color: var(--primary) !important;
+    color: #fff !important;
+}
+
+.page-link {
+    color: var(--primary) !important;
+    box-shadow: none !important;
+}
+
+.page-item.active .page-link {
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: var(--white) !important;
+}
+
+.card {
+    box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.05) !important;
+    /* box-shadow: none !important; */
+    border-radius: var(--sm-rounded) !important;
+}
+
+.form-control:focus {
+    border: 1px solid var(--primary) !important;
+}
+
+.select2-container--bootstrap4.select2-container--focus .select2-selection {
+    border-color: var(--primary) !important;
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+}
+
+.select2-container--bootstrap4 .select2-results__option--highlighted,
+.select2-container--bootstrap4 .select2-results__option--highlighted.select2-results__option[aria-selected="true"] {
+    color: #fff;
+    background-color: var(--primary) !important;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.btn-dark {
+    width: max-content;
+    padding: 6px 12px !important;
+    background: var(--primary);
+    color: var(--white);
+    cursor: pointer;
+    transition: .3s;
+    outline: 1px solid var(--primary) !important;
+    border-radius: var(--sm-rounded);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 14px;
+    border: none !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.btn-dark:hover,
+.btn-dark:active,
+.btn-dark:focus {
+    background: var(--white) !important;
+    color: var(--primary) !important;
+}
+
+
+.btn-import {
+    width: max-content;
+    padding: 6px 12px !important;
+    background: var(--dark-green);
+    color: var(--white);
+    cursor: pointer;
+    transition: .3s;
+    outline: 1px solid var(--dark-green) !important;
+    border-radius: var(--sm-rounded);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 14px;
+    border: none !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.page-title {
+    margin: auto 0;
+    font-size: 22px;
+    font-weight: 900;
+    text-align: center;
+}
+
+.setting-icons {
+    display: flex;
+    gap: 12px;
+    margin: auto;
+    max-width: 150px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.setting-icon {
+    border: none;
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+    color: var(--primary);
+}
+
+.setting-icon:hover {
+    color: var(--primary);
+}
+
+#show-pass {
+    cursor: pointer;
+}
+
+.btn-add {
+    width: max-content;
+    height: max-content;
+    padding: 5px 10px;
+    border: none;
+    outline: none;
+    border-radius: var(--sm-rounded);
+    color: var(--white);
+    background: var(--primary);
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.btn-delete-input {
+    position: absolute;
+    background: var(--red);
+    border-radius: var(--sm-rounded);
+    color: var(--white);
+    right: 0;
+    top: 0;
+    border: none;
+    outline: none;
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
+}
+
+.pointer-none {
+    pointer-events: none;
+}
+
+.setting-edit {
+    width: 32px !important;
+    height: 32px !important;
+    background: var(--sky-blue);
+    color: var(--white);
+    border-radius: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+}
+
+.setting-edit:hover,
+.setting-detail:hover {
+    color: var(--white);
+    opacity: .8;
+}
+
+.setting-detail {
+    width: 32px !important;
+    height: 32px !important;
+    background: var(--green);
+    color: var(--white);
+    border-radius: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+}
+
+.colored-toast.swal2-icon-success {
+    background-color: var(--green) !important;
+    color: var(--white) !important;
+}
+
+.colored-toast.swal2-icon-error {
+    background-color: var(--red) !important;
+    color: var(--white) !important;
+}
+
+.gap-20 {
+    gap: 20px;
+}
