@@ -47,10 +47,14 @@
                                 <div class="form-group">
                                     <label for="#">User</label>
                                     <select name="user_status" id="user_status" class="form-control" required>
-                                        @foreach ($statuses as $key => $value)
-                                            <option value="{{ $key }}" @selected($key == $tahun_ajaran->user_aktif)>
-                                                {{ $value }}</option>
-                                        @endforeach
+                                        @if ($tahun_ajaran->user_aktif == 1)
+                                            <option value="1">Aktif</option>
+                                        @else
+                                            @foreach ($statuses as $key => $value)
+                                                <option value="{{ $key }}" @selected($key == $tahun_ajaran->user_aktif)>
+                                                    {{ $value }}</option>
+                                            @endforeach
+                                        @endif
                                     </select>
                                 </div>
                             </div>
@@ -58,11 +62,15 @@
                                 <div class="form-group">
                                     <label for="#">Superadmin</label>
                                     <select name="superadmin_status" id="superadmin_status" class="form-control" required>
-                                        @foreach ($statuses as $key => $value)
-                                            <option value="{{ $key }}" @selected($key == $tahun_ajaran->superadmin_aktif)>
-                                                {{ $value }}
-                                            </option>
-                                        @endforeach
+                                        @if ($tahun_ajaran->superadmin_aktif == 1)
+                                            <option value="1">Aktif</option>
+                                        @else
+                                            @foreach ($statuses as $key => $value)
+                                                <option value="{{ $key }}" @selected($key == $tahun_ajaran->superadmin_aktif)>
+                                                    {{ $value }}
+                                                </option>
+                                            @endforeach
+                                        @endif
                                     </select>
                                 </div>
                             </div>
@@ -84,6 +92,22 @@
             Swal.fire({
                 title: "Tahun Ajaran berhasil di update",
                 icon: "success",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('min1Aktif'))
+            Swal.fire({
+                title: "Minimal ada 1 tahun ajaran yg di aktifkan",
+                icon: "error",
                 iconColor: 'white',
                 customClass: {
                     popup: 'colored-toast'

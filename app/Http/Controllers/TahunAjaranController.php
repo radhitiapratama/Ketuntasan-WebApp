@@ -122,7 +122,7 @@ class TahunAjaranController extends Controller
     public function edit($tahun_ajaran_id)
     {
         if (!isset($tahun_ajaran_id)) {
-            return redirect('/tahunAjaran');
+            return redirect()->back();
         }
 
         $sql_tahunAjaran = DB::table('tahun_ajaran')
@@ -130,7 +130,7 @@ class TahunAjaranController extends Controller
             ->first();
 
         if (empty($sql_tahunAjaran)) {
-            return redirect("/tahunAjaran");
+            return redirect()->back();
         }
 
         $parser = explode("-", $sql_tahunAjaran->tahun_ajaran);
@@ -173,6 +173,10 @@ class TahunAjaranController extends Controller
                 ->update([
                     'superadmin_aktif' => 0,
                 ]);
+        }
+
+        if ($request->superadmin_status == 0) {
+            return redirect()->back()->with("min1Aktif", "min1Aktif");
         }
 
         // jika user & superadmin di updat menjadi 1 update semua di db menjadi 0
