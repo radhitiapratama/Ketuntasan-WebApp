@@ -36,7 +36,7 @@ class AuthController extends Controller
             }
         }
 
-        return redirect()->back();
+        return redirect()->back()->with("loginFailed", "loginFailed")->withInput();
     }
 
     public function logout(Request $request)

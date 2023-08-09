@@ -9,38 +9,53 @@
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
     {{-- Remix Icon --}}
     <link rel="stylesheet" href="{{ asset('plugins/remixIcon/fonts/remixicon.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
 </head>
 
 <body>
     <div class="container">
-        <div class="col-left">
-            <img src="{{ asset('imgs/login-img.png') }}" alt="login-image" class="login-img">
-        </div>
-        <div class="col-right">
-            <form action=" {{ url('login') }}" method="post" class="wrapper">
-                @csrf
-                <h1 style="text-align: center">Silahkan Login</h1>
-                <h3 style="text-align: center;">Selamat Datang di ketuntasan </h3>
-                <div class="input-wrapper">
-                    <div class="input-box">
-                        <i id="" class="ri-user-line"></i>
-                        <input class="input" type="text" name="username" placeholder="Username">
-                        <span></span>
-                    </div>
-                    <div class="input-box">
-                        <i id="icon" class="ri-lock-line"></i>
-                        <input type="password" name="password" placeholder="Password" class="input-pass">
-                        <i id="show-pass" class="ri-eye-line"></i>
-                        <span></span>
-                    </div>
+        <form action=" {{ url('login') }}" method="post" class="wrapper">
+            @csrf
+            <h1 style="text-align: center">Silahkan Login</h1>
+            <h3 style="text-align: center;">Selamat Datang di ketuntasan </h3>
+            <div class="input-wrapper">
+                <div class="input-box">
+                    <i id="" class="ri-user-line"></i>
+                    <input class="input" type="text" name="username" placeholder="Username"
+                        value="{{ old('username') }}">
+                    <span></span>
                 </div>
-                <button type="submit" class="btn-login">
-                    Login
-                </button>
-            </form>
-        </div>
+                <div class="input-box">
+                    <i id="icon" class="ri-lock-line"></i>
+                    <input type="password" name="password" placeholder="Password" class="input-pass">
+                    <i id="show-pass" class="ri-eye-line"></i>
+                    <span></span>
+                </div>
+            </div>
+            <button type="submit" class="btn-login">
+                Login
+            </button>
+        </form>
     </div>
     <script src="{{ asset('js/login.js') }}"></script>
+    <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+    <script>
+        @if (session()->has('loginFailed'))
+            Swal.fire({
+                title: "Username / Password Salah",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+    </script>
 </body>
 
 </html>
