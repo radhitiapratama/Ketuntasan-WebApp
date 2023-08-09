@@ -4,8 +4,10 @@
 3. Ubah file .env.example menjadi .env dan sesuakan configurasinya
 4. Jalankan perintah php artisan key:generate
 5. Jalankan perintah php artisan migrate
-6. Import database dari file ketuntasan.sql
+6. Import database dari file ketuntasan.sql di dalam folder z_db
 7. Jalankan perintah php artisan serve
+
+### Untuk template file excel bisa di cek di folder z_db
 
 
 ### Alur Superadmin

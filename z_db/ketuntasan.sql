@@ -11,7 +11,7 @@
  Target Server Version : 100427
  File Encoding         : 65001
 
- Date: 08/08/2023 13:13:46
+ Date: 09/08/2023 18:54:54
 */
 
 SET NAMES utf8mb4;
@@ -387,7 +387,7 @@ CREATE TABLE `mapel`  (
   `updated_by` int NULL DEFAULT NULL,
   PRIMARY KEY (`mapel_id`) USING BTREE,
   UNIQUE INDEX `mapel_nama_mapel_unique`(`nama_mapel`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 94 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 94 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of mapel
@@ -495,7 +495,7 @@ CREATE TABLE `migrations`  (
   `migration` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 14 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of migrations
@@ -508,12 +508,11 @@ INSERT INTO `migrations` VALUES (5, '2014_10_12_000000_create_users_table', 1);
 INSERT INTO `migrations` VALUES (6, '2014_10_12_100000_create_password_resets_table', 1);
 INSERT INTO `migrations` VALUES (7, '2019_08_19_000000_create_failed_jobs_table', 1);
 INSERT INTO `migrations` VALUES (8, '2019_12_14_000001_create_personal_access_tokens_table', 1);
-INSERT INTO `migrations` VALUES (9, '2023_07_27_032502_create_table_tingkatan', 1);
-INSERT INTO `migrations` VALUES (10, '2023_07_27_033012_create_table_guru_mapel', 1);
-INSERT INTO `migrations` VALUES (11, '2023_07_27_033409_create_kelas_mapel', 1);
-INSERT INTO `migrations` VALUES (12, '2023_07_27_033912_create_ketuntasan', 1);
-INSERT INTO `migrations` VALUES (13, '2023_07_27_053430_create_wali_kelas', 1);
-INSERT INTO `migrations` VALUES (14, '2023_08_02_120432_create_batas_waktu', 1);
+INSERT INTO `migrations` VALUES (9, '2023_07_27_033012_create_table_guru_mapel', 1);
+INSERT INTO `migrations` VALUES (10, '2023_07_27_033409_create_kelas_mapel', 1);
+INSERT INTO `migrations` VALUES (11, '2023_07_27_033912_create_ketuntasan', 1);
+INSERT INTO `migrations` VALUES (12, '2023_07_27_053430_create_wali_kelas', 1);
+INSERT INTO `migrations` VALUES (13, '2023_08_02_120432_create_batas_waktu', 1);
 
 -- ----------------------------
 -- Table structure for password_resets
@@ -574,25 +573,6 @@ CREATE TABLE `tahun_ajaran`  (
 -- Records of tahun_ajaran
 -- ----------------------------
 INSERT INTO `tahun_ajaran` VALUES (1, '2023-2024', 1, 1, '2023-08-08 08:41:30', NULL, NULL, NULL);
-
--- ----------------------------
--- Table structure for tingkatan
--- ----------------------------
-DROP TABLE IF EXISTS `tingkatan`;
-CREATE TABLE `tingkatan`  (
-  `tingkatan_id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
-  `nama_tingkatan` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `status` int NOT NULL DEFAULT 1,
-  `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  `creted_by` int NULL DEFAULT NULL,
-  `updated_by` int NULL DEFAULT NULL,
-  PRIMARY KEY (`tingkatan_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of tingkatan
--- ----------------------------
 
 -- ----------------------------
 -- Table structure for users
