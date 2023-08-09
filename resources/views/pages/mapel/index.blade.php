@@ -36,11 +36,15 @@
     <div class="card mb-1">
         <div class="card-body">
             <div class="row">
-                <div class="col-12">
-                    <button type="button" class="btn-import" data-toggle="modal" data-target="#import_modal">
-                        <i class="ri-book-2-line"></i>
+                <div class="col-12 d-flex gap-20">
+                    <button type="button" class="btn-excel" data-toggle="modal" data-target="#import_modal">
+                        <i class="ri-file-excel-2-line"></i>
                         Import Mapel
                     </button>
+                    <a href="{{ asset('excel/template-mapel.xlsx') }}" class="btn-excel" download="">
+                        <i class="ri-file-excel-2-line"></i>
+                        Download Template
+                    </a>
                 </div>
             </div>
         </div>
@@ -68,7 +72,7 @@
     </div>
 
 
-    <!-- Modal -->
+    {{-- Modal Import --}}
     <div class="modal fade" id="import_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

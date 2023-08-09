@@ -10,7 +10,8 @@
     <div class="card mb-1">
         <div class="card-body">
             <div class="row">
-                <div class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
+                <div
+                    class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
                     <h1 class="page-title">Data Guru</h1>
                     <a href="guru/add" class="btn-dark">
                         <i class="ri-add-circle-fill"></i>
@@ -36,11 +37,15 @@
     <div class="card mb-1">
         <div class="card-body">
             <div class="row">
-                <div class="col-12">
-                    <button type="button" class="btn-import" data-toggle="modal" data-target="#import_modal">
-                        <i class="ri-presentation-line"></i>
+                <div class="col-12 d-flex gap-20">
+                    <button type="button" class="btn-excel" data-toggle="modal" data-target="#import_modal">
+                        <i class="ri-file-excel-2-line"></i>
                         Import Guru
                     </button>
+                    <a href="{{ asset('excel/template-guru.xlsx') }}" class="btn-excel">
+                        <i class="ri-file-excel-2-line"></i>
+                        Download Template
+                    </a>
                 </div>
             </div>
         </div>
