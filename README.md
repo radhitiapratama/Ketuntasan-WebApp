@@ -7,6 +7,8 @@
 6. Import database dari file ketuntasan.sql di dalam folder z_db
 7. Jalankan perintah php artisan serve
 
+### Password semua akun defaultnya adalah 123456
+
 ### Untuk template file excel bisa di cek di folder z_db
 
 
