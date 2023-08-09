@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\TahunAjaran;
 use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -16,13 +17,10 @@ class tahunAjaranSeeder extends Seeder
      */
     public function run()
     {
-        DB::table("tahun_ajaran")
-            ->insert([
-                'tahun_ajaran_id' => 1,
-                'tahun_ajaran' => "2023-2024",
-                'user_aktif' => 1,
-                'superadmin_aktif' => 1,
-                'created_at' => Carbon::now(),
-            ]);
+        TahunAjaran::create([
+            'tahun_ajaran_id' => 1,
+            'tahun_ajaran' => "2023-2024",
+            'user_aktif' => 1,
+        ]);
     }
 }

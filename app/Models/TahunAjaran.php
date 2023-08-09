@@ -11,4 +11,5 @@ class TahunAjaran extends Model
 
     protected $table = 'tahun_ajaran';
     protected $primaryKey = 'tahun_ajaran_id';
+    protected $guarded = ['tahun_ajaran_id'];
 }
