@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BatasWaktuController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\User;
@@ -51,31 +50,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post("/guru/update", [GuruController::class, 'update']);
         Route::post("/guru/store", [GuruController::class, 'store']);
         Route::post("/guru/import", [GuruController::class, 'importGuru']);
-
-        // Route::get("/guru/updateUsername", function () {
-        //     $guru = DB::table("users")
-        //         ->where('role', 2)
-        //         ->get();
-
-        //     foreach ($guru as $row) {
-        //         $arr = explode(" ", $row->nama);
-        //         if (count($arr) < 2) {
-        //             $temp_name = str_replace([',', '.'], '', strtolower($arr[0])  . rand(0, 100) . rand(0, 100));
-        //         } else {
-        //             $temp_name = str_replace([',', '.'], '', strtolower($arr[0]) . strtolower($arr[1]) . rand(0, 100) . rand(0, 100));
-        //         }
-
-        //         echo $temp_name . "<br>";
-
-        //         // DB::table("users")
-        //         //     ->where('user_id', $row->user_id)
-        //         //     ->update([
-        //         //         'username' => $temp_name,
-        //         //     ]);
-        //     }
-
-        //     // dd('selesai');
-        // });
 
         // Guru Mapel   
         Route::get("/guru-mapel", [GuruController::class, 'guruMapel']);
@@ -146,6 +120,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post("/siswa/store", [SiswaController::class, 'store']);
         Route::get("/siswa/edit/{user_id}", [SiswaController::class, 'edit']);
         Route::post("/siswa/update", [SiswaController::class, 'update']);
+        Route::post("/siswa/import", [SiswaController::class, 'import']);
 
         // Siswa Naik Kelass
         Route::get("/siswa-naik-kelas", [SiswaController::class, 'naikKelas']);

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Imports\SiswaImport;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +14,7 @@ use App\Models\TahunAjaran;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class SiswaController extends Controller
 {
@@ -476,5 +479,26 @@ class SiswaController extends Controller
             'recordsTotal' => $countFiltered,
             'data' => $dataResponse,
         ]);
+    }
+
+    public function import(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'file_import' => 'required|mimes:xlsx'
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $file = $request->file_import;
+
+        $siswa = new SiswaImport;
+        $siswa->import($file);
+
+        return redirect()->back()->with("successImport", "successImport");
     }
 }
