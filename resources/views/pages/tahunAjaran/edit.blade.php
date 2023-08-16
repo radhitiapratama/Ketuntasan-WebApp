@@ -48,10 +48,10 @@
                                     <label for="#">User</label>
                                     <select name="user_status" id="user_status" class="form-control" required>
                                         @if ($tahun_ajaran->user_aktif == 1)
-                                            <option value="1">Aktif</option>
+                                            <option value="1" selected>Aktif</option>
                                         @else
                                             @foreach ($statuses as $key => $value)
-                                                <option value="{{ $key }}" @selected($key == $tahun_ajaran->user_aktif)>
+                                                <option value="{{ $key }}" @selected(old('user_status', $tahun_ajaran->user_aktif) == $key)>
                                                     {{ $value }}</option>
                                             @endforeach
                                         @endif
@@ -63,10 +63,10 @@
                                     <label for="#">Superadmin</label>
                                     <select name="superadmin_status" id="superadmin_status" class="form-control" required>
                                         @if ($tahun_ajaran->superadmin_aktif == 1)
-                                            <option value="1">Aktif</option>
+                                            <option value="1" selected>Aktif</option>
                                         @else
                                             @foreach ($statuses as $key => $value)
-                                                <option value="{{ $key }}" @selected($key == $tahun_ajaran->superadmin_aktif)>
+                                                <option value="{{ $key }}" @selected(old('superadmin_status', $tahun_ajaran->superadmin_aktif) == $key)>
                                                     {{ $value }}
                                                 </option>
                                             @endforeach

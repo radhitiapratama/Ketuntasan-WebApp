@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TahunAjaran;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class TahunAjaranController extends Controller
 {
@@ -149,53 +151,53 @@ class TahunAjaranController extends Controller
 
     public function update(Request $request)
     {
-        $validated = $request->validate([
-            'tahun_ajaran_id' => "required",
-            'tahun_start' => "required",
-            'tahun_end' => "required",
-            'user_status' => "required",
-            'superadmin_status' => "required",
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'tahun_ajaran_id' => "required",
+                'tahun_start' => "required",
+                'tahun_end' => "required",
+                'user_status' => "required",
+                'superadmin_status' => "required",
+            ],
+            [
+                'required' => ":attribute wajib di isi"
+            ]
+        );
 
-        $tahun_ajaran = $request->tahun_start . "-" . $request->tahun_end;
+        // dd($request->all());
 
-        // jika user_aktif == 1 update semua user_aktif di database menjadi 0 dulu
-        if ($request->user_status == 1) {
-            DB::table('tahun_ajaran')
-                ->update([
-                    'user_aktif' => 0,
-                ]);
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator);
         }
 
-        // jika super_admin == 1 update semua superadmin_aktif di database menjadi 0 dulu
-        if ($request->superadmin_status == 1) {
-            DB::table('tahun_ajaran')
-                ->update([
-                    'superadmin_aktif' => 0,
-                ]);
+        $sql_tahunAjaran = TahunAjaran::where("tahun_ajaran_id", $request->tahun_ajaran_id)->first();
+
+        $dataUpdate = [];
+        $dataUpdate['tahun_ajaran'] = $request->tahun_start . "-" . $request->tahun_end;
+        $dataUpdate['updated_at'] = Carbon::now();
+
+        if ($sql_tahunAjaran->user_aktif != $request->user_status) {
+            if ($request->user_status == 1) {
+                DB::table("tahun_ajaran")->update(['user_aktif' => 0]);
+                $dataUpdate['user_aktif'] = $request->user_status;
+            } else {
+                return redirect()->back()->with("min1Aktif", "min1Aktif");
+            }
         }
 
-        if ($request->superadmin_status == 0) {
-            return redirect()->back()->with("min1Aktif", "min1Aktif");
-        }
-
-        // jika user & superadmin di updat menjadi 1 update semua di db menjadi 0
-        if ($request->user_status == 1 && $request->superadmin_status == 1) {
-            DB::table('tahun_ajaran')
-                ->update([
-                    'user_aktif' => 0,
-                    'superadmin_aktif' => 0,
-                ]);
+        if ($sql_tahunAjaran->superadmin_aktif != $request->superadmin_status) {
+            if ($request->superadmin_status == 1) {
+                DB::table("tahun_ajaran")->update(['superadmin_aktif' => 0]);
+                $dataUpdate['superadmin_aktif'] = $request->superadmin_status;
+            } else {
+                return redirect()->back()->with("min1Aktif", "min1Aktif");
+            }
         }
 
         DB::table('tahun_ajaran')
             ->where('tahun_ajaran_id', $request->tahun_ajaran_id)
-            ->update([
-                'tahun_ajaran' => $tahun_ajaran,
-                'user_aktif' => $request->user_status,
-                'superadmin_aktif' => $request->superadmin_status,
-                'updated_at' => Carbon::now(),
-            ]);
+            ->update($dataUpdate);
 
         return redirect()->back()->with("successUpdate", "successUpdate");
     }
