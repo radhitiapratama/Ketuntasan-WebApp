@@ -13,7 +13,6 @@ use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +35,7 @@ Route::middleware(['isGuest'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::middleware(['isAdmin'])->group(function () {
+
         // Superadmin
         Route::get("superadmin", [UserController::class, 'superadmin']);
         Route::get("superadmin/add", [UserController::class, 'superadmin_add']);
@@ -46,9 +46,9 @@ Route::middleware(['auth'])->group(function () {
         // Guru
         Route::get("/guru", [GuruController::class, 'index']);
         Route::get("/guru/add", [GuruController::class, 'add']);
+        Route::post("/guru/store", [GuruController::class, 'store']);
         Route::get("/guru/edit/{guru_id}", [GuruController::class, 'edit']);
         Route::post("/guru/update", [GuruController::class, 'update']);
-        Route::post("/guru/store", [GuruController::class, 'store']);
         Route::post("/guru/import", [GuruController::class, 'importGuru']);
 
         // Guru Mapel   
@@ -59,13 +59,20 @@ Route::middleware(['auth'])->group(function () {
         Route::post("/guru-mapel/update", [GuruController::class, 'guruMapel_update']);
         Route::post("/guru-mapels", [GuruController::class, 'getDataMapelByGuru']);
 
-
         // Wali Kelas
         Route::get("/wali-kelas", [GuruController::class, 'waliKelas']);
         Route::get("/wali-kelas/add", [GuruController::class, 'waliKelas_add']);
         Route::post("/wali-kelas/store", [GuruController::class, 'waliKelas_store']);
         Route::get("wali-kelas/edit/{wali_kelas_id}", [GuruController::class, 'waliKelas_edit']);
         Route::post("wali-kelas/update", [GuruController::class, 'waliKelas_update']);
+
+        // Jurusan
+        Route::get("/jurusan", [JurusanController::class, 'index']);
+        Route::get("/jurusan/add", [JurusanController::class, 'add']);
+        Route::post("/jurusan/store", [JurusanController::class, 'store']);
+        Route::get("/jurusan/edit/{jurusan_id}", [JurusanController::class, 'edit']);
+        Route::post("/jurusan/update", [JurusanController::class, 'update']);
+        Route::post("/jurusan/import", [JurusanController::class, 'importJurusan']);
 
         // Mapel
         Route::get("/mapel", [MapelController::class, 'index']);
@@ -92,13 +99,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post("/kelas-mapel/getDataGuruByMapel", [KelasController::class, 'kelasMapel_getDataGuruByMapel']);
         Route::post("/kelas-mapel/update", [KelasController::class, 'kelasMapel_update']);
 
-        // Jurusan
-        Route::get("/jurusan", [JurusanController::class, 'index']);
-        Route::get("/jurusan/add", [JurusanController::class, 'add']);
-        Route::post("/jurusan/store", [JurusanController::class, 'store']);
-        Route::get("/jurusan/edit/{jurusan_id}", [JurusanController::class, 'edit']);
-        Route::post("/jurusan/update", [JurusanController::class, 'update']);
-        Route::post("/jurusan/import", [JurusanController::class, 'importJurusan']);
+
 
         // Tahun Ajaran
         Route::get("/tahun-ajaran", [TahunAjaranController::class, 'index'])->middleware('isAdmin');
@@ -138,7 +139,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware('isGuru')->group(function () {
         // ketuntasan role guru
-
         //param mapel_id,tingkatan.jurusan_id,kelas_id,ketuntasan_id
         Route::match(['get', 'post'], 'guru/ketuntasan/kelas', [KetuntasanController::class, 'guru_kelas']);
         Route::match(['get', 'post'], 'guru/ketuntasan/kelas/siswa', [KetuntasanController::class, 'guru_siswa']);
@@ -162,6 +162,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post("getDataGuruByMapel", [GuruController::class, 'getDataGuruByMapel']);
     Route::get("/getDataSiswaNaikKelas", [SiswaController::class, 'getDataSiswaNaikKelas']);
     Route::post("/getDataKelasByJurusan", [KelasController::class, 'getDataKelasByJurusan']);
+
+    Route::get("dashboard/kelas/siswas", [SiswaController::class, 'getDataSiswaByKelas']);
 
     //logout
     Route::get('/logout', [AuthController::class, 'logout']);

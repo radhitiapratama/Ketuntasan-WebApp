@@ -5,6 +5,8 @@ namespace App\Imports;
 use App\Models\Jurusan;
 use App\Models\Kelas;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -58,6 +60,7 @@ class SiswaImport implements
                     'jurusan_id' => $jurusan->jurusan_id,
                     'kelas_id' => $kelas->kelas_id,
                     'role' => 3,
+                    'password' => Hash::make("123456"),
                 ]);
             };
         }

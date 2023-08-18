@@ -20,6 +20,21 @@
             </div>
         </div>
     </div>
+
+    <div class="row my-3">
+        <div class="col-md-6 col-12">
+            <div class="custom-alert alert-warning">
+                <div class="alert-icon">
+                    <i class="ri-error-warning-line"></i>
+                </div>
+                <div class="alert-body">
+                    <h1 class="alert-title">Peringatan !</h1>
+                    <p class="alert-text">Data wali kelas akan hilang jika berganti tahun ajaran </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header">
             <div class="row">
@@ -36,11 +51,12 @@
                 </div>
                 <div class="col-md-3 col-12">
                     <div class="form-group">
-                        <label for="#">Jurusan</label>
-                        <select name="jurusan_id" id="jurusan_id" class="form-control">
+                        <label for="#">Kelas</label>
+                        <select name="kelas_id" id="kelas_id" class="form-control">
                             <option value="">Pilih..</option>
-                            @foreach ($jurusans as $jurusan)
-                                <option value="{{ $jurusan->jurusan_id }}">{{ $jurusan->nama_jurusan }}</option>
+                            @foreach ($kelases as $kelas)
+                                <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                    {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -53,12 +69,11 @@
                     <table class="table table-bordered" id="tbl-waliKelas" style="width: 100%">
                         <thead>
                             <tr>
-                                <th style="width: 5px">#</th>
+                                <th width="5px">#</th>
                                 <th>Wali Kelas</th>
-                                <th>Tingkatan</th>
-                                <th>Jurusan</th>
-                                <th>Nama Kelas</th>
-                                <th class="text-center">Pengaturan</th>
+                                <th width="5px">Tingkatan</th>
+                                <th>Kelas</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -100,7 +115,7 @@
                     url: "{{ url('wali-kelas') }}",
                     data: function(data) {
                         data.tingkatan = $("#tingkatan").val();
-                        data.jurusan_id = $("#jurusan_id").val();
+                        data.kelas_id = $("#kelas_id").val();
                     }
                 },
                 columns: [{
@@ -111,9 +126,6 @@
                     },
                     {
                         data: 'tingkatan'
-                    },
-                    {
-                        data: 'jurusan'
                     },
                     {
                         data: 'kelas'
@@ -132,14 +144,14 @@
         loadDatatable();
 
         $("#tingkatan").select2(configSelect2);
-        $("#jurusan_id").select2(configSelect2);
+        $("#kelas_id").select2(configSelect2);
 
         $("#tingkatan").change(function() {
             clearDatatable();
             loadDatatable();
         });
 
-        $("#jurusan_id").change(function() {
+        $("#kelas_id").change(function() {
             clearDatatable();
             loadDatatable();
         });

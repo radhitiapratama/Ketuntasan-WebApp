@@ -8,8 +8,6 @@ use App\Models\Mapel;
 use App\Imports\MapelImport;
 use Illuminate\Auth\Events\Validated;
 use Illuminate\Support\Facades\Validator;
-use Symfony\Component\CssSelector\XPath\Extension\FunctionExtension;
-use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
 class MapelController extends Controller
 {
@@ -33,7 +31,7 @@ class MapelController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $columnsSearch = ['nama_mapel'];
+            $columnsSearch = ['nama_mapel', 'mapel_id'];
             $table  = DB::table("mapel");
 
             if ($request->input("search.value")) {
@@ -46,9 +44,16 @@ class MapelController extends Controller
 
             $query = $table->select('mapel_id', 'nama_mapel', 'status');
 
+            if ($request->status != null) {
+                $query->where("status", $request->status);
+            }
+
             $count = $query->count();
 
-            $result = $query->offset($request->start)->limit($request->length)->get();
+            $result = $query->offset($request->start)
+                ->limit($request->length)
+                ->orderByRaw("mapel_id DESC")
+                ->get();
 
             $data = [];
 
@@ -58,6 +63,12 @@ class MapelController extends Controller
                     $i++;
                     $subData = [];
                     $subData['no'] = $i;
+                    $subData['kode'] = '
+                    <div class="text-center">
+                        ' . $row->mapel_id . '
+                    </div>
+                    ';
+
                     $subData['nama_mapel'] = $row->nama_mapel;
 
                     $subData['status'] = '
@@ -94,7 +105,10 @@ class MapelController extends Controller
             ]);
         }
 
-        return view("pages.mapel.index");
+        $dataToView = [
+            'statuses' => $this->statuses,
+        ];
+        return view("pages.mapel.index", $dataToView);
     }
 
     public function add()
@@ -104,9 +118,19 @@ class MapelController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama_mapel' => "required",
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'nama_mapel' => "required",
+            ],
+            [
+                'required' => ":attribute wajib di isi"
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator);
+        }
 
         $data_insert = [
             'nama_mapel' => $request->input("nama_mapel"),
@@ -181,18 +205,21 @@ class MapelController extends Controller
 
     public function importMapel(Request $request)
     {
-        $validated = $request->validate([
-            'file' => "required|mimes:xlsx,csv"
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'file' => "required|mimes:xlsx,csv"
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator);
+        }
 
         $file = $request->file('file');
         $mapel = new MapelImport;
         $mapel->import($file);
 
         return redirect("/mapel")->with("successImport", "successImport");
-    }
-
-    public function getDataMapel(Request $request)
-    {
     }
 }

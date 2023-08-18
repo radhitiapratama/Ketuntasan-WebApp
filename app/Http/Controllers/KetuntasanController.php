@@ -31,10 +31,7 @@ class KetuntasanController extends Controller
     {
         // jika role superadmin
         if (Gate::allows("admin")) {
-
             if ($request->ajax()) {
-                // return response()->json($request->all());
-
                 $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
                 $table = DB::table("ketuntasan as kt");
@@ -51,22 +48,23 @@ class KetuntasanController extends Controller
                     ->join('kelas as k', 'k.kelas_id', '=', 'u.kelas_id')
                     ->where("kt.tahun_ajaran_id", $tahun_ajaran->tahun_ajaran_id);
 
-                $records = $query->count();
 
                 if ($request->tingkatan != null) {
                     $query->where('u.tingkatan', $request->tingkatan);
                 }
 
-                if ($request->jurusan_id != null) {
-                    $query->where('u.jurusan_id', $request->jurusan_id);
-                }
-
                 if ($request->kelas_id != null) {
-                    $query->where('u.kelas_id', $request->kelas_id);
+                    // [0] => jurusan_id
+                    // [1] => kelas_id
+                    $arr = explode("|", $request->kelas_id);
+
+                    $query->where('u.jurusan_id', $arr[0])
+                        ->where("u.kelas_id", $arr[1]);
                 }
 
-                $result = $query
-                    ->groupBy("u.tingkatan", 'u.kelas_id')
+                $records = count($query->groupBy("u.tingkatan", 'u.kelas_id')->get());
+
+                $result = $query->groupBy("u.tingkatan", 'u.kelas_id')
                     ->offset($request->start)
                     ->limit($request->length)
                     ->get();
@@ -79,20 +77,27 @@ class KetuntasanController extends Controller
                         $no++;
                         $subData['no'] = $no;
 
+
                         if ($row->tingkatan == 1) {
-                            $subData['tingkatan'] = "X";
+                            $tingkatan = "X";
                         }
 
                         if ($row->tingkatan == 2) {
-                            $subData['tingkatan'] = "XI";
+                            $tingkatan = "XI";
                         }
 
                         if ($row->tingkatan == 3) {
-                            $subData['tingkatan'] = "XII";
+                            $tingkatan = "XII";
                         }
 
-                        $subData['jurusan'] = $row->nama_jurusan;
-                        $subData['kelas'] = $row->nama_kelas;
+                        $subData['tingkatan'] = '
+                        <div class="text-center">
+                            ' . $tingkatan . '
+                        </div>
+                        ';
+
+
+                        $subData['kelas'] = $row->nama_jurusan . " | " . $row->nama_kelas;
 
                         $subData['settings'] = '
                         <div class="setting-icons">
@@ -120,10 +125,18 @@ class KetuntasanController extends Controller
                 ]);
             }
 
-            $sql_jurusan = Jurusan::where("status", 1)->get();
+            // $sql_jurusan = Jurusan::where("status", 1)->get();
+            $sql_kelas =  Kelas::with([
+                'jurusan' => function ($query) {
+                    $query->select("jurusan_id", 'nama_jurusan');
+                    $query->where("status", 1);
+                }
+            ])
+                ->where("kelas.status", 1)
+                ->get();
 
             $dataToView = [
-                'jurusans' => $sql_jurusan,
+                'kelases' => $sql_kelas,
                 'tingkatans' => $this->tingkatans,
             ];
 

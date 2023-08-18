@@ -37,19 +37,13 @@
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label for="#">Jurusan</label>
-                            <select name="jurusan_id" id="jurusan_id" class="form-control select2">
-                                <option value="">Pilih...</option>
-                                @foreach ($jurusans as $jurusan)
-                                    <option value="{{ $jurusan->jurusan_id }}">{{ $jurusan->nama_jurusan }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
                             <label for="#">Kelas</label>
-                            <select name="kelas_id" id="kelas_id" class="form-control select2" disabled>
+                            <select name="kelas_id" id="kelas_id" class="form-control select2">
+                                <option value="">Pilih...</option>
+                                @foreach ($kelases as $kelas)
+                                    <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                        {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -61,23 +55,19 @@
                         <table class="table table-bordered" id="tbl-ketuntasan" style="width: 100%">
                             <thead>
                                 <tr style="border-bottom: none !important">
-                                    <th style="width: 5px">#</th>
-                                    <th>Tingkatan</th>
-                                    <th>Jurusan</th>
+                                    <th width="5px">#</th>
+                                    <th width="5px">Tingkatan</th>
                                     <th>Kelas</th>
-                                    <th class="text-center">Pengaturan</th>
+                                    <th class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
-
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
-
-
 
         <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
         <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
@@ -94,7 +84,6 @@
                         url: "{{ url('ketuntasan') }}",
                         data: function(data) {
                             data.tingkatan = $("#tingkatan").val();
-                            data.jurusan_id = $("#jurusan_id").val();
                             data.kelas_id = $("#kelas_id").val();
                         }
                     },
@@ -106,9 +95,6 @@
                         },
                         {
                             data: "tingkatan"
-                        },
-                        {
-                            data: "jurusan"
                         },
                         {
                             data: "kelas"
@@ -138,41 +124,7 @@
             });
 
             $("#tingkatan").select2(configSelect2);
-            $("#jurusan_id").select2(configSelect2);
             $("#kelas_id").select2(configSelect2);
-
-            $("#jurusan_id").change(function() {
-                $("#kelas_id").html("");
-                $("#kelas_id").attr("disabled", true);
-
-                clearDatatable();
-                loadDatatable();
-
-                //get data kelas by jurusan
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url('getDataKelasByJurusan') }}",
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                    data: {
-                        jurusan_id: $(this).val(),
-                    },
-                    dataType: "json",
-                    success: function(response) {
-                        console.log(response);
-                        let opt = `<option value="">Pilih...</option>`;
-
-                        for (let i = 0; i < response.kelases.length; i++) {
-                            opt +=
-                                `<option value="${response.kelases[i].kelas_id}">${response.kelases[i].nama_kelas}</option>`
-                        }
-
-                        $("#kelas_id").html(opt);
-                        $("#kelas_id").attr("disabled", false);
-                    }
-                });
-            });
 
             $("#tingkatan").change(function() {
                 clearDatatable();

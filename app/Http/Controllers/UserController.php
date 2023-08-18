@@ -120,13 +120,13 @@ class UserController extends Controller
     public function superadmin_edit($user_id)
     {
         if (!isset($user_id)) {
-            return redirect('superadmin');
+            return redirect()->back();
         }
 
         $dataUser = User::select("user_id", 'username', 'nama', 'status', 'role')->where("user_id", $user_id)->first();
 
         if (empty($dataUser) || $dataUser->role != 1) {
-            return redirect("superadmin");
+            return redirect()->back();
         }
 
         $dataToView  = [

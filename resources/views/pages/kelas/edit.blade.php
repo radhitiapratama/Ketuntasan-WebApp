@@ -84,6 +84,7 @@
                 timerProgressBar: true
             })
         @endif
+
         @if (session()->has('duplicateKelas'))
             Swal.fire({
                 title: "Nama Kelas sudah di gunakan",

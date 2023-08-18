@@ -105,10 +105,20 @@ class TahunAjaranController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'tahun_start' => "required",
-            'tahun_end' => 'required',
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'tahun_start' => "required",
+                'tahun_end' => 'required',
+            ],
+            [
+                'required' => ":attribute wajib di isi"
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator);
+        }
 
         $tahun_ajaran = $request->tahun_start . "-" . $request->tahun_end;
 
@@ -164,8 +174,6 @@ class TahunAjaranController extends Controller
                 'required' => ":attribute wajib di isi"
             ]
         );
-
-        // dd($request->all());
 
         if ($validator->fails()) {
             return redirect()->back()->withInput()->withErrors($validator);

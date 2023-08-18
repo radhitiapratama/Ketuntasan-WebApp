@@ -2,19 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Imports\SiswaImport;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\Jurusan;
 use App\Models\Kelas;
-use App\Models\TahunAjaran;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class SiswaController extends Controller
 {
@@ -60,12 +56,12 @@ class SiswaController extends Controller
                 $query->where('u.tingkatan', $request->tingkatan);
             }
 
-            if ($request->jurusan_id != null) {
-                $query->where("u.jurusan_id", $request->jurusan_id);
-            }
-
             if ($request->kelas_id != null) {
-                $query->where('u.kelas_id', $request->kelas_id);
+
+                // [0] => jurusan_id
+                // [1] => kelas_id
+                $arr = explode("|", $request->kelas_id);
+                $query->where('u.kelas_id', $arr[1]);
             }
 
             if ($request->status != null) {
@@ -103,14 +99,13 @@ class SiswaController extends Controller
                         $subData['tingkatan'] = "XII";
                     }
 
-                    $subData['jurusan'] =  $row->nama_jurusan;
-                    $subData['kelas'] =  $row->nama_kelas;
+                    $subData['kelas'] = $row->nama_jurusan . " | " .  $row->nama_kelas;
 
                     $subData['status'] = '
-                <div class="text-center">
-                    <span class="badge badge-success p-2">Aktif</span>
-                </div>
-                ';
+                    <div class="text-center">
+                        <span class="badge badge-success p-2">Aktif</span>
+                    </div>
+                    ';
 
                     if ($row->status == 0) {
                         $subData['status'] = '
@@ -141,14 +136,18 @@ class SiswaController extends Controller
             ]);
         }
 
-        $sql_jurusan = DB::table("jurusan")
-            ->select('jurusan_id', 'nama_jurusan')
-            ->where('status', 1)
+        $sql_kelas = Kelas::with([
+            'jurusan' => function ($query) {
+                $query->select("jurusan_id", 'nama_jurusan')
+                    ->where("status", 1);
+            }
+        ])
+            ->where("kelas.status", 1)
             ->get();
 
         $dataToView = [
             'tingkatans' => $this->tingkatans,
-            'jurusans' => $sql_jurusan,
+            'kelases' => $sql_kelas,
             'statuses' => $this->statuses
         ];
 
@@ -157,19 +156,17 @@ class SiswaController extends Controller
 
     public function add()
     {
-        $sql_jurusan = Jurusan::where("status", 1)->get();
-
-        $sql_user = User::select("user_id", 'username')
-            ->where("role", 3)
-            ->whereNull("tingkatan")
-            ->whereNull("jurusan_id")
-            ->whereNull("kelas_id")
+        $sql_kelas = Kelas::with([
+            'jurusan' => function ($query) {
+                $query->select("jurusan_id", "nama_jurusan")
+                    ->where("status", 1);
+            }
+        ])->where("status", 1)
             ->get();
 
         $dataToView = [
             'tingkatans' => $this->tingkatans,
-            'jurusans' => $sql_jurusan,
-            'siswas' => $sql_user,
+            "kelases" => $sql_kelas,
         ];
 
         return view("pages.siswa.add", $dataToView);
@@ -181,7 +178,6 @@ class SiswaController extends Controller
             $request->all(),
             [
                 'tingkatan' => "required",
-                'jurusan_id' => "required",
                 'kelas_id' => "required",
                 'username' => "required|unique:users,username",
                 'nama_siswa' => "required",
@@ -200,14 +196,18 @@ class SiswaController extends Controller
             ]);
         }
 
+        // [0] => jurusan_id
+        // [1] => kelas_id
+        $arr = explode("|", $request->kelas_id);
+
         User::create([
             'username' => $request->username,
             'nama' => $request->nama_siswa,
             'password' => Hash::make($request->password),
             'role' => 3,
             'tingkatan' => $request->tingkatan,
-            'jurusan_id' => $request->jurusan_id,
-            'kelas_id' => $request->kelas_id
+            'jurusan_id' => $arr[0],
+            'kelas_id' => $arr[1]
         ]);
 
         return response()->json([
@@ -280,12 +280,21 @@ class SiswaController extends Controller
             return redirect()->back();
         }
 
-        $sql_jurusan = Jurusan::where('status', 1)->get();
+        // $sql_jurusan = Jurusan::where('status', 1)->get();
+
+        $sql_kelas = Kelas::with([
+            'jurusan' => function ($query) {
+                $query->select("jurusan_id", "nama_jurusan")
+                    ->where("status", 1);
+            }
+        ])->where("status", 1)
+            ->get();
 
         $dataToView = [
             'siswa' => $sql_siswa,
             'tingkatans' => $this->tingkatans,
-            'jurusans' => $sql_jurusan,
+            // 'jurusans' => $sql_jurusan,
+            "kelases" => $sql_kelas,
             'statuses' => $this->statuses,
         ];
 
@@ -294,18 +303,27 @@ class SiswaController extends Controller
 
     public function update(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => "required",
-            'hide_tingkatan' => "required",
-            'hide_jurusan' => "required",
-            'hide_kelas' => "required",
-            'tingkatan_id' => "required",
-            'jurusan_id' => "required",
-            'kelas_id' => "required",
-            'username' => 'required',
-            'nama' => "required",
-            'status' => 'required',
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'user_id' => "required",
+                'hide_tingkatan' => "required",
+                'hide_jurusan' => "required",
+                'hide_kelas' => "required",
+                'tingkatan_id' => "required",
+                'kelas_id' => "required",
+                'username' => 'required',
+                'nama' => "required",
+                'status' => 'required',
+            ],
+            [
+                'required' => ":attribute wajib di isi"
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator);
+        }
 
         $user = User::where("user_id", $request->user_id)->first();
 
@@ -327,12 +345,13 @@ class SiswaController extends Controller
             $dataUpdate['tingkatan'] = $request->tingkatan_id;
         }
 
-        if ($user->jurusan_id != $request->jurusan_id) {
-            $dataUpdate['jurusan'] = $request->jurusan_id;
-        }
+        // [0] => jurusan_id
+        // [1] => kelas_id
+        $arr = explode("|", $request->kelas_id);
 
-        if ($user->kelas_id != $request->kelas_id) {
-            $dataUpdate['kelas_id'] = $request->kelas_id;
+        if ($user->jurusan_id != $arr[0] || $user->kelas_id != $arr[1]) {
+            $dataUpdate['jurusan_id'] = $arr[0];
+            $dataUpdate['kelas_id'] = $arr[1];
         }
 
         if ($user->nama != $request->nama) {
@@ -354,11 +373,18 @@ class SiswaController extends Controller
 
     public function naikKelas()
     {
+        $sql_kelas = Kelas::with([
+            'jurusan' => function ($query) {
+                $query->select("jurusan_id", 'nama_jurusan')
+                    ->where("status", 1);
+            }
+        ])
+            ->where("kelas.status", 1)
+            ->get();
 
-        $sql_jurusan = Jurusan::where("status", 1)->get();
 
         $dataToView = [
-            'jurusans' => $sql_jurusan,
+            'kelases' => $sql_kelas,
             'tingkatans' => $this->tingkatans,
         ];
 
@@ -394,13 +420,6 @@ class SiswaController extends Controller
         return redirect("/siswa-naik-kelas")->with("successNaikKelas", 'successNaikKelas');
     }
 
-    public function getDataSiswa(Request $request)
-    {
-        // return response()->json($request->all());
-
-
-    }
-
     public function getDataSiswaNaikKelas(Request $request)
     {
         $columnsSearch = ['u.username', 'u.nama'];
@@ -413,6 +432,10 @@ class SiswaController extends Controller
                 }
             });
         }
+
+        // [0] => jurusan_id
+        // [1] => kelas_id
+        $arr = explode("|", $request->kelas_id);
 
         $query = $table->select(
             'u.username',
@@ -428,8 +451,7 @@ class SiswaController extends Controller
             ->where('u.role', 3)
             ->where('u.status', 1)
             ->where('u.tingkatan', $request->tingkatan)
-            ->where('u.jurusan_id', $request->jurusan_id)
-            ->where('u.kelas_id', $request->kelas_id);
+            ->where('u.kelas_id', $arr[1]);
 
         $countFiltered = $query->count();
 
@@ -466,8 +488,7 @@ class SiswaController extends Controller
                     $subData['tingkatan'] = "XII";
                 }
 
-                $subData['jurusan'] = $row->nama_jurusan;
-                $subData['kelas'] = $row->nama_kelas;
+                $subData['kelas'] = $row->nama_jurusan . " | " . $row->nama_kelas;
 
                 $dataResponse[] = $subData;
             }
@@ -500,5 +521,13 @@ class SiswaController extends Controller
         $siswa->import($file);
 
         return redirect()->back()->with("successImport", "successImport");
+    }
+
+    public function getDataSiswaByKelas(Request $request)
+    {
+        // [0] => jurusan_id
+        // [1] => kelas_id 
+        $arr = explode("|", $request->kelas);
+        return response()->json($arr);
     }
 }

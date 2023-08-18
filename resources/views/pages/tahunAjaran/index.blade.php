@@ -25,11 +25,11 @@
                     <table class="table table-bordered" id="tbl-tahunAjaran" style="width: 100%">
                         <thead>
                             <tr style="border-bottom: none !important">
-                                <th style="width: 5px">#</th>
+                                <th width="5px">#</th>
                                 <th>Tahun Ajaran</th>
                                 <th class="text-center">User Aktif</th>
                                 <th class="text-center">Superadmin Aktif</th>
-                                <th class="text-center">Pengaturan</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>

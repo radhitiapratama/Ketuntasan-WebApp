@@ -22,11 +22,11 @@
                     <table class="table table-bordered" id="tbl-guruMapel" style="width: 100%">
                         <thead>
                             <tr>
-                                <th style="width: 5px">#</th>
+                                <th width="5px">#</th>
+                                <th width="100px" class="text-center">Kode Guru</th>
                                 <th>Username</th>
                                 <th>Nama Guru</th>
-                                <th class="text-center">Status Guru</th>
-                                <th class="text-center">Pengaturan</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -77,7 +77,6 @@
     <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
 
-
     <script>
         function loadDatatable() {
             $("#tbl-guruMapel").DataTable({
@@ -94,13 +93,13 @@
                         data: "no"
                     },
                     {
+                        data: "kode_guru"
+                    },
+                    {
                         data: "username"
                     },
                     {
                         data: "nama"
-                    },
-                    {
-                        data: "status"
                     },
                     {
                         data: "settings"

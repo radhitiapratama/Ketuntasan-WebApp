@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TahunAjaran;
-use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -84,9 +83,17 @@ class AuthController extends Controller
 
     public function changePassword(Request $request)
     {
-        $validated = $request->validate([
-            'new_password' => "required|min:6",
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'new_password' => "required|min:6",
+
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator);
+        }
 
         DB::table("users")
             ->where('user_id', auth()->user()->user_id)

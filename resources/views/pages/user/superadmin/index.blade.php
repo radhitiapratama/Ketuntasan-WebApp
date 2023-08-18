@@ -24,11 +24,11 @@
                     <table class="table table-bordered" id="tbl-superadmin" style="width: 100%">
                         <thead>
                             <tr>
-                                <th style="width: 5px">#</th>
+                                <th width="5px">#</th>
                                 <th>Username</th>
                                 <th>Nama</th>
                                 <th class="text-center">Status</th>
-                                <th class="text-center" style="width: 150px">Pengaturan</th>
+                                <th class="text-center" style="width: 150px">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>

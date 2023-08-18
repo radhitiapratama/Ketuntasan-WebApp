@@ -51,7 +51,7 @@
                                 <th style="width: 5px">#</th>
                                 <th>Username</th>
                                 <th>Nama Siswa</th>
-                                <th class="text-center">Pengaturan</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>

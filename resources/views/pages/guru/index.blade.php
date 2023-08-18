@@ -2,10 +2,9 @@
 
 @section('content')
     <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/toastr/toastr.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
-    <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
-
+    <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
 
     <div class="card mb-1">
         <div class="card-body">
@@ -52,17 +51,32 @@
     </div>
 
     <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-3 col-12">
+                    <div class="form-group">
+                        <label for="#">Status</label>
+                        <select name="status" id="status" class="form-control">
+                            <option value="">Pilih...</option>
+                            <option value="1">Status</option>
+                            <option value="0">Nonaktif</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-12 table-responsive">
                     <table class="table table-bordered" id="tbl-guru" style="width: 100%">
                         <thead>
                             <tr>
-                                <th style="width: 5px">#</th>
+                                <th width="5px">#</th>
+                                <th class="text-center" width="100px">Kode</th>
                                 <th>Username</th>
                                 <th>Nama Guru</th>
                                 <th class="text-center">Status</th>
-                                <th class="text-center">Pengaturan</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -116,9 +130,11 @@
         </div>
     </div>
 
-    <script src="{{ asset('plugins/toastr/toastr.min.js') }}"></script>
+    <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
+
 
     <script>
         @if (session()->has('successImport'))
@@ -139,35 +155,67 @@
     </script>
 
     <script>
-        $("#tbl-guru").DataTable({
-            serverSide: true,
-            processing: true,
-            ordering: false,
-            ajax: "/guru",
-            drawCallback: function(res) {
-                console.log(res.json);
-            },
-            columns: [{
-                    data: "no"
+        function loadDatatable() {
+            $("#tbl-guru").DataTable({
+                serverSide: true,
+                processing: true,
+                ordering: false,
+                ajax: {
+                    url: "/guru",
+                    data: function(data) {
+                        data.status = $("#status").val();
+                    }
                 },
-                {
-                    data: "username"
+                drawCallback: function(res) {
+                    console.log(res.json);
                 },
-                {
-                    data: "nama"
-                },
-                {
-                    data: "status"
-                },
-                {
-                    data: "setting"
-                },
-            ]
+                columns: [{
+                        data: "no"
+                    },
+                    {
+                        data: "kode_guru"
+                    },
+                    {
+                        data: "username"
+                    },
+                    {
+                        data: "nama"
+                    },
+                    {
+                        data: "status"
+                    },
+                    {
+                        data: "setting"
+                    },
+                ]
+            });
+        }
+
+        function clearDatatable() {
+            $("#tbl-guru").DataTable().clear().destroy();
+        }
+
+        loadDatatable();
+
+        $(document).on('select2:open', () => {
+            document.querySelector('.select2-search__field').focus();
         });
 
         $('input[type="file"]').change(function(e) {
             var fileName = e.target.files[0].name;
             $('.custom-file-label').html(fileName);
+        });
+
+        const configSelect2 = {
+            theme: "bootstrap4",
+            width: "100%",
+        }
+
+        $("#status").select2(configSelect2);
+
+        $("#status").change(function() {
+            clearDatatable();
+            loadDatatable();
         });
     </script>
 @endsection

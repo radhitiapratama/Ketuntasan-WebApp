@@ -25,7 +25,7 @@
                 <div class="col-12 col-md-8">
                     <form id="form">
                         <div class="row justify-content-center mb-3">
-                            <div class="col-md-4 col-12">
+                            <div class="col-md-6 col-12">
                                 <div class="form-group">
                                     <label for="#">Tingkatan</label>
                                     <select name="tingkatan" id="tingkatan_id" class="form-control select2" required>
@@ -37,23 +37,15 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4 col-12">
-                                <div class="form-group">
-                                    <label for="#">Jurusan</label>
-                                    <select name="jurusan_id" id="jurusan_id" class="form-control select2" disabled
-                                        required>
-                                        <option value=""></option>
-                                        @foreach ($jurusans as $jurusan)
-                                            <option value="{{ $jurusan->jurusan_id }}">{{ $jurusan->nama_jurusan }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-12">
+                            <div class="col-md-6 col-12">
                                 <div class="form-group">
                                     <label for="#">Kelas</label>
-                                    <select name="kelas_id" id="kelas_id" class="form-control select2" disabled required>
+                                    <select name="kelas_id" id="kelas_id" class="form-control select2" required>
                                         <option value=""></option>
+                                        @foreach ($kelases as $kelas)
+                                            <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                                {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
@@ -161,38 +153,11 @@
         });
 
         $("#tingkatan_id").select2(configSelect2);
-        $("#jurusan_id").select2(configSelect2);
         $("#kelas_id").select2(configSelect2);
         $("#user_id").select2(configSelect2);
 
         $("#tingkatan_id").change(function() {
             $("#jurusan_id").attr("disabled", false);
-        });
-
-        $("#jurusan_id").change(function() {
-            $("#kelas_id").html("");
-            $("#kelas_id").attr("disabled", true);
-            $.ajax({
-                type: "POST",
-                url: "/getDataKelasByJurusan",
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                data: {
-                    jurusan_id: $(this).val(),
-                },
-                dataType: "json",
-                success: function(response) {
-                    console.log(response);
-                    let opt = '<option value=""></option>';
-                    for (let i = 0; i < response.kelases.length; i++) {
-                        opt +=
-                            `<option value="${response.kelases[i].kelas_id}">${response.kelases[i].nama_kelas}</option>`;
-                    }
-                    $("#kelas_id").html(opt);
-                    $("#kelas_id").attr("disabled", false);
-                }
-            });
         });
 
         $("#kelas_id").change(function() {
@@ -246,11 +211,7 @@
                     $("#password").val("");
 
                     $("#tingkatan_id").val("").trigger("change.select2");
-                    $("#jurusan_id").val("").trigger("change.select2");
-                    $("#jurusan_id").attr('disabled', true);
                     $("#kelas_id").val("").trigger("change.select2");
-                    $("#kelas_id").attr("disabled", true);
-                    $("#kelas_id").html("");
 
                     Swal.fire({
                         title: "Siswa berhasil di tambahkan",

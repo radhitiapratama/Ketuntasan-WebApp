@@ -75,7 +75,7 @@
                                 <th class="text-center">Deskripsi</th>
                                 <th class="text-center">Tgl Tuntas</th>
                                 <th class="text-center" style="width: 5px">Semester</th>
-                                <th class="text-center">Pengaturan</th>
+                                <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>

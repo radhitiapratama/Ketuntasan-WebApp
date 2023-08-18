@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaran;
 use Illuminate\Support\Facades\Validator;
-use Psy\CodeCleaner\FunctionReturnInWriteContextPass;
 
 class KelasController extends Controller
 {
@@ -27,7 +26,7 @@ class KelasController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $columnsSearch = ['k.nama_kelas', 'j.nama_jurusan'];
+            $columnsSearch = ['k.nama_kelas', 'j.nama_jurusan', 'kelas_id'];
             $table = DB::table("kelas as k");
 
             if ($request->input("search.value")) {
@@ -42,10 +41,15 @@ class KelasController extends Controller
                 ->join('jurusan as j', 'k.jurusan_id', '=', 'j.jurusan_id')
                 ->where('j.status', 1);
 
+            if ($request->status != null) {
+                $query->where('k.status', $request->status);
+            }
+
             $count = $query->count();
 
             $result = $query->offset($request->start)
                 ->limit($request->length)
+                ->orderByRaw("k.created_at DESC")
                 ->get();
 
             $data = [];
@@ -55,8 +59,15 @@ class KelasController extends Controller
                     $i++;
                     $subData = [];
                     $subData['no'] = $i;
-                    $subData['jurusan'] = $row->nama_jurusan;
-                    $subData['kelas'] = $row->nama_kelas;
+
+                    $subData['kode_kelas'] = '
+                    <div class="text-center">
+                    ' . $row->kelas_id . '
+                    </div>
+                    ';
+
+                    $subData['kelas'] = $row->nama_jurusan . " | " . $row->nama_kelas;
+
                     $subData['status'] = '
                     <div class="text-center">
                         <span class="badge badge-danger p-2">Nonaktif</span>
@@ -70,6 +81,7 @@ class KelasController extends Controller
                         </div>
                         ';
                     }
+
                     $subData['settings'] = '
                     <div class="setting-icons">
                         <a href="kelas/edit/' . $row->kelas_id . '" class="setting-edit">
@@ -234,12 +246,24 @@ class KelasController extends Controller
             $query = $table->select('km.*', 'k.nama_kelas', 'j.nama_jurusan')
                 ->join('jurusan as j', 'j.jurusan_id', '=', 'km.jurusan_id')
                 ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
-                ->where('km.tahun_ajaran_id', $tahun->tahun_ajaran_id)
-                ->groupBy('km.tingkatan', 'km.kelas_id');
+                ->where('km.tahun_ajaran_id', $tahun->tahun_ajaran_id);
+
+            if ($request->tingkatan != null) {
+                $query->where("km.tingkatan", $request->tingkatan);
+            }
+
+            if ($request->kelas_id != null) {
+                // [0] => jurusan_id
+                // [1] => kelas_id
+                $arr = explode("|", $request->kelas_id);
+                $query->where("km.jurusan_id", $arr[0])
+                    ->where('km.kelas_id', $arr[1]);
+            }
 
             $count = $query->count();
 
-            $result = $query->offset($request->start)
+            $result = $query->groupBy('km.tingkatan', 'km.kelas_id')
+                ->offset($request->start)
                 ->limit($request->length)
                 ->get();
 
@@ -252,17 +276,22 @@ class KelasController extends Controller
                     $subData['no'] = $i;
 
                     if ($row->tingkatan == 1) {
-                        $subData['tingkatan'] = "X";
+                        $tingkatan = "X";
                     }
                     if ($row->tingkatan == 2) {
-                        $subData['tingkatan'] = "XI";
+                        $tingkatan = "XI";
                     }
                     if ($row->tingkatan == 3) {
-                        $subData['tingkatan'] = "XII";
+                        $tingkatan = "XII";
                     }
 
-                    $subData['jurusan'] = $row->nama_jurusan;
-                    $subData['kelas'] = $row->nama_kelas;
+                    $subData['tingkatan'] = '
+                    <div class="text-center">
+                        ' . $tingkatan . '
+                    </div>
+                    ';
+
+                    $subData['kelas'] = $row->nama_jurusan . " | " . $row->nama_kelas;
 
                     $subData['settings'] = '
                     <div class="d-flex">
@@ -291,21 +320,21 @@ class KelasController extends Controller
             ]);
         }
 
+        $sql_kelas = Kelas::with([
+            'jurusan' => function ($query) {
+                $query->select("jurusan_id", 'nama_jurusan')
+                    ->where("status", 1);
+            }
+        ])
+            ->where("status", 1)
+            ->get();
 
+        $dataToView = [
+            'tingkatans' => $this->tingkatans,
+            'kelases' => $sql_kelas,
+        ];
 
-        // $sql_kelasMapel = DB::table("kelas_mapel as km")
-        //     ->select('j.nama_jurusan', 'k.nama_kelas', 'km.*')
-        //     ->join('jurusan as j', 'j.jurusan_id', '=', 'km.jurusan_id')
-        //     ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
-        //     ->where('km.tahun_ajaran_id', $tahun->tahun_ajaran_id)
-        //     ->groupBy('km.tingkatan', 'km.kelas_id')
-        //     ->get();
-
-        // $dataToView = [
-        //     'kelasesMapel' => $sql_kelasMapel,
-        // ];
-
-        return view("pages.kelas.kelasMapel.index");
+        return view("pages.kelas.kelasMapel.index", $dataToView);
     }
 
     public function kelasMapel_add()
@@ -441,11 +470,6 @@ class KelasController extends Controller
         if (!isset($tingkatan_id) || !isset($jurusan_id) || !isset($kelas_id)) {
             return redirect()->back();
         }
-
-        // dd($data);
-
-        // return view("testing", compact("data"));
-
 
         $tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 

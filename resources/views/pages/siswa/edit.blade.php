@@ -32,11 +32,10 @@
                         <input type="hidden" name="hide_kelas" value="{{ $siswa->kelas_id }}">
 
                         <div class="row">
-                            <div class="col-md-4 col-12">
+                            <div class="col-md-6 col-12">
                                 <div class="form-group">
                                     <label for="#">Tingkatan</label>
                                     <select name="tingkatan_id" id="tingkatan" class="form-control" required>
-                                        <option value=""></option>
                                         @foreach ($tingkatans as $key => $value)
                                             <option value="{{ $key }}" @selected($key == $siswa->tingkatan)>
                                                 {{ $value }}</option>
@@ -44,61 +43,30 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4 col-12">
-                                <div class="form-group">
-                                    <label for="#">Jurusan</label>
-                                    <select name="jurusan_id" id="jurusan" class="form-control" required>
-                                        <option value=""></option>
-                                        @foreach ($jurusans as $jurusan)
-                                            <option value="{{ $jurusan->jurusan_id }}" @selected($siswa->jurusan_id == $jurusan->jurusan_id)>
-                                                {{ $jurusan->nama_jurusan }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-12">
+                            <div class="col-md-6 col-12">
                                 <div class="form-group">
                                     <label for="#">Kelas</label>
-                                    <select name="kelas_id" id="kelas" class="form-control" required>
-
-                                        @php
-                                            $sql_kelases = DB::table('kelas')
-                                                ->select('kelas_id', 'nama_kelas')
-                                                ->where('jurusan_id', $siswa->jurusan_id)
-                                                ->get();
-                                        @endphp
-
-                                        @foreach ($sql_kelases as $kelases)
-                                            <option value="{{ $kelases->kelas_id }}" @selected($kelases->kelas_id == $siswa->kelas_id)>
-                                                {{ $kelases->nama_kelas }}</option>
+                                    <select name="kelas_id" id="kelas_id" class="form-control" required>
+                                        @foreach ($kelases as $kelas)
+                                            <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}"
+                                                @selected(old('kelas_id', $siswa->jurusan_id . '|' . $siswa->kelas_id) == $kelas->jurusan->jurusan_id . '|' . $kelas->kelas_id)>
+                                                {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}</option>
                                         @endforeach
-
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-4 col-12">
                                 <div class="form-group">
                                     <label for="#">Username</label>
-                                    @if (old('username'))
-                                        <input type="text" class="form-control" name="username"
-                                            value="{{ old('username') }}"required>
-                                    @else
-                                        <input type="text" class="form-control" name="username"
-                                            value="{{ $siswa->username }}"required>
-                                    @endif
+                                    <input type="text" class="form-control" name="username"
+                                        value="{{ old('username', $siswa->username) }}"required>
                                 </div>
                             </div>
                             <div class="col-md-4 col-12">
                                 <div class="form-group">
                                     <label for="#">Nama Siswa</label>
-                                    @if (old('nama'))
-                                        <input type="text" class="form-control" name="nama"
-                                            value="{{ old('nama') }}"required>
-                                    @else
-                                        <input type="text" class="form-control" name="nama"
-                                            value="{{ $siswa->nama }}"required>
-                                    @endif
+                                    <input type="text" class="form-control" name="nama"
+                                        value="{{ old('nama', $siswa->nama) }}"required>
                                 </div>
                             </div>
                             <div class="col-md-4 col-12">
@@ -167,14 +135,16 @@
         const configSelect2 = {
             theme: "bootstrap4",
             width: "100%",
-            placeholder: "Pilih...",
         };
 
         const csrfToken = $("meta[name='csrf-token']").attr("content");
 
+        $(document).on('select2:open', () => {
+            document.querySelector('.select2-search__field').focus();
+        });
+
         $("#tingkatan").select2(configSelect2);
-        $("#jurusan").select2(configSelect2);
-        $("#kelas").select2(configSelect2);
+        $("#kelas_id").select2(configSelect2);
         $("#status").select2(configSelect2);
 
         $("#btn-submit").click(function(e) {
@@ -219,36 +189,6 @@
                 }
             })
 
-        });
-
-        $("#jurusan").change(function() {
-            $("#kelas").html("");
-            $("#kelas").attr("disabled", true);
-
-            $.ajax({
-                type: "POST",
-                url: "/getDataKelasByJurusan",
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                data: {
-                    jurusan_id: $(this).val(),
-                },
-                dataType: "json",
-                success: function(response) {
-                    console.log(response);
-                    let opt = `<option value=""></option>`;
-
-                    for (let i = 0; i < response.kelases.length; i++) {
-                        opt +=
-                            `<option value="${response.kelases[i].kelas_id}">${response.kelases[i].nama_kelas}</option>`;
-                    }
-
-                    console.log(opt);
-                    $("#kelas").html(opt);
-                    $("#kelas").attr("disabled", false);
-                }
-            });
         });
     </script>
 @endsection

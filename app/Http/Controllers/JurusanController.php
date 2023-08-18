@@ -29,10 +29,15 @@ class JurusanController extends Controller
                 });
             }
 
+            if ($request->status != null) {
+                $table->where("status", $request->status);
+            }
+
             $count = $table->count();
 
             $result = $table->offset($request->start)
                 ->limit($request->length)
+                ->orderByRaw("jurusan_id DESC")
                 ->get();
 
             $data = [];
@@ -42,6 +47,12 @@ class JurusanController extends Controller
                     $i++;
                     $subData = [];
                     $subData['no'] = $i;
+                    $subData['kode_kelas'] = ' 
+                    <div class="text-center">
+                        ' . $row->jurusan_id . '
+                    </div>
+                    ';
+
                     $subData['jurusan'] = $row->nama_jurusan;
                     $subData['status'] = '
                     <div class="text-center">
@@ -86,15 +97,23 @@ class JurusanController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'nama_jurusan' => "required|unique:jurusan,nama_jurusan"
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'nama_jurusan' => "required|unique:jurusan,nama_jurusan"
+            ],
+            [
+                'unique' => ":attribute sudah ada"
+            ]
+        );
 
-        DB::table("jurusan")
-            ->insert([
-                'nama_jurusan' => $request->input("nama_jurusan"),
-                'created_at' => date("Y-m-d"),
-            ]);
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        Jurusan::create([
+            'nama_jurusan' => $request->nama_jurusan
+        ]);
 
         return redirect()->back()->with("successStore", "successStore");
     }
@@ -159,9 +178,13 @@ class JurusanController extends Controller
 
     public function importJurusan(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'file_import' => "required|mimes:xlsx,csv"
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $file = $request->file("file_import");
 

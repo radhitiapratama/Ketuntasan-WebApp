@@ -6,6 +6,7 @@ use App\Models\TahunAjaran;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class BatasWaktuController extends Controller
 {
@@ -90,9 +91,19 @@ class BatasWaktuController extends Controller
 
     public function store(Request $request)
     {
-        $validated =  [
-            'batas_waktu' => "required",
-        ];
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'batas_waktu' => "required",
+            ],
+            [
+                'required' => ":attribute wajib di isi"
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator);
+        }
 
         $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
@@ -152,14 +163,23 @@ class BatasWaktuController extends Controller
 
     public function update(Request $request)
     {
-        $validated = [
-            'batas_waktu_id' => "required",
-            'batasWaktu' => "required",
-            'status' => "required"
-        ];
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'batas_waktu_id' => "required",
+                'batasWaktu' => "required",
+                'status' => "required"
+            ],
+            [
+                'required' => ":attribute wajib di isi"
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator);
+        }
 
         $tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
-
 
         $tgl_mulai = date("Y-m-d", strtotime($request->tgl_mulai));
         $tgl_selesai = date("Y-m-d", strtotime($request->tgl_selesai));

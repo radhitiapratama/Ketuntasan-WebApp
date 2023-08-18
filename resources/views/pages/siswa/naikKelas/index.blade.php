@@ -12,45 +12,7 @@
                 <div
                     class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
                     <h1 class="page-title">Siswa Naik Kelas</h1>
-                    <button type="button" class="btn-dark" id="btn-naik-kelas">
-                        <i class="ri-check-line"></i>
-                        Naik Kelas
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="card mb-1">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-2 col-12">
-                    <div class="form-group">
-                        <label for="#">Tingkatan</label>
-                        <select name="tingkatan_id" id="tingkatan_id" class="form-control select2">
-                            <option value=""></option>
-                            @foreach ($tingkatans as $key => $value)
-                                <option value="{{ $key }}">{{ $value }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3 col-12">
-                    <div class="form-group">
-                        <label for="#">Jurusan</label>
-                        <select name="jurusan_id" id="jurusan_id" class="form-control select2">
-                            <option value=""></option>
-                            @foreach ($jurusans as $jurusan)
-                                <option value="{{ $jurusan->jurusan_id }}">{{ $jurusan->nama_jurusan }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3 col-12">
-                    <div class="form-group">
-                        <label for="#">Kelas</label>
-                        <select name="kelas_id" id="kelas_id" class="form-control select2" disabled>
-                        </select>
-                    </div>
+
                 </div>
             </div>
         </div>
@@ -59,18 +21,51 @@
     <form action="/siswa/do-naik-kelas" method="post" id="form">
         @csrf
         <div class="card">
+            <div class="card-header">
+                <button type="button" class="btn-dark" id="btn-naik-kelas">
+                    <i class="ri-check-line"></i>
+                    Naik Kelas
+                </button>
+            </div>
+            <div class="card-header">
+                <div class="row">
+                    <div class="col-md-2 col-12">
+                        <div class="form-group">
+                            <label for="#">Tingkatan</label>
+                            <select name="tingkatan_id" id="tingkatan_id" class="form-control select2">
+                                <option value=""></option>
+                                @foreach ($tingkatans as $key => $value)
+                                    <option value="{{ $key }}">{{ $value }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-12">
+                        <div class="form-group">
+                            <label for="#">Kelas</label>
+                            <select name="kelas_id" id="kelas_id" class="form-control select2">
+                                <option value=""></option>
+                                @foreach ($kelases as $kelas)
+                                    <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                        {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-12 table-responsive">
                         <table class="table table-bordered" id="tbl-siswa" style="width: 100%">
                             <thead>
                                 <tr>
-                                    <th style="width: 5px">#</th>
+                                    <th width="5px">#</th>
                                     <th class="text-center"><input type="checkbox" name="check_all" id="check_all"></th>
                                     <th>Username</th>
                                     <th>Nama Siswa</th>
                                     <th>Tingkatan</th>
-                                    <th>Jurusan</th>
                                     <th>Kelas</th>
                                 </tr>
                             </thead>
@@ -109,7 +104,6 @@
                     url: "{{ url('getDataSiswaNaikKelas') }}",
                     data: function(data) {
                         data.tingkatan = $("#tingkatan_id").val();
-                        data.jurusan_id = $("#jurusan_id").val();
                         data.kelas_id = $("#kelas_id").val();
                     }
                 },
@@ -130,9 +124,6 @@
                     },
                     {
                         data: "tingkatan"
-                    },
-                    {
-                        data: "jurusan"
                     },
                     {
                         data: "kelas"
@@ -158,46 +149,16 @@
         }
 
         $("#tingkatan_id").select2(configSelect2);
-        $("#jurusan_id").select2(configSelect2);
         $("#kelas_id").select2(configSelect2);
 
         //change tingkatan
         $("#tingkatan_id").change(function() {
             const jurusan = $("#jurusan_id").val();
             const kelas = $("#kelas_id").val();
-            if (jurusan != null && kelas != null) {
+            if (jurusan != "" && kelas != "") {
                 clearDatatable();
                 loadDatatable();
             }
-        });
-
-        //change jurusan
-        $("#jurusan_id").change(function() {
-            $("#kelas_id").attr("disabled", true);
-            $("#kelas_id").html("");
-
-            $.ajax({
-                type: "POST",
-                url: "/getDataKelasByJurusan",
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                data: {
-                    jurusan_id: $(this).val(),
-                },
-                dataType: "json",
-                success: function(response) {
-                    console.log(response);
-                    let opt = "<option value=''></option>";
-                    for (let i = 0; i < response.kelases.length; i++) {
-                        opt +=
-                            `<option value="${response.kelases[i].kelas_id}">${response.kelases[i].nama_kelas}</option>`;
-                    }
-
-                    $("#kelas_id").html(opt);
-                    $("#kelas_id").attr("disabled", false);
-                }
-            });
         });
 
         //filter kelas
