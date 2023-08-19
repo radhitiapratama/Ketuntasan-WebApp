@@ -260,7 +260,7 @@ class KelasController extends Controller
                     ->where('km.kelas_id', $arr[1]);
             }
 
-            $count = $query->count();
+            $count = count($query->groupBy("km.tingkatan", "km.kelas_id")->get());
 
             $result = $query->groupBy('km.tingkatan', 'km.kelas_id')
                 ->offset($request->start)
@@ -339,16 +339,21 @@ class KelasController extends Controller
 
     public function kelasMapel_add()
     {
-        $sql_jurusan = DB::table("jurusan")
-            ->where('status', 1)
-            ->get();
-
         $sql_mapel = DB::table("mapel")
             ->where('status', 1)
             ->get();
 
+        $sql_kelas = Kelas::with([
+            'jurusan' => function ($query) {
+                $query->select("jurusan_id", 'nama_jurusan')
+                    ->where("status", 1);
+            }
+        ])
+            ->where("status", 1)
+            ->get();
+
         $dataToView = [
-            'jurusans' => $sql_jurusan,
+            'kelases' => $sql_kelas,
             'tingkatans' => $this->tingkatans,
             'mapels' => $sql_mapel,
         ];
@@ -376,16 +381,26 @@ class KelasController extends Controller
 
     public function kelasMapel_store(Request $request)
     {
-        $validated = $request->validate([
-            'tingkatan' => "required",
-            'jurusan' => "required",
-            'kelas' => "required",
-            'mapel_id' => "required",
-            'guru_id' => "required",
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'tingkatan' => "required",
+                'kelas' => "required",
+                'mapel_id' => "required",
+                'guru_id' => "required",
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator);
+        }
 
         $mapel_id = $request->mapel_id;
         $guru_id = $request->guru_id;
+
+        // [0] => jurusan_id
+        // [1] => kelas_id
+        $arrKelas = explode("|", $request->kelas);
 
         $tahun_ajaran = TahunAjaran::select('tahun_ajaran_id')->where("superadmin_aktif", 1)->first();
 
@@ -394,8 +409,8 @@ class KelasController extends Controller
             $sql_check = DB::table("kelas_mapel")
                 ->select('kelas_mapel_id')
                 ->where('tingkatan', $request->tingkatan)
-                ->where('jurusan_id', $request->jurusan)
-                ->where('kelas_id', $request->kelas)
+                ->where('jurusan_id', $arrKelas[0])
+                ->where('kelas_id', $arrKelas[1])
                 ->where('user_id', $guru_id[$i])
                 ->where('mapel_id', $mapel_id[$i])
                 ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
@@ -408,8 +423,8 @@ class KelasController extends Controller
             DB::table("kelas_mapel")
                 ->insert([
                     'tingkatan' => $request->tingkatan,
-                    'jurusan_id' => $request->jurusan,
-                    'kelas_id' => $request->kelas,
+                    'jurusan_id' => $arrKelas[0],
+                    'kelas_id' => $arrKelas[1],
                     'user_id' => $guru_id[$i],
                     'mapel_id' => $mapel_id[$i],
                     'tahun_ajaran_id' => $tahun_ajaran->tahun_ajaran_id,

@@ -28,7 +28,7 @@
                     <div class="form-group">
                         <label for="#">Tingkatan</label>
                         <select name="tingkatan_id" id="tingkatan_id" class="form-control select2">
-                            <option value=""></option>
+                            <option value="">Pilih...</option>
                             @foreach ($tingkatans as $key => $value)
                                 <option value="{{ $key }}">{{ $value }}</option>
                             @endforeach
@@ -37,19 +37,24 @@
                 </div>
                 <div class="col-md-3 col-12">
                     <div class="form-group">
-                        <label for="#">Jurusan</label>
-                        <select name="jurusan_id" id="jurusan_id" class="form-control select2">
-                            <option value=""></option>
-                            @foreach ($jurusans as $jurusan)
-                                <option value="{{ $jurusan->jurusan_id }}">{{ $jurusan->nama_jurusan }}</option>
+                        <label for="#">Kelas</label>
+                        <select name="kelas_id" id="kelas_id" class="form-control select2">
+                            <option value="">Pilih...</option>
+                            @foreach ($kelases as $kelas)
+                                <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                    {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
                 </div>
                 <div class="col-md-3 col-12">
                     <div class="form-group">
-                        <label for="#">Kelas</label>
-                        <select name="kelas_id" id="kelas_id" class="form-control select2" disabled>
+                        <label for="#">Semester</label>
+                        <select name="semester" id="semester" class="form-control">
+                            <option value="">Pilih...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
                         </select>
                     </div>
                 </div>
@@ -75,57 +80,20 @@
         const configSelect2 = {
             theme: "bootstrap4",
             width: "100%",
-            placeholder: "Pilih..."
         }
 
         const csrfToken = $("meta[name='csrf-token']").attr("content");
 
         $("#tingkatan_id").select2(configSelect2);
-        $("#jurusan_id").select2(configSelect2);
         $("#kelas_id").select2(configSelect2);
-
-        $("#tingkatan_id").change(function() {
-            $("#jurusan_id").attr("disabled", false);
-        });
-
-        $("#jurusan_id").change(function() {
-            $("#kelas_id").html("");
-            $("#kelas_id").attr("disabled", true);
-            $.ajax({
-                type: "POST",
-                url: "/getDataKelasByJurusan",
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                data: {
-                    jurusan_id: $(this).val(),
-                },
-                dataType: "json",
-                success: function(response) {
-                    console.log(response);
-                    let opt = '<option value=""></option>';
-                    for (let i = 0; i < response.kelases.length; i++) {
-                        opt +=
-                            `<option value="${response.kelases[i].kelas_id}">${response.kelases[i].nama_kelas}</option>`;
-                    }
-                    $("#kelas_id").html(opt);
-                    $("#kelas_id").attr("disabled", false);
-                }
-            });
-        });
-
-        $("#kelas_id").change(function() {
-            $("input[name='username']").attr("disabled", false);
-            $("input[name='password']").attr("disabled", false);
-            $("input[name='nama_siswa']").attr("disabled", false);
-        });
+        $("#semester").select2(configSelect2);
 
         $("#btn-submit").click(function() {
             const tingkatan = $("#tingkatan_id").val();
-            const jurusan = $("#jurusan_id").val();
             const kelas = $("#kelas_id").val();
+            const semester = $("#semester").val();
 
-            if (tingkatan == "" || tingkatan == null || jurusan == "" || jurusan == null || kelas == "" || kelas ==
+            if (tingkatan == "" || tingkatan == null || kelas == "" || kelas ==
                 null) {
                 Swal.fire({
                     title: "Gagal !",
@@ -151,8 +119,8 @@
                 },
                 data: {
                     tingkatan_id: $("#tingkatan_id").val(),
-                    jurusan_id: $("#jurusan_id").val(),
                     kelas_id: $("#kelas_id").val(),
+                    semester: $("#semester").val(),
                 },
                 dataType: "json",
                 success: function(response) {

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->integer('user_aktif')->default(0);
             $table->integer('superadmin_aktif')->default(0);
             $table->timestamps();
-            $table->integer("creted_by")->nullable();
+            $table->integer("created_by")->nullable();
             $table->integer("updated_by")->nullable();
         });
     }

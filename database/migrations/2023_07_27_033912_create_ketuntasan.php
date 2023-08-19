@@ -23,7 +23,7 @@ return new class extends Migration
             $table->foreignId("tahun_ajaran_id")->references('tahun_ajaran_id')->on("tahun_ajaran");
             $table->integer('semester');
             $table->timestamps();
-            $table->integer("creted_by")->nullable();
+            $table->integer("created_by")->nullable();
             $table->integer("updated_by")->nullable();
         });
     }

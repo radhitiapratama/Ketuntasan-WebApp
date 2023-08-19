@@ -3,7 +3,7 @@
 @section('content')
     <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('plugins/toastr/toastr.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
 
     <div class="card mb-1">
         <div class="card-body">
@@ -11,7 +11,7 @@
                 <div
                     class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
                     <h1 class="page-title">Edit Ketuntasan</h1>
-                    <form action="{{ url('ketuntasan/kelas/siswa') }}" method="post">
+                    <form action="{{ url('ketuntasan/siswas/show') }}" method="post">
                         @csrf
                         <input type="hidden" name="tingkatan" value="{{ $tingkatan }}">
                         <input type="hidden" name="jurusan_id" value="{{ $jurusan_id }}">
@@ -30,8 +30,7 @@
         <div class="card-body">
             <div class="row justify-content-center">
                 <div class="col-md-6 col-12">
-                    <form action="{{ url('ketuntasan/update') }}" method="POST">
-                        @csrf
+                    <form action="" method="POST">
                         <input type="hidden" name="ketuntasan_id" value="{{ $ketuntasan->ketuntasan_id }}">
                         <input type="hidden" name="tingkatan" value="{{ $tingkatan }}">
                         <input type="hidden" name="jurusan_id" value="{{ $jurusan_id }}">
@@ -58,7 +57,7 @@
                                 {{ $ketuntasan->desc }}
                             </textarea>
                         </div>
-                        <button type="submit" class="btn-dark m-auto">
+                        <button type="button" class="btn-dark m-auto" id="btn-edit">
                             <i class="ri-check-line"></i>
                             Update
                         </button>
@@ -68,41 +67,82 @@
         </div>
     </div>
 
-    <script src="{{ asset('plugins/toastr/toastr.min.js') }}"></script>
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
-
-    <script>
-        toastr.options = {
-            "closeButton": false,
-            "debug": false,
-            "newestOnTop": false,
-            "progressBar": true,
-            "positionClass": "toast-top-right",
-            "preventDuplicates": false,
-            "onclick": null,
-            "showDuration": "300",
-            "hideDuration": "1000",
-            "timeOut": "8000",
-            "extendedTimeOut": "1000",
-            "showEasing": "swing",
-            "hideEasing": "linear",
-            "showMethod": "fadeIn",
-            "hideMethod": "fadeOut"
-        }
-
-        @if (session()->has('successUpdate'))
-            toastr['success']("Data Ketuntasan berhasil di update");
-        @endif
-    </script>
+    <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 
     <script>
         $(document).on('select2:open', () => {
             document.querySelector('.select2-search__field').focus();
         });
 
+
+        function showLoading() {
+            Swal.fire({
+                title: "Sedang memprosess,",
+                text: "Jangan tutup Browser / tekan tombol kembali",
+                icon: "info",
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+            });
+        }
+
+        function hideLoading() {
+            Swal.close();
+        }
+
         $("#tuntas").select2({
             theme: "bootstrap4",
             width: "100%",
-        })
+        });
+
+        const csrfToken = $("meta[name='csrf-token']").attr("content");
+
+        $("#btn-edit").click(function() {
+            showLoading();
+            $.ajax({
+                type: "POST",
+                url: "{{ url('ketuntasan/update') }}",
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                data: {
+                    ketuntasan_id: {{ $ketuntasan->ketuntasan_id }},
+                    tuntas: $("#tuntas").val(),
+                    deskripsi: $("#deskripsi").val(),
+                },
+                dataType: "json",
+                success: function(response) {
+                    if (response.message == 'success') {
+                        hideLoading();
+                        Swal.fire({
+                            title: "Ketuntasan siswa berhasil di update",
+                            icon: "success",
+                            iconColor: 'white',
+                            customClass: {
+                                popup: 'colored-toast'
+                            },
+                            toast: true,
+                            position: 'top-right',
+                            showConfirmButton: false,
+                            timer: 4000,
+                            timerProgressBar: true
+                        });
+
+                        let text = "";
+                        let value = "";
+                        if (response.ketuntasan.tuntas == 1) {
+                            text = "Tuntas";
+                            value = 1;
+                        } else {
+                            text = "Belum Tuntas";
+                            value = 0;
+                        }
+                        $("select[name='status']").val(value).trigger("change");
+                        $("#deskripsi").val(response.ketuntasan.desc);
+                    }
+                }
+            });
+        });
     </script>
 @endsection

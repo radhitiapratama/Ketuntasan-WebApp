@@ -94,7 +94,8 @@ class BatasWaktuController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'batas_waktu' => "required",
+                'tgl_mulai' => "required",
+                'tgl_selesai' => "required",
             ],
             [
                 'required' => ":attribute wajib di isi"

@@ -5,12 +5,10 @@
     <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
 
-    <div class="card mb-1">
+    <div class="card mb-3">
         <div class="card-body">
             <div class="row">
-                <div
-                    class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
-                    <h1 class="page-title">Tambah Kelas Mapel</h1>
+                <div class="col-12 d-flex justify-content-end">
                     <a href="/kelas-mapel" class="btn-dark">
                         <i class="ri-arrow-left-line"></i>
                         Kembali
@@ -20,43 +18,42 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <div class="row justify-content-center">
-                <div class="col-md-10 col-12">
+    <div class="row">
+        <div class="col-md-8 col-12 ">
+            <div class="card">
+                <div class="card-header py-4">
+                    <h3 class="card-title" style="font-weight: bold">Tambah Kelas Mapel</h3>
+                </div>
+                <div class="card-body">
                     <form action="/kelas-mapel/store" method="POST">
                         @csrf
                         <div class="row mb-3">
-                            <div class="col-md-4 col-12 mb-3 mb-md-0">
+                            <div class="col-md-5 col-12 mb-3 mb-md-0">
                                 <label for="tingkatan">Tingkatan</label>
                                 <select name="tingkatan" id="select2-1" class="form-control select2 select-tingkatan"
                                     required>
-                                    <option value=""></option>
+                                    <option value="">Pilih..</option>
                                     @foreach ($tingkatans as $key => $value)
                                         <option value="{{ $key }}">{{ $value }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-4 col-12 mb-3 mb-md-0">
-                                <label for="jurusan">Jurusan</label>
-                                <select name="jurusan" id="select2-2" class="form-control select2 select-jurusan" disabled
-                                    required>
-                                    <option value=""></option>
-                                    @foreach ($jurusans as $jurusan)
-                                        <option value="{{ $jurusan->jurusan_id }}">{{ $jurusan->nama_jurusan }}</option>
+                            <div class="col-md-7 col-12 mb-3 mb-md-0">
+                                <label for="kelas">Kelas</label>
+                                <select name="kelas" id="select2-2" class="form-control select2 select-kelas"required>
+                                    <option value="">Pilih..</option>
+                                    @foreach ($kelases as $kelas)
+                                        <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                            {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-4 col-12 mb-3 mb-md-0">
-                                <label for="kelas">Kelas</label>
-                                <select name="kelas" id="select2-3" class="form-control select2 select-kelas" disabled
-                                    required>
-                                </select>
-                            </div>
                         </div>
+
                         <div class="mapel-wrapper">
-                            <div class="row mb-3 justify-content-center">
+                            <div class="row mb-3">
                                 <div class="col-md-5 col-12 mb-3 mb-md-0">
                                     <div class="form-group parent_mapel_1" id="1">
                                         <label for="mapel_id">Nama Mapel</label>
@@ -64,12 +61,13 @@
                                             required>
                                             <option value=""></option>
                                             @foreach ($mapels as $mapel)
-                                                <option value="{{ $mapel->mapel_id }}">{{ $mapel->nama_mapel }}</option>
+                                                <option value="{{ $mapel->mapel_id }}">{{ $mapel->nama_mapel }}
+                                                </option>
                                             @endforeach
                                         </select>
                                     </div>
                                 </div>
-                                <div class="col-md-5 col-12 mb-3 mb-md-0">
+                                <div class="col-md-7 col-12 mb-3 mb-md-0">
                                     <div class="form-group parent_guru_1" id="1">
                                         <label for="guru_id">Nama Guru</label>
                                         <select name="guru_id[]" id="guru_id_1" class="form-control select-guru" disabled
@@ -79,6 +77,7 @@
                                 </div>
                             </div>
                         </div>
+
                         <div class="row mb-3">
                             <div class="col-12">
                                 <button type="button" class="btn-dark m-auto d-none" id="btn-add-mapel">
@@ -86,7 +85,7 @@
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" class="btn-dark m-auto">
+                        <button type="submit" class="btn-dark">
                             <i class="ri-check-line"></i>
                             Submit
                         </button>
@@ -96,7 +95,7 @@
         </div>
     </div>
 
-    <div class="row mb-3 justify-content-center clone-el d-none">
+    <div class="row mb-3  clone-el d-none">
         <div class="col-md-5 col-12 mb-3 mb-md-0">
             <div class="form-group parent-mapel" id="1">
                 <label for="mapel_id">Nama Mapel</label>
@@ -108,7 +107,7 @@
                 </select>
             </div>
         </div>
-        <div class="col-md-5 col-12 mb-3 mb-md-0">
+        <div class="col-md-7 col-12 mb-3 mb-md-0">
             <div class="form-group parent-guru input-wrapper" id="1">
                 <label for="guru_id">Nama Guru</label>
                 <select name="guru_id[]" id="guru_id_1" class="form-control select-guru" disabled required>
@@ -154,43 +153,8 @@
             $(`#select2-${i}`).select2({
                 theme: "bootstrap4",
                 width: "100%",
-                placeholder: "Pilih...",
             });
         }
-
-        // select tingkatan
-        $(".select-tingkatan").change(function() {
-            $(".select-jurusan").removeAttr("disabled");
-        });
-
-
-        // select jurusan
-        $(".select-jurusan").change(function() {
-            $(".select-kelas").html("");
-            $(".select-kelas").attr('disabled', true);
-
-            $.ajax({
-                type: "POST",
-                url: "/getDataKelasByJurusan",
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                data: {
-                    jurusan_id: $(this).val(),
-                },
-                dataType: "json",
-                success: function(response) {
-                    let opt = `<option value=""></option>`;
-                    for (let i = 0; i < response.kelases.length; i++) {
-                        opt +=
-                            `<option value="${response.kelases[i].kelas_id}">${response.kelases[i].nama_kelas}</option>`
-                    }
-
-                    $(".select-kelas").html(opt);
-                    $(".select-kelas").attr('disabled', false);
-                }
-            });
-        });
 
         // select kelas
         $(".select-kelas").change(function() {

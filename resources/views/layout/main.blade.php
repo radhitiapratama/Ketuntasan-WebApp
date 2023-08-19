@@ -40,7 +40,7 @@
         <!-- /.navbar -->
 
         <!-- Main Sidebar Container -->
-        <aside class="main-sidebar sidebar-light-primary elevation-4">
+        <aside class="main-sidebar sidebar-light-primary">
             @include('layout.sidebar')
         </aside>
 
@@ -60,9 +60,9 @@
         </footer>
 
         <!-- Control Sidebar -->
-        <aside class="control-sidebar control-sidebar-dark">
+        {{-- <aside class="control-sidebar control-sidebar-dark">
             <!-- Control sidebar content goes here -->
-        </aside>
+        </aside> --}}
         <!-- /.control-sidebar -->
     </div>
     <!-- ./wrapper -->

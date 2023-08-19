@@ -313,3 +313,11 @@
 }
 
 /* End Custom Alert */
+
+label {
+    font-size: 14px;
+}
+
+.vertical-align-middle {
+    vertical-align: middle !important;
+}

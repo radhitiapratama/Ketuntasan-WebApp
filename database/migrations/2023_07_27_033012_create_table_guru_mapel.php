@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId("mapel_id")->references('mapel_id')->on("mapel")->onDelete('cascade');
             $table->integer("status")->default(1);
             $table->timestamps();
-            $table->integer("creted_by")->nullable();
+            $table->integer("created_by")->nullable();
             $table->integer("updated_by")->nullable();
         });
     }

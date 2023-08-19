@@ -101,7 +101,7 @@ class KetuntasanController extends Controller
 
                         $subData['settings'] = '
                         <div class="setting-icons">
-                            <form action="' . url("ketuntasan/kelas") . '" method="post">
+                            <form action="' . url("ketuntasan/siswas") . '" method="post">
                                 ' . csrf_field() . '
                                 <input type="hidden" name="tingkatan" value="' . $row->tingkatan . '">
                                 <input type="hidden" name="jurusan_id" value="' . $row->jurusan_id . '">
@@ -270,10 +270,17 @@ class KetuntasanController extends Controller
 
     public function add()
     {
-        $sql_jurusan = Jurusan::where('status', 1)->get();
+        $sql_kelas = Kelas::with([
+            'jurusan' => function ($query) {
+                $query->select("jurusan_id", 'nama_jurusan')
+                    ->where("status", 1);
+            }
+        ])
+            ->where("status", 1)
+            ->get();
 
         $dataToView = [
-            'jurusans' => $sql_jurusan,
+            'kelases' => $sql_kelas,
             'tingkatans' => $this->tingkatans,
         ];
 
@@ -283,16 +290,19 @@ class KetuntasanController extends Controller
     public function store(Request $request)
     {
         $tingkatan_id = $request->tingkatan_id;
-        $jurusan_id = $request->jurusan_id;
-        $kelas_id = $request->kelas_id;
+        $semester = $request->semester;
+
+        // [0] => jurusan_id
+        // [1] => kelas_id
+        $kelasArr = explode("|", $request->kelas_id);
 
         $tahun_ajaran  = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
         $sql_mapel = DB::table('kelas_mapel')
             ->select('kelas_mapel_id')
             ->where('tingkatan', $tingkatan_id)
-            ->where('jurusan_id', $jurusan_id)
-            ->where('kelas_id', $kelas_id)
+            ->where('jurusan_id', $kelasArr[0])
+            ->where('kelas_id', $kelasArr[1])
             ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
             ->get();
 
@@ -307,8 +317,8 @@ class KetuntasanController extends Controller
         $sql_user = DB::table("users")
             ->select('user_id')
             ->where('tingkatan', $tingkatan_id)
-            ->where('jurusan_id', $jurusan_id)
-            ->where('kelas_id', $kelas_id)
+            ->where('jurusan_id', $kelasArr[0])
+            ->where('kelas_id', $kelasArr[1])
             ->where('status', 1)
             ->where('role', 3)
             ->get();
@@ -323,6 +333,7 @@ class KetuntasanController extends Controller
 
         foreach ($sql_user as $user) {
             foreach ($sql_mapel as $mapel) {
+                // check duplicate ketuntasan
                 $sql_check = DB::table("ketuntasan")
                     ->select('ketuntasan_id')
                     ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
@@ -339,16 +350,7 @@ class KetuntasanController extends Controller
                         'user_id' => $user->user_id,
                         'kelas_mapel_id' => $mapel->kelas_mapel_id,
                         'tahun_ajaran_id' => $tahun_ajaran->tahun_ajaran_id,
-                        'semester' => 1,
-                        'created_at' => Carbon::now(),
-                    ]);
-
-                DB::table('ketuntasan')
-                    ->insert([
-                        'user_id' => $user->user_id,
-                        'kelas_mapel_id' => $mapel->kelas_mapel_id,
-                        'tahun_ajaran_id' => $tahun_ajaran->tahun_ajaran_id,
-                        'semester' => 2,
+                        'semester' => $semester,
                         'created_at' => Carbon::now(),
                     ]);
             }
@@ -429,7 +431,8 @@ class KetuntasanController extends Controller
         ]);
     }
 
-    public function kelas(Request $request)
+    // Ketuntasan Siswa
+    public function siswa(Request $request)
     {
         $tingkatan = $request->tingkatan;
         $jurusan_id = $request->jurusan_id;
@@ -438,11 +441,13 @@ class KetuntasanController extends Controller
         if ($request->isMethod("GET")) {
 
             if ($request->ajax()) {
+                $tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
+
                 $columnsSearch = ['username', 'nama'];
                 $table = DB::table("users");
 
                 $query = $table
-                    ->select('user_id', 'username', 'nama')
+                    ->select('user_id', 'nama')
                     ->where('tingkatan', $tingkatan)
                     ->where('jurusan_id', $jurusan_id)
                     ->where('kelas_id', $kelas_id);
@@ -455,7 +460,7 @@ class KetuntasanController extends Controller
                     });
                 }
 
-                $records = $query->count();
+                $records  = $table->count();
 
                 $result = $query->offset($request->start)->limit($request->length)->get();
 
@@ -466,12 +471,56 @@ class KetuntasanController extends Controller
                     foreach ($result as $row) {
                         $no++;
                         $subData['no'] = $no;
-                        $subData['username'] = $row->username;
                         $subData['nama'] = $row->nama;
+
+                        //total mapel
+                        $sql_total_mapel = DB::table("kelas_mapel")
+                            ->select("kelas_mapel_id")
+                            ->where("tingkatan", $tingkatan)
+                            ->where('jurusan_id', $jurusan_id)
+                            ->where('kelas_id', $kelas_id)
+                            ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
+                            ->where("status", 1)
+                            ->count();
+
+                        // mapel tuntas semester 1
+                        $sql_tuntas_semester1 = DB::table("ketuntasan as k")
+                            ->select('k.ketuntasan_id')
+                            ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
+                            ->where("k.user_id", $row->user_id)
+                            ->where("k.tuntas", 1)
+                            ->where("k.semester", 1)
+                            ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
+                            ->where('km.status', 1)
+                            ->count();
+
+                        // mapel tuntas semester 2
+                        $sql_tuntas_semester2 = DB::table("ketuntasan as k")
+                            ->select('k.ketuntasan_id')
+                            ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
+                            ->where("k.user_id", $row->user_id)
+                            ->where("k.tuntas", 1)
+                            ->where("k.semester", 2)
+                            ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
+                            ->where('km.status', 1)
+                            ->count();
+
+
+                        $subData['semester1'] = '
+                        <div class="text-center">
+                            ' . $sql_tuntas_semester1 . " / " . $sql_total_mapel . '
+                        </div>
+                        ';
+
+                        $subData['semester2'] = '
+                        <div class="text-center">
+                            ' . $sql_tuntas_semester2 . " / " . $sql_total_mapel . '
+                        </div>
+                        ';
 
                         $subData['settings'] = '
                         <div class="setting-icons">
-                            <form action="' . url("ketuntasan/kelas/siswa") . '" method="post">
+                            <form action="' . url("ketuntasan/siswas/show") . '" method="post">
                             ' . csrf_field() . '
                                 <input type="hidden" name="tingkatan" value="' . $tingkatan . '">
                                 <input type="hidden" name="jurusan_id" value="' . $jurusan_id . '">
@@ -515,10 +564,11 @@ class KetuntasanController extends Controller
             'kelas_id' => $kelas_id,
         ];
 
-        return view('pages.ketuntasan.kelas', $dataToView);
+        return view('pages.ketuntasan.siswa', $dataToView);
     }
 
-    public function siswa(Request $request)
+    // Detail ketuntasan siswa
+    public function siswa_show(Request $request)
     {
         $tingkatan = $request->tingkatan;
         $jurusan_id = $request->jurusan_id;
@@ -589,7 +639,7 @@ class KetuntasanController extends Controller
 
                         $subData['settings'] = '
                         <div class="setting-icons">
-                            <form action="' . url("ketuntasan/kelas/siswa/edit") . '" method="post">
+                            <form action="' . url("ketuntasan/siswas/edit") . '" method="post">
                             ' . csrf_field() . '
                                 <input type="hidden" name="tingkatan" value="' . $tingkatan . '">
                                 <input type="hidden" name="jurusan_id" value="' . $jurusan_id . '">
@@ -636,7 +686,7 @@ class KetuntasanController extends Controller
             'siswa' => $sql_siswa,
         ];
 
-        return view("pages.ketuntasan.siswa", $dataToView);
+        return view("pages.ketuntasan.detail", $dataToView);
     }
 
     public function guru_kelas(Request $request)

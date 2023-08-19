@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string("nama_mapel", 255)->unique();
             $table->integer("status")->default(1);
             $table->timestamps();
-            $table->integer("creted_by")->nullable();
+            $table->integer("created_by")->nullable();
             $table->integer("updated_by")->nullable();
         });
     }
