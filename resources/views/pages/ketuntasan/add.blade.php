@@ -20,47 +20,46 @@
             </div>
         </div>
     </div>
-
-    <div class="card mb-1">
-        <div class="card-body">
-            <div class="row justify-content-center mb-3">
-                <div class="col-md-3 col-12">
-                    <div class="form-group">
-                        <label for="#">Tingkatan</label>
-                        <select name="tingkatan_id" id="tingkatan_id" class="form-control select2">
-                            <option value="">Pilih...</option>
-                            @foreach ($tingkatans as $key => $value)
-                                <option value="{{ $key }}">{{ $value }}</option>
-                            @endforeach
-                        </select>
+    <div class="row">
+        <div class="col-md-8 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 col-12">
+                            <div class="form-group">
+                                <label for="#">Tingkatan</label>
+                                <select name="tingkatan_id" id="tingkatan_id" class="form-control select2">
+                                    <option value="">Pilih...</option>
+                                    @foreach ($tingkatans as $key => $value)
+                                        <option value="{{ $key }}">{{ $value }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-12">
+                            <div class="form-group">
+                                <label for="#">Kelas</label>
+                                <select name="kelas_id" id="kelas_id" class="form-control select2">
+                                    <option value="">Pilih...</option>
+                                    @foreach ($kelases as $kelas)
+                                        <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                            {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-12">
+                            <div class="form-group">
+                                <label for="#">Semester</label>
+                                <select name="semester" id="semester" class="form-control">
+                                    <option value="">Pilih...</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-md-3 col-12">
-                    <div class="form-group">
-                        <label for="#">Kelas</label>
-                        <select name="kelas_id" id="kelas_id" class="form-control select2">
-                            <option value="">Pilih...</option>
-                            @foreach ($kelases as $kelas)
-                                <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
-                                    {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-3 col-12">
-                    <div class="form-group">
-                        <label for="#">Semester</label>
-                        <select name="semester" id="semester" class="form-control">
-                            <option value="">Pilih...</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-12 d-flex justify-content-center">
                     <button type="button" class="btn-dark" id="btn-submit">
                         <i class="ri-check-line"></i>
                         Submit
@@ -126,33 +125,69 @@
                 success: function(response) {
                     console.log(response);
                     Swal.close();
+
+                    if (response.message == "empty_batasWaktu") {
+                        swal.fire({
+                            title: "Gagal",
+                            text: "Silahkan tambahkan batas waktu terlebih dahulu !",
+                            icon: "warning",
+                        });
+
+                        return;
+                    }
+
                     if (response.message == "success") {
                         Swal.fire({
-                            title: "Berhasil",
-                            text: "Data Ketuntasan berhasil di buat",
+                            title: "Data ketuntasan berhasil di buat",
                             icon: "success",
+                            iconColor: 'white',
+                            customClass: {
+                                popup: 'colored-toast'
+                            },
+                            toast: true,
+                            position: 'top-right',
+                            showConfirmButton: false,
+                            timer: 5000,
+                            timerProgressBar: true
                         });
 
                         $("#tingkatan_id").val("").trigger("change.select2");
                         $("#jurusan_id").val("").trigger("change.select2");
                         $("#kelas_id").val("").trigger("change.select2");
+                        $("#semester").val("").trigger("change.select2");
                         return;
                     }
 
                     if (response.message == "empty_mapel") {
                         Swal.fire({
-                            title: "Gagal !",
-                            text: "Kelas tidak punya mapel !",
+                            title: "Gagal kelas tidak punya mapel",
                             icon: "error",
+                            iconColor: 'white',
+                            customClass: {
+                                popup: 'colored-toast'
+                            },
+                            toast: true,
+                            position: 'top-right',
+                            showConfirmButton: false,
+                            timer: 5000,
+                            timerProgressBar: true
                         });
                         return;
                     }
 
                     if (response.message == 'empty_siswa') {
                         Swal.fire({
-                            title: "Gagal !",
-                            text: "Tidak ada data siswa di kelas yang di pilih !",
+                            title: "Gagal tidak ada data siswa di kelas yg di pilih",
                             icon: "error",
+                            iconColor: 'white',
+                            customClass: {
+                                popup: 'colored-toast'
+                            },
+                            toast: true,
+                            position: 'top-right',
+                            showConfirmButton: false,
+                            timer: 5000,
+                            timerProgressBar: true
                         });
                         return;
                     }

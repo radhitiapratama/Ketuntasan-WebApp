@@ -21,95 +21,103 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <div class="row justify-content-center">
-                <div class="col-md-10 col-12">
-                    <form action="/kelas-mapel/update" method="POST">
-                        @csrf
+    <div class="row">
+        <div class="col-md-8 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <form action="/kelas-mapel/update" method="POST">
+                                @csrf
 
-                        <input type="hidden" name="tingkatan_id" value="{{ $tingkatan_id }}">
-                        <input type="hidden" name="jurusan_id" value="{{ $jurusan_id }}">
-                        <input type="hidden" name="kelas_id" value="{{ $kelas_id }}">
+                                <input type="hidden" name="tingkatan_id" value="{{ $tingkatan_id }}">
+                                <input type="hidden" name="jurusan_id" value="{{ $jurusan_id }}">
+                                <input type="hidden" name="kelas_id" value="{{ $kelas_id }}">
 
-                        <div class="row justify-content-center">
-                            <div class="col-md-3 col-12">
-                                <div class="form-group">
-                                    <label for="tingkatan">Tingkatan</label>
-                                    <input type="text" class="form-control" id="tingkatan" disabled
-                                        @if ($detail->tingkatan == 1) value="X" @endif
-                                        @if ($detail->tingkatan == 2) value="XI" @endif
-                                        @if ($detail->tingkatan == 3) value="XII" @endif>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-12">
-                                <div class="form-group">
-                                    <label for="jurusan">Jurusan</label>
-                                    <input type="text" class="form-control" id="jurusan" disabled
-                                        value="{{ $detail->nama_jurusan }}">
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-12">
-                                <div class="form-group">
-                                    <label for="kelas">Kelas</label>
-                                    <input type="text" class="form-control" id="kelas" disabled
-                                        value="{{ $detail->nama_kelas }}">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mapels">
-                            @foreach ($kelas_mapels as $kelas_mapel)
-                                <input type="hidden" name="kelas_mapel_id[]" value="{{ $kelas_mapel->kelas_mapel_id }}">
                                 <div class="row">
-                                    <div class="col-md-4 col-12">
-                                        <div class="form-group" id="{{ $loop->iteration }}">
-                                            <label for="#">Mapel</label>
-                                            <select name="mapel_id[]" id="mapel_id_{{ $loop->iteration }}"
-                                                class="form-control select-mapel" required>
-                                                @foreach ($mapels as $mapel)
-                                                    <option value="{{ $mapel->mapel_id }}" @selected($mapel->mapel_id == $kelas_mapel->mapel_id)>
-                                                        {{ $mapel->nama_mapel }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 col-12">
-                                        <div class="form-group" id="{{ $loop->iteration }}">
-                                            <label for="#">Guru</label>
-                                            <select name="guru_id[]" id="guru_id_{{ $loop->iteration }}"
-                                                class="form-control select-guru" required>
-                                                @foreach ($kelas_mapel->guru_mapel_user as $kmUser)
-                                                    <option value="{{ $kmUser->user_id }}" @selected($kmUser->user_id == $kelas_mapel->user_id)>
-                                                        {{ $kmUser->nama }}</option>
-                                                @endforeach
-                                            </select>
+                                    <div class="col-md-3 col-12">
+                                        <div class="form-group">
+                                            <label for="tingkatan">Tingkatan</label>
+                                            <input type="text" class="form-control" id="tingkatan" disabled
+                                                @if ($detail->tingkatan == 1) value="X" @endif
+                                                @if ($detail->tingkatan == 2) value="XI" @endif
+                                                @if ($detail->tingkatan == 3) value="XII" @endif>
                                         </div>
                                     </div>
                                     <div class="col-md-4 col-12">
                                         <div class="form-group">
-                                            <label for="#">Status</label>
-                                            <select name="status[]" id="status_{{ $loop->iteration }}"
-                                                class="form-control select-status" required>
-                                                @foreach ($statuses as $key => $value)
-                                                    <option value="{{ $key }}" @selected($key == $kelas_mapel->status)>
-                                                        {{ $value }}</option>
-                                                @endforeach
-                                            </select>
+                                            <label for="jurusan">Jurusan</label>
+                                            <input type="text" class="form-control" id="jurusan" disabled
+                                                value="{{ $detail->nama_jurusan }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-12">
+                                        <div class="form-group">
+                                            <label for="kelas">Kelas</label>
+                                            <input type="text" class="form-control" id="kelas" disabled
+                                                value="{{ $detail->nama_kelas }}">
                                         </div>
                                     </div>
                                 </div>
-                            @endforeach
+
+                                <div class="mapels">
+                                    @foreach ($kelas_mapels as $kelas_mapel)
+                                        <input type="hidden" name="kelas_mapel_id[]"
+                                            value="{{ $kelas_mapel->kelas_mapel_id }}">
+                                        <div class="row">
+                                            <div class="col-md-4 col-12">
+                                                <div class="form-group" id="{{ $loop->iteration }}">
+                                                    <label for="#">Mapel</label>
+                                                    <select name="mapel_id[]" id="mapel_id_{{ $loop->iteration }}"
+                                                        class="form-control select-mapel" required>
+                                                        @foreach ($mapels as $mapel)
+                                                            <option value="{{ $mapel->mapel_id }}"
+                                                                @selected($mapel->mapel_id == $kelas_mapel->mapel_id)>
+                                                                {{ $mapel->nama_mapel }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 col-12">
+                                                <div class="form-group" id="{{ $loop->iteration }}">
+                                                    <label for="#">Guru</label>
+                                                    <select name="guru_id[]" id="guru_id_{{ $loop->iteration }}"
+                                                        class="form-control select-guru" required>
+                                                        @foreach ($kelas_mapel->guru_mapel_user as $kmUser)
+                                                            <option value="{{ $kmUser->user_id }}"
+                                                                @selected($kmUser->user_id == $kelas_mapel->user_id)>
+                                                                {{ $kmUser->nama }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 col-12">
+                                                <div class="form-group">
+                                                    <label for="#">Status</label>
+                                                    <select name="status[]" id="status_{{ $loop->iteration }}"
+                                                        class="form-control select-status" required>
+                                                        @foreach ($statuses as $key => $value)
+                                                            <option value="{{ $key }}"
+                                                                @selected($key == $kelas_mapel->status)>
+                                                                {{ $value }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn-dark">
+                                            <i class="ri-check-line"></i>
+                                            Update
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <button type="submit" class="btn-dark m-auto">
-                                    <i class="ri-check-line"></i>
-                                    Update
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>

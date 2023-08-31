@@ -15,6 +15,7 @@
             </div>
         </div>
     </div>
+
     <div class="card">
         <div class="card-header">
             <div class="row">
@@ -31,12 +32,11 @@
                 <div class="col-12 table-responsive">
                     <table class="table table-bordered" id="tbl-detailSiswa" style="width: 100%">
                         <thead>
-                            <tr style="border-bottom: none !important">
-                                <th style="width: 5px">#</th>
-                                <th>Tingkatan</th>
-                                <th>Jurusan</th>
+                            <tr>
+                                <th width="5px">#</th>
+                                <th width="5px">Tingkatan</th>
                                 <th>Kelas</th>
-                                <th class="text-center">Pengaturan</th>
+                                <th width="100px" class="text-center ">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -65,17 +65,11 @@
                         data.mapel_id = {{ $mapel_id }};
                     }
                 },
-                drawCallback: function(res) {
-                    console.log(res.json)
-                },
                 columns: [{
                         data: "no"
                     },
                     {
                         data: "tingkatan"
-                    },
-                    {
-                        data: "jurusan"
                     },
                     {
                         data: "kelas"

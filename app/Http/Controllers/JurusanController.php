@@ -178,19 +178,26 @@ class JurusanController extends Controller
 
     public function importJurusan(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'file_import' => "required|mimes:xlsx,csv"
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'excel_file' => "required|mimes:xlsx"
+            ],
+            [
+                'excel_file.mimes' => 'Extensi file yg di import wajib .xlsx',
+                'excel_file.required' => "File yg ingin di import wajib di isi"
+            ]
+        );
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $file = $request->file("file_import");
+        $file = $request->file("excel_file");
 
         $jurusan = new JurusanImport;
         $jurusan->import($file);
 
-        return redirect("/jurusan")->with("successImport", "successImport");
+        return redirect("/jurusan")->with("successImport", "Data jurusan berhasil di import");
     }
 }

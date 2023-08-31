@@ -15,8 +15,9 @@ return new class extends Migration
     {
         Schema::create('guru_mapel', function (Blueprint $table) {
             $table->id("guru_mapel_id");
-            $table->foreignId("user_id")->references('user_id')->on("users")->onDelete('cascade');
-            $table->foreignId("mapel_id")->references('mapel_id')->on("mapel")->onDelete('cascade');
+            $table->foreignId("guru_id")->references("guru_id")->on("guru");
+            $table->foreignId("mapel_id")->references('mapel_id')->on("mapel");
+            $table->string("kode_guru_mapel")->nullable();
             $table->integer("status")->default(1);
             $table->timestamps();
             $table->integer("created_by")->nullable();

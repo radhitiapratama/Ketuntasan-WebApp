@@ -16,6 +16,13 @@
     --sm-rounded: 2px;
 }
 
+/* Datatable */
+
+table.dataTable thead th {
+    border-bottom: none;
+    border-top: none;
+}
+
 .nav-link.active {
     background-color: var(--primary) !important;
     color: #fff !important;
@@ -32,6 +39,10 @@
     color: var(--white) !important;
 }
 
+/* End Datatable */
+
+/* Bootstrap */
+
 .card {
     /* box-shadow: 0px 0px 24px rgba(0, 0, 0, 0.05) !important; */
     box-shadow: none !important;
@@ -42,7 +53,11 @@
     border: 1px solid var(--primary) !important;
 }
 
+/* End Bootstrap */
+
+/* Select2 */
 .select2-container--bootstrap4.select2-container--focus .select2-selection {
+
     border-color: var(--primary) !important;
     -webkit-box-shadow: none !important;
     box-shadow: none !important;
@@ -53,6 +68,23 @@
     color: #fff;
     background-color: var(--primary) !important;
 }
+
+/* End Select2 */
+
+/* Sweet alert2 */
+
+.colored-toast.swal2-icon-success {
+    background-color: var(--green) !important;
+    color: var(--white) !important;
+}
+
+.colored-toast.swal2-icon-error {
+    background-color: var(--red) !important;
+    color: var(--white) !important;
+}
+
+/* End Sweet alert */
+
 
 * {
     margin: 0;
@@ -206,15 +238,7 @@
     border: none;
 }
 
-.colored-toast.swal2-icon-success {
-    background-color: var(--green) !important;
-    color: var(--white) !important;
-}
 
-.colored-toast.swal2-icon-error {
-    background-color: var(--red) !important;
-    color: var(--white) !important;
-}
 
 .gap-20 {
     gap: 20px;
@@ -314,10 +338,159 @@
 
 /* End Custom Alert */
 
+
+
 label {
     font-size: 14px;
 }
 
 .vertical-align-middle {
     vertical-align: middle !important;
+}
+
+.profile-card {
+    width: max-content;
+    height: max-content;
+    min-width: 320px;
+    max-width: 320px;
+    position: relative;
+    background: var(--white);
+    box-shadow: 2px 2px 14px rgba(0, 0, 0, .05);
+    padding: 60px 20px 20px 20px;
+}
+
+.profile-card .profile-icon {
+    width: 80px;
+    height: 80px;
+    position: absolute;
+    top: -40px;
+    left: 10px;
+    background: var(--primary);
+    border-radius: var(--sm-rounded);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--white);
+    font-size: 32px;
+    box-shadow: 2px 2px 14px rgba(0, 0, 0, .05);
+}
+
+.profile-card .info-group {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+}
+
+.profile-card .title {
+    font-size: 18px;
+    text-transform: uppercase;
+    color: rgb(96, 96, 96);
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.profile-card .title::after {
+    content: "";
+    width: 100%;
+    height: 2px;
+    background-color: var(--primary);
+    position: absolute;
+    left: 0;
+    bottom: -8px;
+}
+
+.info-group .info-key {
+    font-size: 14px;
+}
+
+.info-group .info-val {
+    font-size: 14px;
+    color: gray;
+    margin-top: -10px;
+}
+
+.profile-card .btn-change-pass {
+    width: max-content;
+    height: max-content;
+    display: flex;
+    color: var(--white);
+    text-decoration: none;
+    padding: 8px 16px;
+    gap: 8px;
+    font-size: 13px;
+    border-radius: var(--sm-rounded);
+    border: 2px solid var(--primary);
+    color: #2e2e2e;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    transition: .3s;
+}
+
+.profile-card .btn-change-pass::after {
+    content: "";
+    position: absolute;
+    left: -10%;
+    top: 0;
+    height: 101%;
+    width: 0;
+    background-color: var(--primary);
+    transform: skewX(-20deg);
+    z-index: -1;
+    transition: .5s;
+}
+
+.profile-card .btn-change-pass:hover {
+    color: var(--white);
+}
+
+.profile-card .btn-change-pass:hover::after {
+    width: 120%;
+}
+
+.mapel-card {
+    width: max-content;
+    max-width: 320px;
+    height: max-content;
+    position: relative;
+    padding: 60px 20px 20px 20px;
+    background: var(--white);
+    box-shadow: 2px 2px 14px rgba(0, 0, 0, .05);
+}
+
+.mapel-card .mapel-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--primary);
+    position: absolute;
+    top: -40px;
+    left: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    color: var(--white);
+}
+
+.mapel-card .title {
+    font-size: 18px;
+    text-transform: uppercase;
+    color: rgb(96, 96, 96);
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.mapel-card .title::after {
+    content: "";
+    width: 100%;
+    height: 2px;
+    background-color: var(--primary);
+    position: absolute;
+    left: 0;
+    bottom: -8px;
+}
+
+.mapel-card .mapel-item {
+    font-size: 14px;
+    color: gray;
 }

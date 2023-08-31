@@ -22,15 +22,11 @@
     </div>
 
     @if ($errors->any())
-        <div class="card">
-            <div class="card-body">
-                @foreach ($errors->all() as $error)
-                    <div class="alert alert-danger" role="alert">
-                        {{ $error }}
-                    </div>
-                @endforeach
+        @foreach ($errors->all() as $error)
+            <div class="alert alert-danger mt-3" role="alert">
+                {{ $error }}
             </div>
-        </div>
+        @endforeach
     @endif
 
     <div class="card mb-1">
@@ -72,7 +68,7 @@
                         <thead>
                             <tr>
                                 <th width="5px">#</th>
-                                <th class="text-center" width="100px">Kode</th>
+                                <th class="text-center" width="100px">Kode Guru</th>
                                 <th>Username</th>
                                 <th>Nama Guru</th>
                                 <th class="text-center">Status</th>
@@ -87,6 +83,7 @@
         </div>
     </div>
 
+    {{-- Modal Import Data Guru --}}
     <div class="modal fade" id="import_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -107,7 +104,7 @@
                                 </div>
                                 <div class="custom-file">
                                     <input type="file" class="custom-file-input" id="inputGroupFile01"
-                                        aria-describedby="inputGroupFileAddon01" name="file_import" required>
+                                        aria-describedby="inputGroupFileAddon01" name="excel_file" required>
                                     <label class="custom-file-label" for="inputGroupFile01">Jenis File .xlsx</label>
                                 </div>
                             </div>
@@ -139,8 +136,40 @@
     <script>
         @if (session()->has('successImport'))
             Swal.fire({
-                title: "Data guru berhasil di import",
+                title: "{{ session('successImport') }}",
                 icon: "success",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('username_not_unique'))
+            Swal.fire({
+                title: "{{ session('username_not_unique') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('max_count'))
+            Swal.fire({
+                title: "{{ session('max_count') }}",
+                icon: "error",
                 iconColor: 'white',
                 customClass: {
                     popup: 'colored-toast'

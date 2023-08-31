@@ -54,4 +54,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(GuruMapel::class);
     }
+
+    public function ketuntasan()
+    {
+        return $this->hasMany(Ketuntasan::class, 'user_id', 'user_id');
+    }
+
+    public function admin()
+    {
+        return $this->belongsTo(Admin::class, 'user_id', 'user_id');
+    }
 }

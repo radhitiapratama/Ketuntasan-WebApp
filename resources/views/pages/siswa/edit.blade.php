@@ -20,76 +20,82 @@
             </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body">
-            <div class="row justify-content-center">
-                <div class="col-md-10 col-12">
-                    <form action="/siswa/update" method="post" id="form">
-                        @csrf
-                        <input type="hidden" name="user_id" value="{{ $siswa->user_id }}">
-                        <input type="hidden" name="hide_tingkatan" value="{{ $siswa->tingkatan }}">
-                        <input type="hidden" name="hide_jurusan" value="{{ $siswa->jurusan_id }}">
-                        <input type="hidden" name="hide_kelas" value="{{ $siswa->kelas_id }}">
+    <div class="row">
+        <div class="col-md-8 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <form action="/siswa/update" method="post" id="form">
+                                @csrf
+                                <input type="hidden" name="user_id" value="{{ $siswa->user_id }}">
+                                <input type="hidden" name="hide_tingkatan" value="{{ $siswa->tingkatan }}">
+                                <input type="hidden" name="hide_jurusan" value="{{ $siswa->jurusan_id }}">
+                                <input type="hidden" name="hide_kelas" value="{{ $siswa->kelas_id }}">
 
-                        <div class="row">
-                            <div class="col-md-6 col-12">
-                                <div class="form-group">
-                                    <label for="#">Tingkatan</label>
-                                    <select name="tingkatan_id" id="tingkatan" class="form-control" required>
-                                        @foreach ($tingkatans as $key => $value)
-                                            <option value="{{ $key }}" @selected($key == $siswa->tingkatan)>
-                                                {{ $value }}</option>
-                                        @endforeach
-                                    </select>
+                                <div class="row">
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Tingkatan</label>
+                                            <select name="tingkatan_id" id="tingkatan" class="form-control" required>
+                                                @foreach ($tingkatans as $key => $value)
+                                                    <option value="{{ $key }}" @selected($key == $siswa->tingkatan)>
+                                                        {{ $value }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Kelas</label>
+                                            <select name="kelas_id" id="kelas_id" class="form-control" required>
+                                                @foreach ($kelases as $kelas)
+                                                    <option
+                                                        value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}"
+                                                        @selected(old('kelas_id', $siswa->jurusan_id . '|' . $siswa->kelas_id) == $kelas->jurusan->jurusan_id . '|' . $kelas->kelas_id)>
+                                                        {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Username</label>
+                                            <input type="text" class="form-control" name="username"
+                                                value="{{ old('username', $siswa->username) }}"required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Nama Siswa</label>
+                                            <input type="text" class="form-control" name="nama"
+                                                value="{{ old('nama', $siswa->nama) }}"required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Status</label>
+                                            <select name="status" id="status" class="form-control" required>
+                                                @foreach ($statuses as $key => $value)
+                                                    <option value="{{ $key }}" @selected($key == $siswa->status)>
+                                                        {{ $value }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6 col-12">
-                                <div class="form-group">
-                                    <label for="#">Kelas</label>
-                                    <select name="kelas_id" id="kelas_id" class="form-control" required>
-                                        @foreach ($kelases as $kelas)
-                                            <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}"
-                                                @selected(old('kelas_id', $siswa->jurusan_id . '|' . $siswa->kelas_id) == $kelas->jurusan->jurusan_id . '|' . $kelas->kelas_id)>
-                                                {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}</option>
-                                        @endforeach
-                                    </select>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn-dark" id="btn-submit">
+                                            <i class="ri-check-line"></i>
+                                            Update
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-4 col-12">
-                                <div class="form-group">
-                                    <label for="#">Username</label>
-                                    <input type="text" class="form-control" name="username"
-                                        value="{{ old('username', $siswa->username) }}"required>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-12">
-                                <div class="form-group">
-                                    <label for="#">Nama Siswa</label>
-                                    <input type="text" class="form-control" name="nama"
-                                        value="{{ old('nama', $siswa->nama) }}"required>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-12">
-                                <div class="form-group">
-                                    <label for="#">Status</label>
-                                    <select name="status" id="status" class="form-control" required>
-                                        @foreach ($statuses as $key => $value)
-                                            <option value="{{ $key }}" @selected($key == $siswa->status)>
-                                                {{ $value }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+                            </form>
                         </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <button type="submit" class="btn-dark m-auto" id="btn-submit">
-                                    <i class="ri-check-line"></i>
-                                    Update
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>

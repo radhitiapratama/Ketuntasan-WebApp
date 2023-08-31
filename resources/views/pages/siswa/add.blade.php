@@ -19,73 +19,80 @@
             </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body">
-            <div class="row justify-content-center">
-                <div class="col-12 col-md-8">
-                    <form id="form">
-                        <div class="row justify-content-center mb-3">
-                            <div class="col-md-6 col-12">
-                                <div class="form-group">
-                                    <label for="#">Tingkatan</label>
-                                    <select name="tingkatan" id="tingkatan_id" class="form-control select2" required>
-                                        <option value=""></option>
-                                        @foreach ($tingkatans as $key => $value)
-                                            <option value="{{ $key }}">
-                                                {{ $value }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6 col-12">
-                                <div class="form-group">
-                                    <label for="#">Kelas</label>
-                                    <select name="kelas_id" id="kelas_id" class="form-control select2" required>
-                                        <option value=""></option>
-                                        @foreach ($kelases as $kelas)
-                                            <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
-                                                {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6 col-12">
-                                <div class="form-group">
-                                    <label for="#">Username</label>
-                                    <input type="text" class="form-control" id="username" name="username"
-                                        placeholder="Contoh : jonokurnia123" disabled required>
-                                    <small class="text-danger" id="err-username"></small>
-                                </div>
-                            </div>
-                            <div class="col-md-6 col-12">
-                                <div class="form-group">
-                                    <label for="#">Password</label>
-                                    <div class="input-group">
-                                        <input type="password" id="password" class="form-control input-pass"
-                                            name="password" disabled required>
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text" id="show-pass">
-                                                <i class="ri-eye-line"></i>
-                                            </span>
+    <div class="row">
+        <div class="col-md-8 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row justify-content-center">
+                        <div class="col-12">
+                            <form id="form">
+                                <div class="row justify-content-center mb-3">
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Tingkatan</label>
+                                            <select name="tingkatan" id="tingkatan_id" class="form-control select2"
+                                                required>
+                                                <option value=""></option>
+                                                @foreach ($tingkatans as $key => $value)
+                                                    <option value="{{ $key }}">
+                                                        {{ $value }}</option>
+                                                @endforeach
+                                            </select>
                                         </div>
                                     </div>
-                                    <small class="text-danger" id="err-password"></small>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Kelas</label>
+                                            <select name="kelas_id" id="kelas_id" class="form-control select2" required>
+                                                <option value=""></option>
+                                                @foreach ($kelases as $kelas)
+                                                    <option
+                                                        value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                                        {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Username</label>
+                                            <input type="text" class="form-control" id="username" name="username"
+                                                placeholder="Contoh : jonokurnia123" disabled required>
+                                            <small class="text-danger" id="err-username"></small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Password</label>
+                                            <div class="input-group">
+                                                <input type="password" id="password" class="form-control input-pass"
+                                                    name="password" disabled required>
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text" id="show-pass">
+                                                        <i class="ri-eye-line"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <small class="text-danger" id="err-password"></small>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <label for="#">Nama Siswa</label>
+                                            <input type="text" id="nama_siswa" class="form-control" name="nama_siswa"
+                                                placeholder="Contoh : Jono Kurniawan" disabled required>
+                                            <small class="text-danger" id="err-nama_siswa"></small>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label for="#">Nama Siswa</label>
-                                    <input type="text" id="nama_siswa" class="form-control" name="nama_siswa"
-                                        placeholder="Contoh : Jono Kurniawan" disabled required>
-                                    <small class="text-danger" id="err-nama_siswa"></small>
-                                </div>
-                            </div>
+                                <button type="button" id="btn-submit" class="btn-dark">
+                                    <i class="ri-check-line"></i>
+                                    Submit
+                                </button>
+                            </form>
                         </div>
-                        <button type="button" id="btn-submit" class="btn-dark m-auto">
-                            <i class="ri-check-line"></i>
-                            Submit
-                        </button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -147,8 +154,10 @@
         showPass.click(function() {
             if (inputPass.attr("type") == "text") {
                 inputPass.attr("type", "password");
+                showPass.html(`<i class="ri-eye-line"></i>`);
             } else {
                 inputPass.attr("type", 'text');
+                showPass.html(`<i class="ri-eye-off-line"></i>`);
             }
         });
 

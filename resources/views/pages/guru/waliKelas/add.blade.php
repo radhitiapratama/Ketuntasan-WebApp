@@ -20,61 +20,60 @@
             </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body">
-            <div class="row justify-content-center">
-                <div class="col-12">
-                    <form action="/wali-kelas/store" method="POST">
-                        @csrf
-                        <div class="row">
-                            <div class="col-md-2 col-12">
-                                <div class="form-group">
-                                    <label for="#">Tingkatan</label>
-                                    <select name="tingkatan_id" id="tingkatan" class="form-control" required>
-                                        <option value=""></option>
-                                        @foreach ($tingkatans as $key => $value)
-                                            <option value="{{ $key }}">{{ $value }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+    <div class="row">
+        <div class="col-md-8 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <form action="/wali-kelas/store" method="POST">
+                                @csrf
+                                <div class="row">
+                                    <div class="col-md-2 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Tingkatan</label>
+                                            <select name="tingkatan_id" id="tingkatan" class="form-control" required>
+                                                <option value=""></option>
+                                                @foreach ($tingkatans as $key => $value)
+                                                    <option value="{{ $key }}">{{ $value }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Kelas</label>
+                                            <select name="kelas_id" id="kelas" class="form-control" disabled required>
+                                                <option value=""></option>
+                                                @foreach ($kelases as $kelas)
+                                                    <option
+                                                        value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                                        {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-5 col-12">
+                                        <div class="form-group">
+                                            <label for="#">Wali Kelas</label>
+                                            <select name="user_id" id="guru" class="form-control" disabled required>
+                                                <option value=""></option>
+                                                @foreach ($gurus as $guru)
+                                                    <option value="{{ $guru->user_id }}">{{ $guru->nama }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-3 col-12">
-                                <div class="form-group">
-                                    <label for="#">Jurusan</label>
-                                    <select name="jurusan_id" id="jurusan" class="form-control" disabled required>
-                                        <option value=""></option>
-                                        @foreach ($jurusans as $jurusan)
-                                            <option value="{{ $jurusan->jurusan_id }}">{{ $jurusan->nama_jurusan }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-3 col-12">
-                                <div class="form-group">
-                                    <label for="#">Kelas</label>
-                                    <select name="kelas_id" id="kelas" class="form-control" disabled required>
-                                        <option value=""></option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-12">
-                                <div class="form-group">
-                                    <label for="#">Wali Kelas</label>
-                                    <select name="user_id" id="guru" class="form-control" disabled required>
-                                        <option value=""></option>
-                                        @foreach ($gurus as $guru)
-                                            <option value="{{ $guru->user_id }}">{{ $guru->nama }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
+                                <button type="submit" class="btn-dark">
+                                    <i class="ri-check-line"></i>
+                                    Submit
+                                </button>
+                            </form>
                         </div>
-                        <button type="submit" class="btn-dark m-auto">
-                            <i class="ri-check-line"></i>
-                            Submit
-                        </button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -131,37 +130,11 @@
         }
 
         $("#tingkatan").select2(configSelect2);
-        $("#jurusan").select2(configSelect2);
         $("#kelas").select2(configSelect2);
         $("#guru").select2(configSelect2);
 
         $("#tingkatan").change(function() {
-            $("#jurusan").attr("disabled", false);
-        });
-
-        $("#jurusan").change(function() {
-            $.ajax({
-                type: "POST",
-                url: "/getDataKelasByJurusan",
-                headers: {
-                    "X-CSRF-TOKEN": csrfToken,
-                },
-                data: {
-                    jurusan_id: $(this).val(),
-                },
-                dataType: "json",
-                success: function(response) {
-                    console.log(response);
-                    let opt = '<option value=""></option>';
-                    for (let i = 0; i < response.kelases.length; i++) {
-                        opt +=
-                            `<option value="${response.kelases[i].kelas_id}">${response.kelases[i].nama_kelas}</option>`;
-                    }
-
-                    $("#kelas").html(opt);
-                    $("#kelas").attr('disabled', false);
-                }
-            });
+            $("#kelas").attr("disabled", false);
         });
 
         $("#kelas").change(function() {

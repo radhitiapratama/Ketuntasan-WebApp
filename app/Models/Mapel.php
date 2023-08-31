@@ -17,6 +17,6 @@ class Mapel extends Model
 
     public function guru_mapel()
     {
-        return $this->hasMany(GuruMapel::class);
+        return $this->hasMany(GuruMapel::class, 'mapel_id', 'mapel_id');
     }
 }

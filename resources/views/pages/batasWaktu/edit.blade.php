@@ -23,64 +23,55 @@
             </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body">
-            <form action="{{ url('batas-waktu/update') }}" method="post">
-                @csrf
-                <input type="hidden" name="batas_waktu_id" value="{{ $batasWaktu->batas_waktu_id }}">
-                <div class="row mb-3 justify-content-center">
-                    <div class="col-md-3 col-12">
-                        <div class="form-group">
-                            <label for="#">Tgl Mulai</label>
-                            @if (old('tgl_mulai'))
-                                <input type="text" class="form-control" name="tgl_mulai" id="tgl_mulai"
-                                    value="{{ old('tgl_mulai') }}" required autocomplete="off">
-                            @else
-                                <input type="text" class="form-control" name="tgl_mulai" id="tgl_mulai"
-                                    value="{{ $start_date }}" required autocomplete="off">
-                            @endif
+    <div class="row">
+        <div class="col-md-6 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form action="{{ url('batas-waktu/update') }}" method="post">
+                        @csrf
+                        <input type="hidden" name="batas_waktu_id" value="{{ $batasWaktu->batas_waktu_id }}">
+                        <div class="row">
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label for="#">Tgl Mulai</label>
+                                    <input type="text" class="form-control" name="tgl_mulai" id="tgl_mulai"
+                                        value="{{ old('tgl_mulai', $start_date) }}" required autocomplete="off">
+
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label for="#">Tgl Selesai</label>
+                                    <input type="text" class="form-control" name="tgl_selesai" id="tgl_selesai"
+                                        value="{{ old('tgl_selesai', $end_date) }}" required autocomplete="off">
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-3 col-12">
-                        <div class="form-group">
-                            <label for="#">Tgl Selesai</label>
-                            @if (old('tgl_selesai'))
-                                <input type="text" class="form-control" name="tgl_selesai" id="tgl_selesai"
-                                    value="{{ old('tgl_selesai') }}" required autocomplete="off">
-                            @else
-                                <input type="text" class="form-control" name="tgl_selesai" id="tgl_selesai"
-                                    value="{{ $end_date }}" required autocomplete="off">
-                            @endif
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="#">Status</label>
+                                    <select name="status" id="status" class="form-control select2" required>
+                                        @if ($batasWaktu->status == 1)
+                                            <option value="1" selected>Aktif</option>
+                                        @else
+                                            @foreach ($statuses as $key => $value)
+                                                <option value="{{ $key }}" @selected(old('status', $batasWaktu->status) == $key)>
+                                                    {{ $value }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="row mb-3 justify-content-center">
-                    <div class="col-md-6 col-12">
-                        <div class="form-group">
-                            <label for="#">Status</label>
-                            <select name="status" id="status" class="form-control select2" required>
-                                <option value=""></option>
-                                @foreach ($statuses as $key => $value)
-                                    <option value="{{ $key }}"
-                                        @if (old('status')) @selected(old("status"))
-                                            @else
-                                            @selected($key == $batasWaktu->status) @endif>
-                                        {{ $value }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 d-flex justify-content-center">
-                        <button type="submit" class="btn-dark m-auto">
+                        <button type="submit" class="btn-dark">
                             <i class="ri-check-line"></i>
                             Update
                         </button>
-                    </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -132,7 +123,6 @@
         $("#status").select2({
             theme: "bootstrap4",
             width: "100%",
-            placeholder: "Pilihhh"
         })
 
         const configDatepicker = {

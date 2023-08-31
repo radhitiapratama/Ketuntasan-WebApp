@@ -3,39 +3,68 @@
 namespace App\Imports;
 
 use App\Models\User;
-use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\Importable;
-use Maatwebsite\Excel\Concerns\SkipsErrors;
-use Maatwebsite\Excel\Concerns\SkipsOnError;
-use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Concerns\Importable;
+use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithStartRow;
 
-class GuruImport implements ToModel, WithHeadingRow, SkipsOnError, WithValidation
+
+
+class GuruImport implements ToCollection, WithStartRow
 {
 
-    use Importable, SkipsErrors;
+    use Importable;
 
-    /**
-     * @param array $row
-     *
-     * @return \Illuminate\Database\Eloquent\Model|null
-     */
-    public function model(array $row)
+    public function collection(Collection $rows)
     {
-        return new User([
-            "username" => $row['username'],
-            'nama' => $row['nama_guru'],
-            'password' => Hash::make("123456"),
-            'role' => 2,
-            'status' => 1,
-        ]);
+        Validator::make(
+            $rows->toArray(),
+            [
+                '*.0' => "required",
+                '*.1' => "required",
+            ],
+            [
+                '*.0.required' => "Gagal! Username guru wajib di isi",
+                '*.1.required' => "Gagal! Nama guru wajib di isi"
+
+            ]
+        )->validate();
+
+        if (count($rows) > 200) {
+            session()->flash("max_count", "Gagal! Row yg di import tidak boleh lebih dari 200");
+            return;
+        }
+
+        DB::beginTransaction();
+
+        foreach ($rows as $row) {
+            $sql_checkUsername = User::where("username", $row[0])->first();
+
+            // Check apakah ada username yg sama
+            if ($sql_checkUsername) {
+                session()->flash("username_not_unique", "Gagal! Username " . $row[0] . " sudah di gunakan");
+                DB::rollBack();
+                return;
+            }
+
+            User::create([
+                'username' => $row[0],
+                'nama' => $row[1],
+                'password' => Hash::make("123456"),
+                'role' => 2,
+                'status' => 1,
+                'created_by' => auth()->user()->user_id
+            ]);
+        }
+
+        DB::commit();
     }
 
-    public function rules(): array
+    public function startRow(): int
     {
-        return [
-            '*.username' => "unique:users,username"
-        ];
+        return 2;
     }
 }

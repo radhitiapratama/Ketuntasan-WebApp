@@ -24,36 +24,39 @@
             </div>
         </div>
     </div>
-
-    <div class="card">
-        <div class="card-body">
-            <form action="{{ url('batas-waktu/store') }}" method="POST">
-                @csrf
-                <div class="row justify-content-center">
-                    <div class="col-md-3 col-12">
-                        <div class="form-group">
-                            <label for="#">Tgl Mulai</label>
-                            <input type="text" class="form-control" name="tgl_mulai" id="tgl_mulai"
-                                value="{{ old('tgl_mulai') }}" required autocomplete="off">
+    <div class="row">
+        <div class="col-md-6 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form action="{{ url('batas-waktu/store') }}" method="POST">
+                        @csrf
+                        <div class="row">
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label for="#">Tgl Mulai</label>
+                                    <input type="text" class="form-control" name="tgl_mulai" id="tgl_mulai"
+                                        value="{{ old('tgl_mulai') }}" required autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label for="#">Tgl Selesai</label>
+                                    <input type="text" class="form-control" name="tgl_selesai" id="tgl_selesai"
+                                        value="{{ old('tgl_selesai') }}" required autocomplete="off">
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-3 col-12">
-                        <div class="form-group">
-                            <label for="#">Tgl Selesai</label>
-                            <input type="text" class="form-control" name="tgl_selesai" id="tgl_selesai"
-                                value="{{ old('tgl_selesai') }}" required autocomplete="off">
+                        <div class="row">
+                            <div class="col-12 d-flex">
+                                <button type="submit" class="btn-dark">
+                                    <i class="ri-check-line"></i>
+                                    Submit
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    </form>
                 </div>
-                <div class="row">
-                    <div class="col-12 d-flex justify-content-center">
-                        <button type="submit" class="btn-dark">
-                            <i class="ri-check-line"></i>
-                            Submit
-                        </button>
-                    </div>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 

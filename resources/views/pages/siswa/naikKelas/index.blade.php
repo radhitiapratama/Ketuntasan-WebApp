@@ -65,7 +65,7 @@
                                     <th class="text-center"><input type="checkbox" name="check_all" id="check_all"></th>
                                     <th>Username</th>
                                     <th>Nama Siswa</th>
-                                    <th>Tingkatan</th>
+                                    <th width="5px" class="text-center">Tingkatan</th>
                                     <th>Kelas</th>
                                 </tr>
                             </thead>
@@ -97,6 +97,7 @@
     <script>
         function loadDatatable() {
             $("#tbl-siswa").DataTable({
+                paging: false,
                 serverSide: true,
                 processing: true,
                 ordering: false,

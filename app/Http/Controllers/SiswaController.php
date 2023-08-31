@@ -73,7 +73,7 @@ class SiswaController extends Controller
             $result = $query
                 ->offset($request->start)
                 ->limit($request->length)
-                ->orderByRaw("u.created_at DESC,u.status ASC")
+                ->orderByRaw("u.user_id DESC,u.status ASC")
                 ->get();
 
             $dataResponse = [];
@@ -88,16 +88,22 @@ class SiswaController extends Controller
                     $subData['nama'] = $row->nama;
 
                     if ($row->tingkatan == 1) {
-                        $subData['tingkatan'] = "X";
+                        $tingkatan = "X";
                     }
 
                     if ($row->tingkatan == 2) {
-                        $subData['tingkatan'] = "XI";
+                        $tingkatan = "XI";
                     }
 
                     if ($row->tingkatan == 3) {
-                        $subData['tingkatan'] = "XII";
+                        $tingkatan = "XII";
                     }
+
+                    $subData['tingkatan'] = '
+                    <div class="text-center">
+                        ' . $tingkatan . '
+                    </div>
+                    ';
 
                     $subData['kelas'] = $row->nama_jurusan . " | " .  $row->nama_kelas;
 
@@ -437,7 +443,7 @@ class SiswaController extends Controller
         // [1] => kelas_id
         $arr = explode("|", $request->kelas_id);
 
-        $query = $table->select(
+        $result = $table->select(
             'u.username',
             'u.nama',
             'u.user_id',
@@ -451,12 +457,7 @@ class SiswaController extends Controller
             ->where('u.role', 3)
             ->where('u.status', 1)
             ->where('u.tingkatan', $request->tingkatan)
-            ->where('u.kelas_id', $arr[1]);
-
-        $countFiltered = $query->count();
-
-        $result = $query->offset($request->start)
-            ->limit($request->length)
+            ->where('u.kelas_id', $arr[1])
             ->orderByRaw("u.nama ASC")
             ->get();
 
@@ -477,16 +478,22 @@ class SiswaController extends Controller
                 $subData['nama'] = $row->nama;
 
                 if ($row->tingkatan == 1) {
-                    $subData['tingkatan'] = "X";
+                    $tingkatan = "X";
                 }
 
                 if ($row->tingkatan == 2) {
-                    $subData['tingkatan'] = "XI";
+                    $tingkatan = "XI";
                 }
 
                 if ($row->tingkatan == 3) {
-                    $subData['tingkatan'] = "XII";
+                    $tingkatan = "XII";
                 }
+
+                $subData['tingkatan'] = '
+                <div class="text-center">
+                    ' . $tingkatan . '
+                </div>
+                ';
 
                 $subData['kelas'] = $row->nama_jurusan . " | " . $row->nama_kelas;
 
@@ -496,8 +503,8 @@ class SiswaController extends Controller
 
         return response()->json([
             'draw' => $request->draw,
-            'recordsFiltered' => $countFiltered,
-            'recordsTotal' => $countFiltered,
+            'recordsFiltered' => 0,
+            'recordsTotal' => 0,
             'data' => $dataResponse,
         ]);
     }
@@ -508,6 +515,10 @@ class SiswaController extends Controller
             $request->all(),
             [
                 'file_import' => 'required|mimes:xlsx'
+            ],
+            [
+                'file_import.mimes' => 'Extensi file yg di import wajib .xlsx',
+                'file_import.required' => "File yg ingin di import wajib di isi"
             ]
         );
 
@@ -515,12 +526,12 @@ class SiswaController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $file = $request->file_import;
+        $file = $request->file('file_import');
 
         $siswa = new SiswaImport;
         $siswa->import($file);
 
-        return redirect()->back()->with("successImport", "successImport");
+        return redirect()->back()->with("successImport", "Data Siswa berhasil di import");
     }
 
     public function getDataSiswaByKelas(Request $request)

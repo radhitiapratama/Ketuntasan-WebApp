@@ -21,65 +21,70 @@
             </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body">
-            <div class="row justify-content-center">
-                <div class="col-md-6 col-12">
-                    <form action="/tahun-ajaran/update" method="POST">
-                        @csrf
-                        <input type="hidden" name="tahun_ajaran_id" value="{{ $tahun_ajaran->tahun_ajaran_id }}">
-                        <div class="row justify-content-center">
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label for="tahun_start">Tahun</label>
-                                    <input type="text" class="form-control" id="tahun_start" name="tahun_start"
-                                        value="{{ old('tahun_start', $tahun_start) }}" required>
+    <div class="row">
+        <div class="col-md-6 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <form action="/tahun-ajaran/update" method="POST">
+                                @csrf
+                                <input type="hidden" name="tahun_ajaran_id" value="{{ $tahun_ajaran->tahun_ajaran_id }}">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label for="tahun_start">Tahun</label>
+                                            <input type="text" class="form-control" id="tahun_start" name="tahun_start"
+                                                value="{{ old('tahun_start', $tahun_start) }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label for="tahun_end">Tahun</label>
+                                            <input type="text" class="form-control" id="tahun_end" name="tahun_end"
+                                                value="{{ old('tahun_end', $tahun_end) }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label for="#">User</label>
+                                            <select name="user_status" id="user_status" class="form-control" required>
+                                                @if ($tahun_ajaran->user_aktif == 1)
+                                                    <option value="1" selected>Aktif</option>
+                                                @else
+                                                    @foreach ($statuses as $key => $value)
+                                                        <option value="{{ $key }}" @selected(old('user_status', $tahun_ajaran->user_aktif) == $key)>
+                                                            {{ $value }}</option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-group">
+                                            <label for="#">Superadmin</label>
+                                            <select name="superadmin_status" id="superadmin_status" class="form-control"
+                                                required>
+                                                @if ($tahun_ajaran->superadmin_aktif == 1)
+                                                    <option value="1" selected>Aktif</option>
+                                                @else
+                                                    @foreach ($statuses as $key => $value)
+                                                        <option value="{{ $key }}" @selected(old('superadmin_status', $tahun_ajaran->superadmin_aktif) == $key)>
+                                                            {{ $value }}
+                                                        </option>
+                                                    @endforeach
+                                                @endif
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label for="tahun_end">Tahun</label>
-                                    <input type="text" class="form-control" id="tahun_end" name="tahun_end"
-                                        value="{{ old('tahun_end', $tahun_end) }}" required>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label for="#">User</label>
-                                    <select name="user_status" id="user_status" class="form-control" required>
-                                        @if ($tahun_ajaran->user_aktif == 1)
-                                            <option value="1" selected>Aktif</option>
-                                        @else
-                                            @foreach ($statuses as $key => $value)
-                                                <option value="{{ $key }}" @selected(old('user_status', $tahun_ajaran->user_aktif) == $key)>
-                                                    {{ $value }}</option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="form-group">
-                                    <label for="#">Superadmin</label>
-                                    <select name="superadmin_status" id="superadmin_status" class="form-control" required>
-                                        @if ($tahun_ajaran->superadmin_aktif == 1)
-                                            <option value="1" selected>Aktif</option>
-                                        @else
-                                            @foreach ($statuses as $key => $value)
-                                                <option value="{{ $key }}" @selected(old('superadmin_status', $tahun_ajaran->superadmin_aktif) == $key)>
-                                                    {{ $value }}
-                                                </option>
-                                            @endforeach
-                                        @endif
-                                    </select>
-                                </div>
-                            </div>
+                                <button type="submit" class="btn-dark">
+                                    <i class="ri-check-line"></i>
+                                    Update
+                                </button>
+                            </form>
                         </div>
-                        <button type="submit" class="btn-dark m-auto">
-                            <i class="ri-check-line"></i>
-                            Update
-                        </button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>

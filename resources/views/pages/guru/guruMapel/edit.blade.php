@@ -21,7 +21,7 @@
     </div>
     <form action="{{ url('guru-mapel/update') }}" method="post">
         @csrf
-        <input type="hidden" name="user_id" value="{{ $guru->user_id }}">
+        <input type="hidden" name="guru_id" value="{{ $guru->guru_id }}">
         <div class="card">
             <div class="card-header">
                 <div class="form-group">
@@ -34,6 +34,7 @@
                     <div class="row justify-content-center">
                         @foreach ($guruMapels as $guruMapel)
                             <input type="hidden" name="guru_mapel_id[]" value="{{ $guruMapel->guru_mapel_id }}">
+
                             <div class="col-md-4 col-12">
                                 <div class="form-group">
                                     <label for="mapel_id">Mata Pelajaran</label>
@@ -47,6 +48,18 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    @error('mapel_id')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="form-group">
+                                    <label for="#">Kode Guru Mapel</label>
+                                    <input type="text" class="form-control" name="kode_guru_mapel[]"
+                                        value="{{ $guruMapel->kode_guru_mapel }}" onkeypress="return onlyNumberKey(event)"
+                                        required>
+                                    @error('kode_guru_mapel')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
                                 </div>
                                 <div class="form-group">
                                     <label for="#">Status</label>
@@ -58,6 +71,9 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    @error('status')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
                                 </div>
                             </div>
                         @endforeach
@@ -94,6 +110,22 @@
                 timerProgressBar: true
             });
         @endif
+
+        @if (session()->has('duplicateKodeGuruMapel'))
+            Swal.fire({
+                title: "{{ session('duplicateKodeGuruMapel') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
     </script>
 
     <script>
@@ -113,6 +145,13 @@
                 theme: "bootstrap4",
                 width: "100%",
             });
+        }
+
+        function onlyNumberKey(evt) {
+            var ASCIICode = (evt.which) ? evt.which : evt.keyCode
+            if (ASCIICode > 31 && (ASCIICode < 48 || ASCIICode > 57))
+                return false;
+            return true;
         }
     </script>
 @endsection

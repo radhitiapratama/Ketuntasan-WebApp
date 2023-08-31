@@ -18,34 +18,38 @@
             </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body">
-            <div class="row justify-content-center">
-                <div class="col-md-6 col-12">
-                    <form action="/tahun-ajaran/store" method="POST">
-                        @csrf
-                        <div class="row justify-content-center">
-                            <div class="col-md-4 col-12">
-                                <div class="form-group">
-                                    <label for="tahun_start">Tahun</label>
-                                    <input type="text" class="form-control" id="tahun_start" name="tahun_start"
-                                        onkeypress="return onlyNum(event)" required>
+    <div class="row">
+        <div class="col-md-6 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class=" col-12">
+                            <form action="/tahun-ajaran/store" method="POST">
+                                @csrf
+                                <div class="row">
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="tahun_start">Tahun</label>
+                                            <input type="text" class="form-control" id="tahun_start" name="tahun_start"
+                                                onkeypress="return onlyNum(event)" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-12">
+                                        <div class="form-group">
+                                            <label for="tahun_end">Tahun</label>
+                                            <input type="text" class="form-control" id="tahun_end" name="tahun_end"
+                                                onkeypress="return onlyNum(event)" required>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-4 col-12">
-                                <div class="form-group">
-                                    <label for="tahun_end">Tahun</label>
-                                    <input type="text" class="form-control" id="tahun_end" name="tahun_end"
-                                        onkeypress="return onlyNum(event)" required>
-                                </div>
-                            </div>
-                        </div>
 
-                        <button type="submit" class="btn-dark m-auto">
-                            <i class="ri-check-line"></i>
-                            Submit
-                        </button>
-                    </form>
+                                <button type="submit" class="btn-dark">
+                                    <i class="ri-check-line"></i>
+                                    Submit
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

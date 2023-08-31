@@ -19,43 +19,47 @@
             </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body">
-            <div class="row justify-content-center">
-                <div class="col-md-6 col-12">
-                    <form method="POST" id="form">
-                        @csrf
-                        <div class="form-group">
-                            <label for="user_id">Nama Guru</label>
-                            <select name="user_id" id="user_id" class="form-control select-guru select2" required
-                                required>
-                                <option value=""></option>
-                                @foreach ($gurus as $guru)
-                                    <option value="{{ $guru->user_id }}">{{ $guru->nama }}</option>
-                                @endforeach
-                            </select>
+    <div class="row">
+        <div class="col-md-6 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <form method="POST" id="form">
+                                @csrf
+                                <div class="form-group">
+                                    <label for="guru_id">Nama Guru</label>
+                                    <select name="guru_id" id="guru_id" class="form-control select-guru select2" required>
+                                        <option value=""></option>
+                                        @foreach ($gurus as $guru)
+                                            <option value="{{ $guru->guru_id }}">{{ $guru->nama }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="mapel_id">Mata Pelajaran</label>
+                                    <select name="mapel_id[]" id="mapel_id_1" class="form-control select2 select-mapel"
+                                        required>
+                                        <option value=""></option>
+                                        @foreach ($mapels as $mapel)
+                                            <option value="{{ $mapel->mapel_id }}">{{ $mapel->nama_mapel }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="mapel-wrapper">
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" class="btn-dark m-auto" id="btn-add-mapel">
+                                        <i class="ri-add-circle-line"></i>
+                                    </button>
+                                </div>
+                                <button type="submit" class="btn-dark m-auto" id="btn-submit">
+                                    <i class="ri-check-line"></i>
+                                    Submit
+                                </button>
+                            </form>
                         </div>
-                        <div class="form-group">
-                            <label for="mapel_id">Mata Pelajaran</label>
-                            <select name="mapel_id[]" id="mapel_id_1" class="form-control select2 select-mapel" required>
-                                <option value=""></option>
-                                @foreach ($mapels as $mapel)
-                                    <option value="{{ $mapel->mapel_id }}">{{ $mapel->nama_mapel }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mapel-wrapper">
-                        </div>
-                        <div class="form-group">
-                            <button type="button" class="btn-dark m-auto" id="btn-add-mapel">
-                                <i class="ri-add-circle-line"></i>
-                            </button>
-                        </div>
-                        <button type="submit" class="btn-dark m-auto" id="btn-submit">
-                            <i class="ri-check-line"></i>
-                            Submit
-                        </button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -188,7 +192,7 @@
                 },
                 data: {
                     mapel_id: mapels,
-                    user_id: $("select[name='user_id']").val(),
+                    guru_id: $("select[name='guru_id']").val(),
                 },
                 dataType: "json",
                 success: function(response) {

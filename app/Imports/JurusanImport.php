@@ -2,43 +2,57 @@
 
 namespace App\Imports;
 
-use App\Models\Jurusan;
 use Carbon\Carbon;
-use Maatwebsite\Excel\Concerns\ToModel;
+use App\Models\Jurusan;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\Importable;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\SkipsErrors;
-use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\SkipsOnError;
+use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithStartRow;
 
-class JurusanImport implements
-    ToModel,
-    WithHeadingRow,
-    SkipsOnError,
-    WithValidation
+
+class JurusanImport implements ToCollection, WithStartRow
 {
-    use Importable,
-        SkipsErrors;
+    use Importable;
 
-    /**
-     * @param array $row
-     *
-     * @return \Illuminate\Database\Eloquent\Model|null
-     */
-    public function model(array $row)
+    public function collection(Collection $rows)
     {
+        Validator::make(
+            $rows->toArray(),
+            [
+                '*.0' => "required"
+            ],
+            [
+                '*.0.required' => "Nama Jurusan wajib di isi",
+            ]
+        )->validate();
 
-        return new Jurusan([
-            'nama_jurusan' => $row['jurusan'],
-            'status' => 1,
-            'created_at' => Carbon::now(),
-        ]);
+        if (count($rows) > 200) {
+            session()->flash("max_count", "Gagal! Row yg di import tidak boleh lebih dari 200");
+            return;
+        }
+
+        DB::beginTransaction();
+
+        foreach ($rows as $row) {
+            $sql_checkJurusan = Jurusan::where("nama_jurusan", $row[0])->first();
+            if ($sql_checkJurusan) {
+                continue;
+            }
+
+            Jurusan::create([
+                'nama_jurusan' => $row[0],
+                'status' => 1,
+                'created_by' => auth()->user()->user_id,
+            ]);
+        }
+
+        DB::commit();
     }
 
-    public function rules(): array
+    public function startRow(): int
     {
-        return  [
-            '*.jurusan' => "unique:jurusan,nama_jurusan"
-        ];
+        return 2;
     }
 }

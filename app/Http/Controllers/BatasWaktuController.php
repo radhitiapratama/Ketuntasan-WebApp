@@ -168,7 +168,8 @@ class BatasWaktuController extends Controller
             $request->all(),
             [
                 'batas_waktu_id' => "required",
-                'batasWaktu' => "required",
+                'tgl_mulai' => "required",
+                'tgl_selesai' => "required",
                 'status' => "required"
             ],
             [
@@ -189,25 +190,28 @@ class BatasWaktuController extends Controller
             return redirect()->back()->withInput()->with("tglSelesaiLebihKecil", "tglSelesaiLebihKecil");
         }
 
+        if ($request->status == 0) {
+            return redirect()->back();
+        }
+
         if ($request->status == 1) {
+            // Update semua batas waktu menjadi nonaktif di tahun ajaran yang sama
             DB::table("batas_waktu")
-                ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
                 ->update([
                     'status' => 0,
                 ]);
+
+            DB::table("batas_waktu")
+                ->where('batas_waktu_id', $request->batas_waktu_id)
+                ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                ->update([
+                    'start_date' => $tgl_mulai,
+                    'end_date' => $tgl_selesai,
+                    'status' => $request->status,
+                ]);
         }
 
-
-        DB::table("batas_waktu")
-            ->where('batas_waktu_id', $request->batas_waktu_id)
-            ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
-            ->update([
-                'start_date' => $tgl_mulai,
-                'end_date' => $tgl_selesai,
-                'status' => $request->status,
-            ]);
-
-        // return redirect('/batasWaktu')->with('success', 'success');
         return redirect()->back()->with("successUpdate", "successUpdate");
     }
 }

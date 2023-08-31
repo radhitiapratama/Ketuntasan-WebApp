@@ -26,43 +26,68 @@
             </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body">
-            <form>
-                <div class="row justify-content-center">
-                    <div class="col-md-6 col-12">
-                        <div class="form-group">
-                            <label for="#">Mapel</label>
-                            <input type="text" class="form-control pointer-none" value="{{ $mapel->nama_mapel }}"
-                                required>
+    <div class="row">
+        <div class="col-md-6 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="#">Mapel</label>
+                                    <input type="text" class="form-control pointer-none" value="{{ $mapel->nama_mapel }}"
+                                        required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="#">Siswa</label>
+                                    <input type="text" class="form-control" id="siswa"
+                                        value="{{ $ketuntasan->nama }}" disabled required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="#">Status</label>
+                                    @if ($status_batasWaktu)
+                                        <select name="tuntas" id="tuntas" class="form-control select2" required>
+                                            @foreach ($tuntases as $key => $value)
+                                                <option value="{{ $key }}" @selected($key == $ketuntasan->tuntas)>
+                                                    {{ $value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <select name="tuntas" id="tuntas" class="form-control select2" required>
+                                            @foreach ($tuntases as $key => $value)
+                                                <option value="{{ $key }}" @selected($key == $ketuntasan->tuntas)>
+                                                    {{ $value }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    @endif
+                                </div>
+                                <div class="form-group">
+                                    <label for="#">Deskripsi</label>
+                                    <textarea name="deskripsi" id="deskripsi" class="form-control">{{ $ketuntasan->desc }}</textarea>
+                                </div>
+                                @if ($status_batasWaktu == 'dalamBatasWaktu')
+                                    <button type="button" class="btn-dark" id="btn-edit">
+                                        <i class="ri-check-line"></i>
+                                        Update
+                                    </button>
+                                @elseif($status_batasWaktu == 'kurang')
+                                    <button type="button" class="btn-dark">
+                                        <i class="ri-close-circle-line"></i>
+                                        Kurang dari batas waktu
+                                    </button>
+                                @elseif($status_batasWaktu == 'lebih')
+                                    <button type="button" class="btn-dark">
+                                        <i class="ri-close-circle-line"></i>
+                                        Lebih dari batas waktu
+                                    </button>
+                                @endif
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="#">Siswa</label>
-                            <input type="text" class="form-control" id="siswa" value="{{ $ketuntasan->nama }}"
-                                disabled required>
-                        </div>
-                        <div class="form-group">
-                            <label for="#">Status</label>
-                            <select name="tuntas" id="tuntas" class="form-control select2" required>
-                                @foreach ($tuntases as $key => $value)
-                                    <option value="{{ $key }}" @selected($key == $ketuntasan->tuntas)>{{ $value }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="#">Deskripsi</label>
-                            <textarea name="deskripsi" id="deskripsi" class="form-control">
-                                {{ $ketuntasan->desc }}
-                            </textarea>
-                        </div>
-                        <button type="button" class="btn-dark m-auto" id="btn-edit">
-                            <i class="ri-check-line"></i>
-                            Update
-                        </button>
-                    </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -97,51 +122,53 @@
 
         const csrfToken = $("meta[name='csrf-token']").attr("content");
 
-        $("#btn-edit").click(function() {
-            showLoading();
-            $.ajax({
-                type: "POST",
-                url: "{{ url('ketuntasan/update') }}",
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                data: {
-                    ketuntasan_id: {{ $ketuntasan->ketuntasan_id }},
-                    tuntas: $("#tuntas").val(),
-                    deskripsi: $("#deskripsi").val(),
-                },
-                dataType: "json",
-                success: function(response) {
-                    if (response.message == 'success') {
-                        hideLoading();
-                        Swal.fire({
-                            title: "Ketuntasan siswa berhasil di update",
-                            icon: "success",
-                            iconColor: 'white',
-                            customClass: {
-                                popup: 'colored-toast'
-                            },
-                            toast: true,
-                            position: 'top-right',
-                            showConfirmButton: false,
-                            timer: 4000,
-                            timerProgressBar: true
-                        });
+        @if ($status_batasWaktu == 'dalamBatasWaktu')
+            $("#btn-edit").click(function() {
+                showLoading();
+                $.ajax({
+                    type: "POST",
+                    url: "{{ url('ketuntasan/update') }}",
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    data: {
+                        ketuntasan_id: {{ $ketuntasan->ketuntasan_id }},
+                        tuntas: $("#tuntas").val(),
+                        deskripsi: $("#deskripsi").val(),
+                    },
+                    dataType: "json",
+                    success: function(response) {
+                        if (response.message == 'success') {
+                            hideLoading();
+                            Swal.fire({
+                                title: "Ketuntasan siswa berhasil di update",
+                                icon: "success",
+                                iconColor: 'white',
+                                customClass: {
+                                    popup: 'colored-toast'
+                                },
+                                toast: true,
+                                position: 'top-right',
+                                showConfirmButton: false,
+                                timer: 4000,
+                                timerProgressBar: true
+                            });
 
-                        let text = "";
-                        let value = "";
-                        if (response.ketuntasan.tuntas == 1) {
-                            text = "Tuntas";
-                            value = 1;
-                        } else {
-                            text = "Belum Tuntas";
-                            value = 0;
+                            let text = "";
+                            let value = "";
+                            if (response.ketuntasan.tuntas == 1) {
+                                text = "Tuntas";
+                                value = 1;
+                            } else {
+                                text = "Belum Tuntas";
+                                value = 0;
+                            }
+                            $("select[name='status']").val(value).trigger("change");
+                            $("#deskripsi").val(response.ketuntasan.desc);
                         }
-                        $("select[name='status']").val(value).trigger("change");
-                        $("#deskripsi").val(response.ketuntasan.desc);
                     }
-                }
+                });
             });
-        });
+        @endif
     </script>
 @endsection

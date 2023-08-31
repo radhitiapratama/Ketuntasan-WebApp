@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admin;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use PDO;
 
 class AuthController extends Controller
 {
@@ -23,20 +25,68 @@ class AuthController extends Controller
             'password' => "required",
         ]);
 
-        if (Auth::attempt($validated)) {
+        if (Auth::guard("admin")->attempt($validated)) {
             $request->session()->regenerate();
-
-
-            if (auth()->user()->role == 1) {
-                return redirect()->intended("/tahun-ajaran");
-            }
-
-            if (auth()->user()->role == 2 || auth()->user()->role == 3) {
-                return redirect()->intended("/ketuntasan");
-            }
+            return redirect()->intended("/tahun-ajaran");
+        }
+        if (Auth::guard('guru')->attempt($validated)) {
+            $request->session()->regenerate();
+            return redirect()->intended("/ketuntasan");
         }
 
+        if (Auth::guard("siswa")->attempt($validated)) {
+            $request->session()->regenerate();
+            return redirect()->intended("/ketuntasan");
+        }
+
+
+
         return redirect()->back()->with("loginFailed", "loginFailed")->withInput();
+
+        // $credentials = array();
+
+        // $sql_admin = DB::table("users as u")
+        //     ->join('admin as ad', 'ad.user_id', '=', 'u.user_id')
+        //     ->where("ad.username", $request->username)
+        //     ->first();
+
+        // if (!empty($sql_admin)) {
+        //     $credentials = (array) $sql_admin;
+        // }
+
+        // $sql_guru = DB::table("users as u")
+        //     ->join('guru as g', 'g.user_id', '=', 'u.user_id')
+        //     ->where("g.username", $request->username)
+        //     ->first();
+
+        // if (!empty($sql_guru)) {
+        //     $credentials = (array) $sql_guru;
+        // }
+
+        // $sql_siswa = DB::table("users as u")
+        //     ->join('siswa as s', 's.user_id', '=', 'u.user_id')
+        //     ->where("s.username", $request->username)
+        //     ->first();
+
+        // if (!empty($sql_siswa)) {
+        //     $credentials = (array) $sql_siswa;
+        // }
+
+        // if (Auth::attempt($validated)) {
+        //     dd(auth()->user());
+
+        //     $request->session()->regenerate();
+
+
+        //     if (auth()->user()->role == 1) {
+        //         return redirect()->intended("/tahun-ajaran");
+        //     }
+
+        //     if (auth()->user()->role == 2 || auth()->user()->role == 3) {
+        //         return redirect()->intended("/ketuntasan");
+        //     }
+        // }
+
     }
 
     public function logout(Request $request)
@@ -70,6 +120,25 @@ class AuthController extends Controller
 
             $dataToView = [
                 'user' => $sql_user
+            ];
+
+            return view("pages.akun.index", $dataToView);
+        }
+
+        if (Gate::allows("guru")) {
+            $sql_user = DB::table("users")
+                ->where("user_id", auth()->user()->user_id)
+                ->first();
+
+            $sql_mapel = DB::table("guru_mapel as gm")
+                ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+                ->where("gm.user_id", auth()->user()->user_id)
+                ->where("gm.status", 1)
+                ->get();
+
+            $dataToView =  [
+                'user' => $sql_user,
+                'mapels' => $sql_mapel
             ];
 
             return view("pages.akun.index", $dataToView);

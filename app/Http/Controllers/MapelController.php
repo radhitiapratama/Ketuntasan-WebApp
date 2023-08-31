@@ -121,10 +121,11 @@ class MapelController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'nama_mapel' => "required",
+                'nama_mapel' => "required|unique:mapel,nama_mapel",
             ],
             [
-                'required' => ":attribute wajib di isi"
+                'required' => ":attribute wajib di isi",
+                'unique' => ":attribute sudah ada"
             ]
         );
 
@@ -139,7 +140,7 @@ class MapelController extends Controller
         DB::table("mapel")
             ->insert($data_insert);
 
-        return redirect("/mapel")->with("successStore", "successStore");
+        return redirect()->back()->with("successStore", "successStore");
     }
 
     public function edit($mapel_id)
@@ -203,12 +204,16 @@ class MapelController extends Controller
         return redirect()->back()->with('successUpdate', "successUpdate");
     }
 
-    public function importMapel(Request $request)
+    public function import(Request $request)
     {
         $validator = Validator::make(
             $request->all(),
             [
-                'file' => "required|mimes:xlsx,csv"
+                'excel_file' => "required|mimes:xlsx"
+            ],
+            [
+                'excel_file.mimes' => 'Extensi file yg di import wajib .xlsx',
+                'excel_file.required' => "File yg ingin di import wajib di isi"
             ]
         );
 
@@ -216,10 +221,10 @@ class MapelController extends Controller
             return redirect()->back()->withInput()->withErrors($validator);
         }
 
-        $file = $request->file('file');
+        $file = $request->file('excel_file');
         $mapel = new MapelImport;
         $mapel->import($file);
 
-        return redirect("/mapel")->with("successImport", "successImport");
+        return redirect("/mapel")->with("success_import", "Data Mapel berhasil di import");
     }
 }

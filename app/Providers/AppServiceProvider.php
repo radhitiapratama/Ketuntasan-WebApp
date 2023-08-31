@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Admin;
 use Illuminate\Support\ServiceProvider;
 
 use Illuminate\Support\Facades\Gate;
 use App\Models\User;
-use Symfony\Component\CssSelector\Node\FunctionNode;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,16 +27,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        Gate::define("admin", function (User $user) {
-            return $user->role == 1;
-        });
+        // Gate::define("admin", function (Admin $admin) {
+        //     return auth()->guard("admin")->check();
+        // });
 
-        Gate::define("guru", function (User $user) {
-            return $user->role == 2;
-        });
+        // Gate::define("guru", function (User $user) {
+        //     return auth()->guard("guru")->check();
+        // });
 
-        Gate::define("siswa", function (User $user) {
-            return $user->role == 3;
-        });
+        // Gate::define("siswa", function (User $user) {
+        //     return auth()->guard("siswa")->check();
+        // });
     }
 }

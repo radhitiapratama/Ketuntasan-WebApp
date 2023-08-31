@@ -183,13 +183,13 @@
                         <table class="table table-bordered" id="tbl-ketuntasan" style="width: 100%">
                             <thead>
                                 <tr style="border-bottom: none !important">
-                                    <th style="width: 5px">#</th>
-                                    <th>Mapel</th>
-                                    <th>Guru</th>
-                                    <th class="text-center" style="width: 5px">Tuntas</th>
-                                    <th>Deskripsi</th>
-                                    <th class="text-center">Tgl Tuntas</th>
-                                    <th class="text-center" style="width: 5px">Semester</th>
+                                    <th width="5px">#</th>
+                                    <th width="20%">Mapel</th>
+                                    <th width="20%">Guru</th>
+                                    <th class="text-center" width="5px">Tuntas</th>
+                                    <th width="20%">Deskripsi</th>
+                                    <th width="20%" class="text-center">Tgl Tuntas</th>
+                                    <th class="text-center" width="5px">Semester</th>
                                 </tr>
                             </thead>
                             <tbody>

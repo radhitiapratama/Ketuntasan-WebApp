@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
@@ -18,8 +19,8 @@ class UserController extends Controller
     public function superadmin(Request $request)
     {
         if ($request->ajax()) {
-            $columnsSearch = ['username', 'nama'];
-            $table = DB::table("users");
+            $columnsSearch = ['a.username', 'a.nama'];
+            $table = DB::table("users as u");
 
             if ($request->input("search.value")) {
                 $table->where(function ($q) use ($columnsSearch, $request) {
@@ -29,8 +30,9 @@ class UserController extends Controller
                 });
             }
 
-            $query = $table->select('user_id', 'username', 'nama', 'status')
-                ->where("role", 1);
+            $query = $table->select('u.user_id', 'a.username', 'a.nama', 'a.status')
+                ->join('admin as a', 'a.user_id', '=', 'u.user_id');
+
 
             $records = $query->count();
 
@@ -79,15 +81,7 @@ class UserController extends Controller
                 'data' => $data,
             ]);
         }
-
-        $superadmin = User::select('user_id', "username", 'nama', 'status')->where("role", 1)->get();
-
-
-        $dataToView = [
-            'superadmins' => $superadmin,
-        ];
-
-        return view("pages.user.superadmin.index", $dataToView);
+        return view("pages.user.superadmin.index");
     }
 
     public function superadmin_add()
@@ -95,81 +89,40 @@ class UserController extends Controller
         return view("pages.user.superadmin.add");
     }
 
+
     public function superadmin_store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => "required|unique:users,username",
+            'username' => "required|unique:admin,username",
             'nama' => "required",
             'password' => "required|min:6",
+        ], [
+
+            'username.required' => "Username wajib di isi",
+            'username.unique' => "Username sudah di gunakan",
+            'username.password' => "Password minimal 6"
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        User::create([
+        $user = User::create([
+            'created_by' => auth()->guard("admin")->user()->user_id,
+        ]);
+
+        $lastUserId = $user->user_id;
+
+        Admin::create([
+            'user_id' => $lastUserId,
             'username' => $request->username,
             'nama' => $request->nama,
             'password' => Hash::make($request->password),
             'role' => 1,
+            'status' => 1,
+            'created_by' => auth()->guard("admin")->user()->user_id,
         ]);
 
         return redirect()->back()->with("successStore", "successStore");
-    }
-
-    public function superadmin_edit($user_id)
-    {
-        if (!isset($user_id)) {
-            return redirect()->back();
-        }
-
-        $dataUser = User::select("user_id", 'username', 'nama', 'status', 'role')->where("user_id", $user_id)->first();
-
-        if (empty($dataUser) || $dataUser->role != 1) {
-            return redirect()->back();
-        }
-
-        $dataToView  = [
-            'user' => $dataUser,
-            'statuses' => $this->statuses,
-        ];
-
-        return view('pages.user.superadmin.edit', $dataToView);
-    }
-
-    public function superadmin_update(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'username' => "required",
-            'nama' => "required",
-            'status' => "required",
-        ]);
-
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
-        $user = User::select("user_id", 'username', 'nama', 'status')->where('user_id', $request->user_id)->first();
-
-        $dataUpdate = [];
-
-        if ($request->username != $user->username) {
-            $check = User::select("username")->where("username", $request->username)->first();
-            if ($check) {
-                return redirect()->back()->with("usernameDuplicate", "usernameDuplicate");
-            }
-            $dataUpdate['username'] = $request->username;
-        }
-
-        if ($request->nama != $user->nama) {
-            $dataUpdate['nama'] = $request->nama;
-        }
-
-        $dataUpdate['status'] = $request->status;
-
-        User::where("user_id", $request->user_id)
-            ->update($dataUpdate);
-
-        return redirect()->back()->with("successUpdate", "successUpdate");
     }
 }

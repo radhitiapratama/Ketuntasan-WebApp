@@ -1,25 +1,25 @@
 <!-- Brand Logo -->
-{{-- <a href="index3.html" class="brand-link">
+<a href="#" class="brand-link">
     <img src="{{ asset('/') }}dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
-        style="opacity: .8">
+        style="opacity: .8; margin-right: 20px">
     <span class="brand-text font-weight-light">Ketuntasan</span>
-</a> --}}
+</a>
 
 <!-- Sidebar -->
 <div class="sidebar">
     <!-- Sidebar user panel (optional) -->
-    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+    {{-- <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
             <img src="{{ asset('/') }}dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
         </div>
-        <div class="info">
+        <div class="info ">
             <a href="#" class="d-block">{{ Str::limit(auth()->user()->nama, 15) }}</a>
         </div>
-    </div>
+    </div> --}}
 
     <!-- Sidebar Menu -->
     <nav class="mt-2">
-        @can('admin')
+        @auth('admin')
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 <li class="nav-item  {{ Request::is('superadmin', 'superadmin/*') ? 'menu-open' : '' }} ">
                     <a href="#" class="nav-link {{ Request::is('superadmin', 'superadmin/*') ? 'active' : '' }} ">
@@ -178,9 +178,9 @@
                     </a>
                 </li>
             </ul>
-        @endcan
+        @endauth
 
-        @can('siswa')
+        @auth('siswa')
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 <li class="nav-item">
                     <a href="{{ url('ketuntasan') }}"
@@ -208,9 +208,9 @@
                     </a>
                 </li>
             </ul>
-        @endcan
+        @endauth
 
-        @can('guru')
+        @auth('guru')
             @php
                 $tahun = DB::table('tahun_ajaran')
                     ->select('tahun_ajaran_id')
@@ -249,6 +249,14 @@
                     </li>
                 @endif
                 <li class="nav-item">
+                    <a href="{{ url('akun') }}" class="nav-link {{ Request::is('akun', 'akun/*') ? 'active' : '' }}">
+                        <i class="nav-icon ri-settings-3-line"></i>
+                        <p>
+                            Akun
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ url('logout') }}" class="nav-link">
                         <i class="nav-icon ri-logout-box-line"></i>
                         <p>
@@ -257,7 +265,7 @@
                     </a>
                 </li>
             </ul>
-        @endcan
+        @endauth
 
     </nav>
     <!-- /.sidebar-menu -->

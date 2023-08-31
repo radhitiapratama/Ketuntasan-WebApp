@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\KelasImport;
+use App\Imports\KelasMapelImport;
 use App\Models\Kelas;
 use App\Models\KelasMapel;
 use Carbon\Carbon;
@@ -9,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaran;
 use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class KelasController extends Controller
 {
@@ -614,5 +617,54 @@ class KelasController extends Controller
         }
 
         return redirect()->back()->with("successUpdate", "successUpdate");
+    }
+
+    public function import(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'excel_file' => "required|mimes:xlsx"
+            ],
+            [
+                'excel_file.mimes' => 'Extensi file yg di import wajib .xlsx',
+                'excel_file.required' => "File yg ingin di import wajib di isi"
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $fileName = $request->file("excel_file");
+        $kelasImport = new KelasImport;
+        $kelasImport->import($fileName);
+
+        return redirect()->back()->with("success_import", "Data Kelas berhasil di import");
+    }
+
+    public function kelasMapel_import(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'excel_file' => "required|mimes:xlsx"
+            ],
+            [
+                'excel_file.mimes' => 'Extensi file yg di import wajib .xlsx',
+                'excel_file.required' => "File yg ingin di import wajib di isi"
+
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $file = $request->file("excel_file");
+        $kelasMapelImport = new KelasMapelImport;
+        $kelasMapelImport->import($file);
+
+        return redirect()->back()->with("success_import", "Data Kelas Mapel berhasil di import");
     }
 }

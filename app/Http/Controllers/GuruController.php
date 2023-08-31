@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Imports\GuruImport;
-use App\Models\GuruMapel;
-use App\Models\Kelas;
-use App\Models\TahunAjaran;
 use Carbon\Carbon;
+use App\Models\Guru;
+use App\Models\User;
+use App\Models\Kelas;
+use App\Models\GuruMapel;
+use App\Imports\GuruImport;
+use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
+use App\Imports\GuruMapelImport;
+use App\Imports\waliKelasImport;
+use App\Models\Mapel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 
 class GuruController extends Controller
@@ -30,8 +34,8 @@ class GuruController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $columnsSearch = ['username', 'nama', 'user_id'];
-            $table = DB::table("users");
+            $columnsSearch = ['username', 'nama', 'status', 'role', 'kode_guru'];
+            $table = DB::table("guru");
 
             if ($request->input("search.value")) {
                 $table->where(function ($q) use ($columnsSearch, $request) {
@@ -41,8 +45,7 @@ class GuruController extends Controller
                 });
             }
 
-            $query = $table->select('user_id', 'username', 'nama', 'status')
-                ->where("role", 2);
+            $query = $table->select('guru_id', 'username', 'nama', 'status', 'kode_guru');
 
             if ($request->status != null) {
                 $query->where('status', $request->status);
@@ -52,7 +55,7 @@ class GuruController extends Controller
 
             $result = $query->offset($request->start)
                 ->limit($request->length)
-                ->orderByRaw("nama ASC")
+                ->orderByRaw("kode_guru ASC")
                 ->get();
 
             $data = [];
@@ -80,13 +83,13 @@ class GuruController extends Controller
 
                     $subData['kode_guru'] = '
                     <div class="text-center">
-                        ' . $row->user_id . '  
+                        ' . $row->kode_guru . '  
                     </div>
                     ';
 
                     $subData['setting'] = '
                     <div class="setting-icons">
-                        <a href="guru/edit/' . $row->user_id . '" class="setting-edit">
+                        <a href="guru/edit/' . $row->guru_id . '" class="setting-edit">
                             <i class="ri-pencil-line"></i>
                         </a>
                     </div>
@@ -104,13 +107,7 @@ class GuruController extends Controller
             ]);
         }
 
-        $data_guru = User::select("user_id", 'username', 'nama', 'status')->where("role", 2)->get();
-
-        $dataToView = [
-            'gurus' => $data_guru,
-        ];
-
-        return view("pages.guru.index", $dataToView);
+        return view("pages.guru.index");
     }
 
     public function add()
@@ -121,41 +118,56 @@ class GuruController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            "username" => "required|unique:users,username",
+            "username" => "required|unique:guru,username",
             'nama_guru' => "required",
             'password' => "required|min:6",
+            'kode_guru' => "required|unique:guru,kode_guru|numeric"
         ], [
-            'required' => ":attribute wajib di isi",
-            'unique' => ":attribute sudah di gunakan",
-            'min' => ":attribute harus lebih dari 6 karakter"
+            'username.required' => "Username wajib di isi",
+            'username.unique' => "Username sudah di gunakan",
+            'nama_guru.required' => "Nama Guru wajib di isi",
+            'password.required' => "Password wajib di isi",
+            'password.min' => "Password minimal 6 huruf",
+            'kode_guru.required' => "Kode Guru wajib di isi",
+            'kode_guru.unique' => "Kode Guru sudah di gunakan",
+            'kode_guru.numeric' => "Kode Guru wajib angka"
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        User::create([
+        $user = User::create([
+            'created_by' => auth()->guard("admin")->user()->user_id
+        ]);
+
+        $lastInsertId = $user->user_id;
+
+        Guru::create([
+            'user_id' => $lastInsertId,
             'username' => $request->username,
             'nama' => $request->nama_guru,
             'password' => Hash::make($request->password),
+            'kode_guru' => $request->kode_guru,
+            'status' => 1,
             'role' => 2,
+            'created_by' => auth()->guard("admin")->user()->user_id
         ]);
 
         return redirect()->back()->with("successStore", "successStore");
     }
 
-    public function edit($user_id)
+    public function edit($guru_id)
     {
-        if (!isset($user_id)) {
+        if (!isset($guru_id)) {
             return redirect()->back();
         }
 
-        $sql_guru = DB::table("users")
-            ->select('user_id', 'username', 'nama', 'status', 'role')
-            ->where('user_id', $user_id)
+        $sql_guru = Guru::select("guru_id", 'username', 'nama', 'status', 'kode_guru')
+            ->where("guru_id", $guru_id)
             ->first();
 
-        if (empty($sql_guru) || $sql_guru->role != 2) {
+        if (empty($sql_guru)) {
             return redirect()->back();
         }
 
@@ -171,12 +183,16 @@ class GuruController extends Controller
     public function update(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            "user_id" => "required",
+            "guru_id" => "required",
             'username' => "required",
             'nama' => "required",
             'status' => "required",
+            'kode_guru' => "required",
         ], [
-            'required' => ":attribute wajib di isi"
+            'username.required' => "Username wajib di isi",
+            'nama.required' => "Nama Guru wajib di isi",
+            'status.required' => "Status wajib di isi",
+            'kode_guru.required' => "Kode Guru wajib di isi",
         ]);
 
         if ($validator->fails()) {
@@ -187,16 +203,17 @@ class GuruController extends Controller
             'status' => $request->status,
         ];
 
-        $data_guru = DB::table("users")
-            ->select('user_id', 'username', 'nama', 'status')
-            ->where('user_id', $request->user_id)
-            ->first();
+        $sql_guru = Guru::where("guru_id", $request->guru_id)->first();
 
+        if ($request->kode_guru != $sql_guru->kode_guru) {
+            $check = Guru::where("kode_guru", $sql_guru->kode_guru)->first();
+            if ($check) {
+                return redirect()->back()->with("duplicateKodeGuru", "duplicateKodeGuru")->withInput();
+            }
+        }
 
-        if ($request->username != $data_guru->username) {
-            $check = DB::table("users")
-                ->select('user_id')
-                ->where('username', $request->username)
+        if ($request->username != $sql_guru->username) {
+            $check = Guru::where("username", $request->username)
                 ->first();
 
             //jika sudah ada username redirect back
@@ -208,13 +225,12 @@ class GuruController extends Controller
             $dataToUpdate['username'] = $request->username;
         }
 
-        if ($request->nama != $data_guru->nama) {
+        if ($request->nama != $sql_guru->nama) {
             // update field nama
             $dataToUpdate['nama'] = $request->nama;
         }
 
-        DB::table('users')
-            ->where('user_id', $request->user_id)
+        Guru::where("guru_id", $request->guru_id)
             ->update($dataToUpdate);
 
         return redirect()->back()->with("successEdit", 'successEdit');
@@ -223,8 +239,8 @@ class GuruController extends Controller
     public function guruMapel(Request $request)
     {
         if ($request->ajax()) {
-            $columnsSearch = ['username', 'nama', 'user_id'];
-            $table = DB::table("users");
+            $columnsSearch = ['username', 'nama'];
+            $table = DB::table("guru");
 
             if ($request->input("search.value")) {
                 $table->where(function ($q) use ($columnsSearch, $request) {
@@ -234,8 +250,7 @@ class GuruController extends Controller
                 });
             }
 
-            $query = $table->select('user_id', 'username', 'nama', 'status')
-                ->where("role", 2)
+            $query = $table->select('guru_id', 'username', 'nama', 'status')
                 ->where('status', 1);
 
             $filtered = $query->count();
@@ -257,18 +272,18 @@ class GuruController extends Controller
 
                     $subData['kode_guru'] = '
                     <div class="text-center">
-                        ' . $row->user_id . '
+                        ' . $row->guru_id . '
                     </div>
                     ';
 
                     $subData['settings'] = '
                     <div class="setting-icons">
                         <button type="button" class="setting-icon setting-detail detail-guru-mapel"
-                            data-guru-id="' . $row->user_id . '" data-toggle="modal"
+                            data-guru-id="' . $row->guru_id . '" data-toggle="modal"
                             data-target="#modal_detailMapel">
                             <i class="ri-eye-line"></i>
                         </button>
-                        <a href="/guru-mapel/edit/' . $row->user_id . '"
+                        <a href="/guru-mapel/edit/' . $row->guru_id . '"
                             class="setting-icon setting-edit">
                             <i class="ri-pencil-line"></i>
                         </a>
@@ -292,19 +307,12 @@ class GuruController extends Controller
 
     public function guruMapel_add()
     {
-        $data_guru = DB::table("users")
-            ->select('user_id', 'nama')
-            ->where('role', 2)
-            ->get();
-
-        $data_mapel = DB::table("mapel")
-            ->select('mapel_id', 'nama_mapel')
-            ->where('status', 1)
-            ->get();
+        $sql_guru = Guru::where("status", 1)->get();
+        $sql_mapel = Mapel::where("status", 1)->get();
 
         $dataToView = [
-            'gurus' => $data_guru,
-            'mapels' => $data_mapel,
+            'gurus' => $sql_guru,
+            'mapels' => $sql_mapel,
         ];
 
         return view("pages.guru.guruMapel.add", $dataToView);
@@ -334,20 +342,49 @@ class GuruController extends Controller
         }
 
         for ($i = 0; $i < count($mapel_id); $i++) {
-            $sql_check = DB::table("guru_mapel")
-                ->where('user_id', $request->user_id)
-                ->where('mapel_id', $mapel_id[$i])
+            $sql_checkDuplicate = DB::table("guru_mapel")
+                ->where("guru_id", $request->guru_id)
+                ->where("mapel_id", $mapel_id[$i])
                 ->first();
 
-            if ($sql_check) {
+            if ($sql_checkDuplicate) {
                 continue;
             }
 
-            GuruMapel::create([
-                'user_id' => $request->user_id,
-                'mapel_id' => $mapel_id[$i],
-                'status' => 1,
-            ]);
+            $sql_count = DB::table("guru_mapel")
+                ->where("guru_id", $request->guru_id)
+                ->count();
+
+            if ($sql_count == 0) {
+                GuruMapel::create([
+                    'guru_id' => $request->guru_id,
+                    'mapel_id' => $mapel_id[$i],
+                    'kode_guru_mapel' => null,
+                    'status' => 1,
+                    'created_by' => auth()->guard("admin")->user()->user_id
+                ]);
+            } elseif ($sql_count == 1) {
+                GuruMapel::where("guru_id", $request->guru_id)
+                    ->update([
+                        'kode_guru_mapel' => 1,
+                    ]);
+
+                GuruMapel::create([
+                    'guru_id' => $request->guru_id,
+                    'mapel_id' => $mapel_id[$i],
+                    'kode_guru_mapel' => $sql_count + 1,
+                    'status' => 1,
+                    'created_by' => auth()->guard("admin")->user()->user_id
+                ]);
+            } else {
+                GuruMapel::create([
+                    'guru_id' => $request->guru_id,
+                    'mapel_id' => $mapel_id[$i],
+                    'kode_guru_mapel' => $sql_count + 1,
+                    'status' => 1,
+                    'created_by' => auth()->guard("admin")->user()->user_id
+                ]);
+            }
         }
 
         $dataResponse = [
@@ -362,14 +399,15 @@ class GuruController extends Controller
         $guru_id = $request->guru_id;
 
         $sql_mapel = DB::table("guru_mapel as gm")
-            ->select('m.nama_mapel', 'gm.status')
+            ->select("m.nama_mapel", 'gm.kode_guru_mapel', 'gm.status', 'gm.kode_guru_mapel', 'g.kode_guru')
             ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
-            ->where('gm.user_id', $guru_id)
+            ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+            ->where("gm.guru_id", $guru_id)
             ->get();
 
-        $sql_guru = DB::table("users")
-            ->select('nama')
-            ->where('user_id', $guru_id)
+        $sql_guru = DB::table('guru')
+            ->select("nama")
+            ->where("guru_id", $guru_id)
             ->first();
 
         $dataToView  = [
@@ -386,18 +424,16 @@ class GuruController extends Controller
             return redirect()->back();
         }
 
-        $sql_guru =  DB::table("users")
-            ->where('user_id', $guru_id)
-            ->first();
+        $sql_guru = Guru::where("guru_id", $guru_id)->first();
 
-        if ($sql_guru->role != 2 || $sql_guru->status == 0) {
+        if ($sql_guru->status == 0) {
             return redirect()->back();
         }
 
         $sql_guru_mapels = DB::table("guru_mapel as gm")
-            ->select('gm.status', 'm.mapel_id', 'm.nama_mapel', 'gm.guru_mapel_id')
+            ->select('gm.status', 'm.mapel_id', 'm.nama_mapel', 'gm.guru_mapel_id', 'gm.kode_guru_mapel')
             ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
-            ->where('gm.user_id', $guru_id)
+            ->where('gm.guru_id', $guru_id)
             ->get();
 
         $sql_mapels = DB::table("mapel")
@@ -420,13 +456,21 @@ class GuruController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'user_id' => 'required',
+                'guru_id' => 'required',
                 'mapel_id' => "required",
                 'status' => "required",
                 'guru_mapel_id' => 'required',
+                'kode_guru_mapel' => "required|numeric",
             ],
             [
-                'required' => ":attribute wajib di isi"
+                'guru_id.required' => "User ID Wajib di isi",
+                'mapel_id.required' => "Mapel wajib di isi",
+                'status.required' => "Status wajib di isi",
+                'guru_mapel_id.required' => "Guru Mapel wajib di isi",
+                'kode_guru_mapel.required' => "Kode Guru Mapel wajib di isi",
+                'kode_guru_mapel.unique' => "Kode Guru Mapel sudah di gunakan",
+                'kode_guru.required' => "Kode Guru wajib di isi",
+                'kode_guru_mapel.numeric' => "Kode Guru wajib angka"
             ]
         );
 
@@ -436,18 +480,51 @@ class GuruController extends Controller
 
         $mapel_id = $request->mapel_id;
         $guru_mapel_id = $request->guru_mapel_id;
+        $kode_guru_mapel = $request->kode_guru_mapel;
+        $status = $request->status;
+
+        DB::beginTransaction();
 
         for ($i = 0; $i < count($guru_mapel_id); $i++) {
-            DB::table("guru_mapel")
-                ->where('guru_mapel_id', $guru_mapel_id[$i])
-                ->update([
-                    'mapel_id' => $mapel_id[$i],
-                    'status' => $request->status[$i],
-                    'updated_at' => date("Y-m-d H:i:s"),
-                ]);
+            $dataUpdate = [];
+
+            // ambil data guru mapel
+            $sql_guruMapel = GuruMapel::where("guru_mapel_id", $guru_mapel_id[$i])->first();
+
+            if ($mapel_id[$i] != $sql_guruMapel->mapel_id) {
+                $dataUpdate['mapel_id'] = $mapel_id[$i];
+            }
+
+            if ($kode_guru_mapel[$i] != $sql_guruMapel->kode_guru_mapel) {
+                // check apakah ada kode guru mapel yg sama sesuai guru id
+                $sql_check_kodeGuruMapel = GuruMapel::where("kode_guru_mapel", $kode_guru_mapel[$i])
+                    ->where("guru_id", $request->guru_id)
+                    ->first();
+
+                if ($sql_check_kodeGuruMapel) {
+                    DB::rollBack();
+                    return redirect()->back()->with("duplicateKodeGuruMapel", "Kode Guru mapel sudah di gunakan");
+                }
+
+                $dataUpdate['kode_guru_mapel'] = $kode_guru_mapel[$i];
+            }
+
+            if ($status[$i] != $sql_guruMapel->status) {
+                $dataUpdate['status'] = $status[$i];
+            }
+
+            if (!empty($dataUpdate)) {
+                $dataUpdate['updated_at'] = Carbon::now();
+                $dataUpdate['updated_by'] = auth()->guard("admin")->user()->user_id;
+
+                GuruMapel::where("guru_mapel_id", $guru_mapel_id[$i])
+                    ->update($dataUpdate);
+            }
         }
 
-        return redirect()->back()->with("successUpdate", "successUpdate");
+        DB::commit();
+
+        return redirect()->back()->with("successUpdate", "successUpdate")->withInput();
     }
 
     public function getDataGuruByMapel(Request $request)
@@ -484,7 +561,7 @@ class GuruController extends Controller
                 });
             }
 
-            $query = $table->select('j.nama_jurusan', 'k.nama_kelas', 'u.nama', 'wk.wali_kelas_id', 'wk.tingkatan')
+            $query = $table->select('j.nama_jurusan', 'k.nama_kelas', 'u.nama', 'u.username', 'wk.wali_kelas_id', 'wk.tingkatan')
                 ->join('jurusan as j', 'j.jurusan_id', '=', 'wk.jurusan_id')
                 ->join('kelas as k', 'k.kelas_id', '=', 'wk.kelas_id')
                 ->join('users as u', 'u.user_id', '=', 'wk.user_id')
@@ -517,6 +594,7 @@ class GuruController extends Controller
                     $i++;
                     $subData = [];
                     $subData['no'] = $i;
+                    $subData['username'] = $row->username;
                     $subData['nama'] = $row->nama;
 
                     if ($row->tingkatan == 1) {
@@ -580,10 +658,6 @@ class GuruController extends Controller
     {
         $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
-        $sql_jurusan = DB::table("jurusan")
-            ->where('status', 1)
-            ->get();
-
         $sql_guruWali = DB::table('wali_kelas')
             ->select('user_id')
             ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id);
@@ -594,9 +668,18 @@ class GuruController extends Controller
             ->whereNotIn('user_id', $sql_guruWali)
             ->get();
 
+        $sql_kelas = Kelas::with([
+            'jurusan' => function ($query) {
+                $query->select("jurusan_id", 'nama_jurusan')
+                    ->where("status", 1);
+            }
+        ])
+            ->where("status", 1)
+            ->get();
+
         $dataToView = [
             'tingkatans' => $this->tingkatans,
-            'jurusans' => $sql_jurusan,
+            'kelases' => $sql_kelas,
             'gurus' => $sql_guru,
         ];
 
@@ -609,7 +692,6 @@ class GuruController extends Controller
             $request->all(),
             [
                 'tingkatan_id' => "required",
-                'jurusan_id' => "required",
                 'kelas_id' => "required",
                 'user_id' => "required",
             ],
@@ -624,11 +706,15 @@ class GuruController extends Controller
 
         $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
+        // [0] => jurusan_id
+        // [1] => kelas_id
+        $arrKelas = explode("|", $request->kelas_id);
+
         $sql_check = DB::table("wali_kelas")
             ->select('wali_kelas_id')
             ->where('tingkatan', $request->tingkatan_id)
-            ->where('jurusan_id', $request->jurusan_id)
-            ->where('kelas_id', $request->kelas_id)
+            ->where('jurusan_id', $arrKelas[0])
+            ->where('kelas_id', $arrKelas[1])
             ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
             ->first();
 
@@ -639,8 +725,8 @@ class GuruController extends Controller
         DB::table("wali_kelas")
             ->insert([
                 'tingkatan' => $request->tingkatan_id,
-                'jurusan_id' => $request->jurusan_id,
-                'kelas_id' => $request->kelas_id,
+                'jurusan_id' => $arrKelas[0],
+                'kelas_id' => $arrKelas[1],
                 'user_id' => $request->user_id,
                 'tahun_ajaran_id' => $tahun_ajaran->tahun_ajaran_id,
                 'created_at' => Carbon::now(),
@@ -719,20 +805,27 @@ class GuruController extends Controller
 
     public function importGuru(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'file_import' => "required|mimes:xlsx",
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'excel_file' => "required|mimes:xlsx",
+            ],
+            [
+                'excel_file.mimes' => 'Extensi file yg di import wajib .xlsx',
+                'excel_file.required' => "File yg ingin di import wajib di isi"
+            ]
+        );
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $file = $request->file("file_import");
+        $file = $request->file("excel_file");
 
         $guru = new GuruImport;
         $guru->import($file);
 
-        return redirect('guru')->with('successImport', "successImport");
+        return redirect('guru')->with('successImport', "Data guru berhasil di import");
     }
 
     public function waliKelas_dataSiswa(Request $request)
@@ -962,5 +1055,48 @@ class GuruController extends Controller
         ];
 
         return view("pages.ketuntasan.waliKelas.detail", $dataToView);
+    }
+
+    public function importGuruMapel(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'excel_file' => "required|mimes:xlsx"
+            ],
+            [
+                'excel_file.mimes' => 'Extensi file yg di import wajib .xlsx',
+                'excel_file.required' => "File yg ingin di import wajib di isi"
+            ]
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator->errors())->withInput();
+        }
+
+        $fileName = $request->file("excel_file");
+
+        $guruMapelImport = new GuruMapelImport;
+        $guruMapelImport->import($fileName);
+
+        return redirect()->back()->with("success_import_guruMapel", "Data Guru Mapel berhasil di import");
+    }
+
+    public function waliKelas_import(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'excel_file' => "required|mimes:xlsx"
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->with("failed_import", 'Gagal! extensi file yg di import harus .xlsx');
+        }
+
+        $fileName = $request->file("excel_file");
+
+        $guruMapelImport = new waliKelasImport;
+        $guruMapelImport->import($fileName);
+
+        return redirect()->back()->with("success_import", "Data Wali kelas berhasil di import");
     }
 }

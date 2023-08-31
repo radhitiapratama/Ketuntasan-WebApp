@@ -36,12 +36,7 @@
                     </div>
                 </div>
                 <div class="col-md-6 col-12 d-flex justify-content-center justify-content-md-end">
-                    <div class="form-group">
-                        <button type="button" class="btn-dark btn-modal-tuntaskan">
-                            <i class="ri-check-line"></i>
-                            Tuntaskan
-                        </button>
-                    </div>
+
                 </div>
             </div>
         </div>
@@ -61,21 +56,42 @@
                 </div>
             </div>
         </div>
+        <div class="card-header">
+            <div class="form-group mt-3">
+                @if ($status_batasWaktu == 'dalamBatasWaktu')
+                    <button type="button" class="btn-dark btn-modal-tuntaskan">
+                        <i class="ri-check-line"></i>
+                        Tuntaskan
+                    </button>
+                @elseif($status_batasWaktu == 'kurang')
+                    <button type="button" class="btn-dark">
+                        <i class="ri-close-circle-line"></i>
+                        Kurang dari batas waktu
+                    </button>
+                @elseif($status_batasWaktu == 'lebih')
+                    <button type="button" class="btn-dark">
+                        <i class="ri-close-circle-line"></i>
+                        Lebih dari batas waktu
+                    </button>
+                @endif
+            </div>
+        </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-12 table-responsive">
                     <table class="table table-bordered" id="tbl-siswaMapel" style="width: 100%">
                         <thead>
                             <tr style="border-bottom: none !important">
-                                <th style="width: 5px">#</th>
-                                <th class="text-center"><input type="checkbox" name="check_all" id="check_all"></th>
-                                <th>Mapel</th>
-                                <th>Guru</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-center">Deskripsi</th>
-                                <th class="text-center">Tgl Tuntas</th>
-                                <th class="text-center" style="width: 5px">Semester</th>
-                                <th class="text-center">Aksi</th>
+                                <th width="5px">#</th>
+                                <th width="5px" class="text-center"><input type="checkbox" name="check_all"
+                                        id="check_all"></th>
+                                <th width="20%">Mapel</th>
+                                <th width="20%">Guru</th>
+                                <th width="5px" class="text-center">Status</th>
+                                <th width="20%" class="text-center">Deskripsi</th>
+                                <th width="20%" class="text-center">Tgl Tuntas</th>
+                                <th width="5px" class="text-center">Semester</th>
+                                <th width="5px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -86,40 +102,39 @@
         </div>
     </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="modal_desc" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Tuntaskan Siswa</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <textarea name="desc" id="text-area-desc" cols="30" rows="8" class="form-control"
-                            placeholder="Deskripsi..."></textarea>
+    @if ($status_batasWaktu == 'dalamBatasWaktu')
+        <!-- Modal Tuntaskan -->
+        <div class="modal fade" id="modal_desc" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Tuntaskan Siswa</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
-                    <div class="row">
-                        <div class="col-12 d-flex justify-content-center" style="gap: 20px">
-                            <button type="button" class="btn-dark" data-dismiss="modal">
-                                <i class="ri-close-circle-line"></i>
-                                Batal
-                            </button>
-                            <button type="button" class="btn-dark" id="btn-tuntaskan">
-                                <i class="ri-check-line"></i>
-                                Tuntaskan
-                            </button>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <textarea name="desc" id="text-area-desc" cols="30" rows="8" class="form-control"
+                                placeholder="Deskripsi..."></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 d-flex justify-content-center" style="gap: 20px">
+                                <button type="button" class="btn-dark" data-dismiss="modal">
+                                    <i class="ri-close-circle-line"></i>
+                                    Batal
+                                </button>
+                                <button type="button" class="btn-dark" id="btn-tuntaskan">
+                                    <i class="ri-check-line"></i>
+                                    Tuntaskan
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-
-
+    @endif
 
     <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
@@ -152,6 +167,7 @@
                 processing: true,
                 ordering: false,
                 paging: false,
+                info: false,
                 ajax: {
                     url: "{{ url('ketuntasan/siswas/show') }}",
                     data: function(data) {
@@ -220,54 +236,101 @@
             $("input[name='ketuntasan_id[]']").prop("checked", this.checked);
         });
 
-        $(".btn-modal-tuntaskan").click(function() {
-            const checked = $("input[name='ketuntasan_id[]']:checked").length;
-            if (checked <= 0) {
-                Swal.fire({
-                    title: "Minimal ada 1 mapel yang di tuntaskan",
-                    icon: "info",
-                });
-
-                return;
-            }
-
-            $("#modal_desc").modal("show");
-        });
-
-        // tuntaskan
-        $("#btn-tuntaskan").click(function() {
-            $("#modal_desc").modal("hide");
-            showLoading();
-
-            let ketuntasans = [];
-
-            $("input[name='ketuntasan_id[]']:checked").each(function() {
-                ketuntasans.push($(this).val());
-            });
-
-            $.ajax({
-                type: "POST",
-                url: '{{ url('ketuntasan/tuntaskan-siswa') }}',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                data: {
-                    ketuntasan_id: ketuntasans,
-                    desc: $("#text-area-desc").val(),
-                },
-                dataType: "json",
-                success: function(response) {
-                    console.log(response);
-                    hideLoading();
+        @if ($status_batasWaktu == 'dalamBatasWaktu')
+            $(".btn-modal-tuntaskan").click(function() {
+                const checked = $("input[name='ketuntasan_id[]']:checked").length;
+                if (checked <= 0) {
                     Swal.fire({
-                        title: "Siswa berhasil di tuntaskan",
-                        icon: "success",
+                        title: "Minimal ada 1 mapel yang di tuntaskan",
+                        icon: "info",
                     });
 
-                    clearDatatable();
-                    loadDatatable();
+                    return;
                 }
+
+                $("#modal_desc").modal("show");
             });
-        });
+
+            // tuntaskan
+            $("#btn-tuntaskan").click(function() {
+                $("#modal_desc").modal("hide");
+                showLoading();
+
+                let ketuntasans = [];
+
+                $("input[name='ketuntasan_id[]']:checked").each(function() {
+                    ketuntasans.push($(this).val());
+                });
+
+                $.ajax({
+                    type: "POST",
+                    url: '{{ url('ketuntasan/tuntaskan-siswa') }}',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    data: {
+                        ketuntasan_id: ketuntasans,
+                        desc: $("#text-area-desc").val(),
+                    },
+                    dataType: "json",
+                    success: function(response) {
+                        console.log(response);
+
+                        if (response.message == "kurang") {
+                            Swal.fire({
+                                title: "Gagal,Kurang dari batas waktu yg sdh di tentukan",
+                                icon: "error",
+                                iconColor: 'white',
+                                customClass: {
+                                    popup: 'colored-toast'
+                                },
+                                toast: true,
+                                position: 'top-right',
+                                showConfirmButton: false,
+                                timer: 5000,
+                                timerProgressBar: true
+                            });
+                        }
+
+                        if (response.message == "lebih") {
+                            Swal.fire({
+                                title: "Gagal,Lebih dari batas waktu yg sdh di tentukan",
+                                icon: "error",
+                                iconColor: 'white',
+                                customClass: {
+                                    popup: 'colored-toast'
+                                },
+                                toast: true,
+                                position: 'top-right',
+                                showConfirmButton: false,
+                                timer: 5000,
+                                timerProgressBar: true
+                            });
+                        }
+
+                        if (response.message == "success") {
+                            hideLoading();
+                            Swal.fire({
+                                title: "Mapel siswa berhasil di tuntaskan",
+                                icon: "success",
+                                iconColor: 'white',
+                                customClass: {
+                                    popup: 'colored-toast'
+                                },
+                                toast: true,
+                                position: 'top-right',
+                                showConfirmButton: false,
+                                timer: 5000,
+                                timerProgressBar: true
+                            });
+
+                            clearDatatable();
+                            loadDatatable();
+                        }
+
+                    }
+                });
+            });
+        @endif
     </script>
 @endsection

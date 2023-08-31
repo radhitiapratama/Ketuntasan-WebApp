@@ -3,9 +3,8 @@
 @section('content')
     <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
-
+    <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
-    <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 
     <div class="card mb-1">
         <div class="card-body">
@@ -23,15 +22,11 @@
     </div>
 
     @if ($errors->any())
-        <div class="card">
-            <div class="card-body">
-                @foreach ($errors->all() as $error)
-                    <div class="alert alert-danger" role="alert">
-                        {{ $error }}
-                    </div>
-                @endforeach
+        @foreach ($errors->all() as $error)
+            <div class="alert alert-danger mt-3" role="alert">
+                {{ $error }}
             </div>
-        </div>
+        @endforeach
     @endif
 
     <div class="card mb-1">
@@ -99,7 +94,7 @@
                                 <th width="5px">#</th>
                                 <th>Username</th>
                                 <th>Nama Siswa</th>
-                                <th>Tingkatan</th>
+                                <th width="5px" class="text-center">Tingkatan</th>
                                 <th>Kelas</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center">Aksi</th>
@@ -113,6 +108,7 @@
         </div>
     </div>
 
+    {{-- Modal Import --}}
     <div class="modal fade" id="import_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -156,16 +152,64 @@
         </div>
     </div>
 
+    <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
-    <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
     <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
 
     <script>
         @if (session()->has('successImport'))
             Swal.fire({
-                title: "Data siswa berhasil di import",
+                title: "{{ session('successImport') }}",
                 icon: "success",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('max_count'))
+            Swal.fire({
+                title: "{{ session('max_count') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('kode_kelas_null'))
+            Swal.fire({
+                title: "{{ session('kode_kelas_null') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('invalid_tingkatan'))
+            Swal.fire({
+                title: "{{ session('invalid_tingkatan') }}",
+                icon: "error",
                 iconColor: 'white',
                 customClass: {
                     popup: 'colored-toast'
@@ -249,37 +293,6 @@
             clearDataTable();
             loadDataTable();
         });
-
-        // change jurusan
-        // $("#jurusan_id").change(function() {
-        //     $("#kelas_id").attr("disabled", true);
-        //     $("#kelas_id").html("");
-
-        //     clearDataTable();
-        //     loadDataTable();
-
-        //     $.ajax({
-        //         type: "POST",
-        //         url: "/getDataKelasByJurusan",
-        //         headers: {
-        //             'X-CSRF-TOKEN': csrfToken,
-        //         },
-        //         data: {
-        //             jurusan_id: $(this).val(),
-        //         },
-        //         dataType: "json",
-        //         success: function(response) {
-        //             let opt = "<option value=''>Pilih...</option>";
-        //             for (let i = 0; i < response.kelases.length; i++) {
-        //                 opt +=
-        //                     `<option value="${response.kelases[i].kelas_id}">${response.kelases[i].nama_kelas}</option>`;
-        //             }
-
-        //             $("#kelas_id").html(opt);
-        //             $("#kelas_id").attr("disabled", false);
-        //         }
-        //     });
-        // });
 
         //kelas change
         $("#kelas_id").change(function() {

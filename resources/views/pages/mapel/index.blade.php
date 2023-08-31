@@ -22,15 +22,11 @@
     </div>
 
     @if ($errors->any())
-        <div class="card">
-            <div class="card-body">
-                @foreach ($errors->all() as $error)
-                    <div class="alert alert-danger" role="alert">
-                        {{ $error }}
-                    </div>
-                @endforeach
+        @foreach ($errors->all() as $error)
+            <div class="alert alert-danger mt-3" role="alert">
+                {{ $error }}
             </div>
-        </div>
+        @endforeach
     @endif
 
     <div class="card mb-1">
@@ -73,7 +69,7 @@
                         <thead>
                             <tr style="border-bottom: none !important">
                                 <th width="5px">#</th>
-                                <th width="100px" class="text-center">Kode</th>
+                                <th width="100px" class="text-center">Kode Mapel</th>
                                 <th>Mata Pelajaran</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center">Aksi</th>
@@ -99,7 +95,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form action="{{ url('mapel/importMapel') }}" method="post" enctype="multipart/form-data">
+                    <form action="{{ url('mapel/import') }}" method="post" enctype="multipart/form-data">
                         @csrf
                         <div class="form-group mb-5">
                             <label for="#">Import Mapel</label>
@@ -109,7 +105,7 @@
                                 </div>
                                 <div class="custom-file">
                                     <input type="file" class="custom-file-input" id="inputGroupFile01"
-                                        aria-describedby="inputGroupFileAddon01" name="file" required>
+                                        aria-describedby="inputGroupFileAddon01" name="excel_file" required>
                                     <label class="custom-file-label" for="inputGroupFile01">Jenis File .xlsx</label>
                                 </div>
                             </div>
@@ -138,10 +134,26 @@
     <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
 
     <script>
-        @if (session()->has('successImport'))
+        @if (session()->has('success_import'))
             Swal.fire({
-                title: "Mapel berhasil di import",
+                title: "{{ session('success_import') }}",
                 icon: "success",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('max_rows'))
+            Swal.fire({
+                title: "{{ session('max_rows') }}",
+                icon: "error",
                 iconColor: 'white',
                 customClass: {
                     popup: 'colored-toast'

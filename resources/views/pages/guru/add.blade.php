@@ -19,48 +19,60 @@
             </div>
         </div>
     </div>
-    <div class="card">
-        <div class="card-body">
-            <div class="row justify-content-center">
-                <div class="col-12 col-md-6">
-                    <form action="{{ url('guru/store') }}" method="POST">
-                        @csrf
-                        <div class="form-group">
-                            <label for="#">Username</label>
-                            <input type="text" class="form-control" name="username" required
-                                value="{{ old('username') }}">
-                            @error('username')
-                                <small class="text-danger">{{ $message }}</small>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label for="#">Nama Guru</label>
-                            <input type="text" class="form-control" name="nama_guru" required
-                                value="{{ old('nama_guru') }}">
-                            @error('nama_guru')
-                                <small class="text-danger">{{ $message }}</small>
-                            @enderror
-                        </div>
-                        <div class="form-group">
-                            <label for="#">Password</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control input-pass" name="password" required
-                                    minlength="6">
-                                <div class="input-group-prepend">
-                                    <div class="input-group-text" id="show-pass">
-                                        <i class="ri-eye-line"></i>
-                                    </div>
+    <div class="row">
+        <div class="col-md-6 col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <form action="{{ url('guru/store') }}" method="POST">
+                                @csrf
+                                <div class="form-group">
+                                    <label for="#">Username</label>
+                                    <input type="text" class="form-control" name="username" required
+                                        value="{{ old('username') }}">
+                                    @error('username')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
                                 </div>
-                            </div>
-                            @error('password')
-                                <small class="text-danger">{{ $message }}</small>
-                            @enderror
+                                <div class="form-group">
+                                    <label for="#">Nama Guru</label>
+                                    <input type="text" class="form-control" name="nama_guru" required
+                                        value="{{ old('nama_guru') }}">
+                                    @error('nama_guru')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="form-group">
+                                    <label for="#">Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control input-pass" name="password" required
+                                            minlength="6">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text" id="show-pass">
+                                                <i class="ri-eye-line"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @error('password')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="form-group">
+                                    <label for="#">Kode Guru</label>
+                                    <input type="text" class="form-control" name="kode_guru" required
+                                        value="{{ old('kode_guru') }}">
+                                    @error('kode_guru')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <button type="submit" class="btn-dark" id="btn-submit">
+                                    <i class="ri-check-line"></i>
+                                    Submit
+                                </button>
+                            </form>
                         </div>
-                        <button type="submit" class="btn-dark m-auto" id="btn-submit">
-                            <i class="ri-check-line"></i>
-                            Submit
-                        </button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -93,8 +105,11 @@
         showPass.click(function() {
             if (inputPass.attr("type") == "text") {
                 inputPass.attr('type', "password");
+                showPass.html(`<i class="ri-eye-line"></i>`);
+
             } else {
                 inputPass.attr("type", "text");
+                showPass.html(`<i class="ri-eye-off-line"></i>`);
             }
         });
     </script>

@@ -1,8 +1,12 @@
 <?php
 
+use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\GuruController;
+use App\Http\Controllers\API\KetuntasanController;
+use App\Models\Ketuntasan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Models\User;
+use Psy\Command\ListCommand\FunctionEnumerator;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,20 +19,32 @@ use App\Models\User;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::post("login", [AuthController::class, 'login']);
 
-Route::get("/users", function (Request $request) {
-    $user_id = $request->query('user_id');
-    if (isset($user_id)) {
-        $users = User::where("user_id", $user_id)->first();
-    } else {
-        $users = User::all();
-    }
+Route::middleware(["auth:sanctum"])->group(function () {
+    // Route::get("hello", function () {
+    //     return response()->json("Hello world");
+    // });
 
-    return response()->json([
-        'status' => "success",
-        'users' => $users,
-    ]);
+    Route::post("logout", [AuthController::class, 'logout']);
+    Route::post("change-password", [AuthController::class, 'changePassword']);
+
+    // Ketuntasan
+    Route::post("siswa/ketuntasan", [KetuntasanController::class, 'siswa']);
+
+    Route::post("guru/ketuntasan/mapel", [KetuntasanController::class, 'guru_mapel']);
+    Route::post("guru/ketuntasan/mapel/kelas", [KetuntasanController::class, 'guru_kelas']);
+    Route::post("guru/ketuntasan/mapel/kelas/siswa", [KetuntasanController::class, 'guru_siswa']);
+
+    Route::put("guru/ketuntasan/mapel/kelas/siswa/edit", [KetuntasanController::class, 'update']);
+
+    Route::post("guru/ketuntasan/tuntaskan", [KetuntasanController::class, 'tuntaskan']);
+
+
+
+    // Account Setting
+    Route::post("account", [AuthController::class, 'account']);
+
+    // Wali Kelas
+    Route::post("wali-kelas/ketuntasan/siswa", [GuruController::class, 'siswa']);
 });

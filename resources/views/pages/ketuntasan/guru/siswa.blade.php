@@ -25,8 +25,8 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header">
+    <div class="card mb-2">
+        <div class="card-body">
             <div class="row">
                 <div class="col-md-4 col-12">
                     <div class="form-group">
@@ -56,8 +56,14 @@
                 </div>
             </div>
         </div>
-        <div class="card-body">
-            <div class="row justify-content-center mb-3">
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title font-weight-bold">Filter</h5>
+        </div>
+        <div class="card-header">
+            <div class="row mb-3">
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="#">Semester</label>
@@ -79,43 +85,46 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-12 d-flex justify-content-center">
-                    <div class="form-group">
-                        @if ($status == 'belum')
-                            <button class="btn-dark">
-                                Belum Waktunya
-                            </button>
-                        @endif
+        </div>
+        <div class="card-header">
+            <div class="form-group mt-3">
+                @if ($status == 'belum')
+                    <button class="btn-dark">
+                        <i class="ri-close-circle-line"></i>
+                        Kurang dari batas waktu
+                    </button>
+                @endif
 
-                        @if ($status == 'lewat')
-                            <button class="btn-dark">
-                                Sudah lewat dari batas waktu
-                            </button>
-                        @endif
+                @if ($status == 'lewat')
+                    <button class="btn-dark">
+                        <i class="ri-close-circle-line"></i>
+                        Lebih dari batas waktu
+                    </button>
+                @endif
 
-                        @if ($status == 'true')
-                            <button type="button" class="btn-dark btn-modal-tuntaskan">
-                                <i class="ri-check-line"></i>
-                                Tuntaskan
-                            </button>
-                        @endif
-                    </div>
-                </div>
+                @if ($status == 'true')
+                    <button type="button" class="btn-dark btn-modal-tuntaskan">
+                        <i class="ri-check-line"></i>
+                        Tuntaskan
+                    </button>
+                @endif
             </div>
+        </div>
+        <div class="card-body">
             <div class="row">
                 <div class="col-12 table-responsive">
                     <table class="table table-bordered" id="tbl-siswaMapel" style="width: 100%">
                         <thead>
                             <tr>
-                                <th style="width: 5px">#</th>
-                                <th class="text-center"><input type="checkbox" name="check_all" id="check_all"></th>
-                                <th>Siswa</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-center">Deskripsi</th>
-                                <th class="text-center">Tgl Tuntas</th>
-                                <th class="text-center">Semester</th>
-                                <th class="text-center">Pengaturan</th>
+                                <th width="5px">#</th>
+                                <th width="5px" class="text-center"><input type="checkbox" name="check_all"
+                                        id="check_all"></th>
+                                <th width="30%">Siswa</th>
+                                <th width="5px" class="text-center">Status</th>
+                                <th width="40%" class="text-center">Deskripsi</th>
+                                <th width="20%">Tgl Tuntas</th>
+                                <th width="5px" class="text-center">Semester</th>
+                                <th width="5px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -304,6 +313,15 @@
                         Swal.fire({
                             title: "Siswa berhasil di tuntaskan",
                             icon: "success",
+                            iconColor: 'white',
+                            customClass: {
+                                popup: 'colored-toast'
+                            },
+                            toast: true,
+                            position: 'top-right',
+                            showConfirmButton: false,
+                            timer: 5000,
+                            timerProgressBar: true
                         });
 
                         clearDatatable();

@@ -28,7 +28,6 @@
                                 <th>Username</th>
                                 <th>Nama</th>
                                 <th class="text-center">Status</th>
-                                <th class="text-center" style="width: 150px">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -51,9 +50,6 @@
                 ajax: {
                     url: "{{ url('superadmin') }}"
                 },
-                drawCallback: function(res) {
-                    console.log(res.json);
-                },
                 columns: [{
                         data: 'no'
                     },
@@ -65,9 +61,6 @@
                     },
                     {
                         data: "status"
-                    },
-                    {
-                        data: 'settings'
                     },
                 ]
             });

@@ -12,6 +12,8 @@ class KelasMapel extends Model
 
     protected $table = "kelas_mapel";
     protected $primaryKey = "kelas_mapel_id";
+    protected $guarded = ['kelas_mapel_id'];
+
 
     public function mapel()
     {

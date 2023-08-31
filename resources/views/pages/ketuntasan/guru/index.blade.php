@@ -18,9 +18,9 @@
                     <table class="table table-bordered" id="tbl-ketuntasan" style="width: 100%">
                         <thead>
                             <tr style="border-bottom: none !important">
-                                <th style="width: 5px">#</th>
+                                <th width="5px">#</th>
                                 <th>Mapel</th>
-                                <th class="text-center">Pengaturan</th>
+                                <th width="100px" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
