@@ -34,7 +34,6 @@
                     <div class="row justify-content-center">
                         @foreach ($guruMapels as $guruMapel)
                             <input type="hidden" name="guru_mapel_id[]" value="{{ $guruMapel->guru_mapel_id }}">
-
                             <div class="col-md-4 col-12">
                                 <div class="form-group">
                                     <label for="mapel_id">Mata Pelajaran</label>
