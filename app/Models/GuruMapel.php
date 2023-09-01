@@ -22,4 +22,9 @@ class GuruMapel extends Model
     {
         return $this->belongsTo(Mapel::class, 'mapel_id');
     }
+
+    public function guru()
+    {
+        return $this->belongsTo(Guru::class, 'guru_id', 'guru_id');
+    }
 }

@@ -17,6 +17,7 @@ use App\Models\WaliKelas;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
 
 class GuruController extends Controller
 {
@@ -240,8 +241,8 @@ class GuruController extends Controller
     public function guruMapel(Request $request)
     {
         if ($request->ajax()) {
-            $columnsSearch = ['username', 'nama'];
-            $table = DB::table("guru");
+            $columnsSearch = ['g.username', 'g.nama', 'g.kode_guru', 'm.nama_mapel', 'gm.kode_guru_mapel'];
+            $table = DB::table("guru_mapel as gm");
 
             if ($request->input("search.value")) {
                 $table->where(function ($q) use ($columnsSearch, $request) {
@@ -251,14 +252,16 @@ class GuruController extends Controller
                 });
             }
 
-            $query = $table->select('guru_id', 'username', 'nama', 'status')
-                ->where('status', 1);
+            $query = $table->select("gm.*", 'g.username', 'g.nama', 'g.kode_guru', 'm.nama_mapel')
+                ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+                ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+                ->where("g.status", 1);
 
             $filtered = $query->count();
 
             $result = $query->offset($request->start)
                 ->limit($request->length)
-                ->orderByRaw("nama ASC")
+                ->orderByRaw("g.kode_guru ASC")
                 ->get();
 
             $data = [];
@@ -268,23 +271,25 @@ class GuruController extends Controller
                     $i++;
                     $subData = [];
                     $subData['no'] = $i;
-                    $subData['username'] = $row->username;
-                    $subData['nama'] = $row->nama;
 
                     $subData['kode_guru'] = '
                     <div class="text-center">
-                        ' . $row->guru_id . '
+                        ' . $row->kode_guru . '
                     </div>
                     ';
 
+                    $subData['nama'] = $row->nama;
+                    $subData['nama_mapel'] = $row->nama_mapel;
+                    $subData['kode_guru_mapel'] = '
+                    <div class="text-center">
+                        ' . $row->kode_guru . ',' . $row->kode_guru_mapel . ' 
+                    </div>
+                    ';
+
+
                     $subData['settings'] = '
                     <div class="setting-icons">
-                        <button type="button" class="setting-icon setting-detail detail-guru-mapel"
-                            data-guru-id="' . $row->guru_id . '" data-toggle="modal"
-                            data-target="#modal_detailMapel">
-                            <i class="ri-eye-line"></i>
-                        </button>
-                        <a href="/guru-mapel/edit/' . $row->guru_id . '"
+                        <a href="/guru-mapel/edit/' . $row->guru_mapel_id . '"
                             class="setting-icon setting-edit">
                             <i class="ri-pencil-line"></i>
                         </a>
@@ -395,56 +400,49 @@ class GuruController extends Controller
         return response()->json($dataResponse);
     }
 
-    public function getDataMapelByGuru(Request $request)
+    // public function getDataMapelByGuru(Request $request)
+    // {
+    //     $guru_id = $request->guru_id;
+
+    //     $sql_mapel = DB::table("guru_mapel as gm")
+    //         ->select("m.nama_mapel", 'gm.kode_guru_mapel', 'gm.status', 'gm.kode_guru_mapel', 'g.kode_guru')
+    //         ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+    //         ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+    //         ->where("gm.guru_id", $guru_id)
+    //         ->get();
+
+    //     $sql_guru = DB::table('guru')
+    //         ->select("nama")
+    //         ->where("guru_id", $guru_id)
+    //         ->first();
+
+    //     $dataToView  = [
+    //         'mapels' => $sql_mapel,
+    //         'guru' => $sql_guru,
+    //     ];
+
+    //     return response()->json($dataToView);
+    // }
+
+    public function guruMapel_edit($guru_mapel_id)
     {
-        $guru_id = $request->guru_id;
+        if (!isset($guru_mapel_id)) {
+            return redirect()->back();
+        }
 
-        $sql_mapel = DB::table("guru_mapel as gm")
-            ->select("m.nama_mapel", 'gm.kode_guru_mapel', 'gm.status', 'gm.kode_guru_mapel', 'g.kode_guru')
+        $sql_guru_mapel = DB::table('guru_mapel as gm')
+            ->select("g.nama", 'm.nama_mapel', 'gm.*')
+            ->join("guru as g", 'g.guru_id', '=', 'gm.guru_id')
             ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
-            ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
-            ->where("gm.guru_id", $guru_id)
-            ->get();
-
-        $sql_guru = DB::table('guru')
-            ->select("nama")
-            ->where("guru_id", $guru_id)
+            ->where("gm.guru_mapel_id", $guru_mapel_id)
             ->first();
-
-        $dataToView  = [
-            'mapels' => $sql_mapel,
-            'guru' => $sql_guru,
-        ];
-
-        return response()->json($dataToView);
-    }
-
-    public function guruMapel_edit($guru_id)
-    {
-        if (!isset($guru_id)) {
-            return redirect()->back();
-        }
-
-        $sql_guru = Guru::where("guru_id", $guru_id)->first();
-
-        if ($sql_guru->status == 0) {
-            return redirect()->back();
-        }
-
-        $sql_guru_mapels = DB::table("guru_mapel as gm")
-            ->select('gm.status', 'm.mapel_id', 'm.nama_mapel', 'gm.guru_mapel_id', 'gm.kode_guru_mapel')
-            ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
-            ->where('gm.guru_id', $guru_id)
-            ->get();
 
         $sql_mapels = DB::table("mapel")
             ->where('status', 1)
-            ->whereNotIn("mapel_id", $sql_guru_mapels->pluck("mapel_id"))
             ->get();
 
         $dataToView = [
-            'guruMapels' => $sql_guru_mapels,
-            'guru' => $sql_guru,
+            'guruMapel' => $sql_guru_mapel,
             'mapels' => $sql_mapels,
             'statuses' => $this->statuses,
         ];
@@ -457,21 +455,17 @@ class GuruController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'guru_id' => 'required',
+                'guru_mapel_id' => "required",
+                'kode_guru_mapel' => "required|integer",
                 'mapel_id' => "required",
                 'status' => "required",
-                'guru_mapel_id' => 'required',
-                'kode_guru_mapel' => "required|integer",
             ],
             [
-                'guru_id.required' => "User ID Wajib di isi",
-                'mapel_id.required' => "Mapel wajib di isi",
-                'status.required' => "Status wajib di isi",
                 'guru_mapel_id.required' => "Guru Mapel wajib di isi",
                 'kode_guru_mapel.required' => "Kode Guru Mapel wajib di isi",
-                'kode_guru_mapel.unique' => "Kode Guru Mapel sudah di gunakan",
-                'kode_guru.required' => "Kode Guru wajib di isi",
-                'kode_guru_mapel.integer' => "Kode Guru wajib angka"
+                'kode_guru_mapel.integer' => "Kode Guru Mapel wajib angka",
+                'mapel_id.required' => "Mapel wajib di isi",
+                'status.required' => "Status wajib di isi",
             ]
         );
 
@@ -479,48 +473,51 @@ class GuruController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $mapel_id = $request->mapel_id;
-        $guru_mapel_id = $request->guru_mapel_id;
-        $kode_guru_mapel = $request->kode_guru_mapel;
-        $status = $request->status;
-
         DB::beginTransaction();
 
-        for ($i = 0; $i < count($guru_mapel_id); $i++) {
-            $dataUpdate = [];
+        $dataUpdate = [];
 
-            // ambil data guru mapel
-            $sql_guruMapel = GuruMapel::where("guru_mapel_id", $guru_mapel_id[$i])->first();
+        $sql_guruMapel = DB::table("guru_mapel")->where("guru_mapel_id", $request->guru_mapel_id)->first();
 
-            if ($mapel_id[$i] != $sql_guruMapel->mapel_id) {
-                $dataUpdate['mapel_id'] = $mapel_id[$i];
+        if ($sql_guruMapel->kode_guru_mapel != $request->kode_guru_mapel) {
+            // check apakah ada kode guru mapel yg sama
+            $sql_checkDuplicate_KodeGuruMapel = DB::table("guru_mapel")
+                ->select("guru_mapel_id")
+                ->where("guru_id", $request->guru_id)
+                ->where("kode_guru_mapel", $request->kode_guru_mapel)
+                ->first();
+
+            if ($sql_checkDuplicate_KodeGuruMapel) {
+                DB::rollBack();
+                return redirect()->back()->withInput()->with("duplicateKodeGuruMapel", "Gagal ! Kode Guru mapel sudah di gunakan");
             }
 
-            if ($kode_guru_mapel[$i] != $sql_guruMapel->kode_guru_mapel) {
-                // check apakah ada kode guru mapel yg sama sesuai guru id
-                $sql_check_kodeGuruMapel = GuruMapel::where("kode_guru_mapel", $kode_guru_mapel[$i])
-                    ->where("guru_id", $request->guru_id)
-                    ->first();
+            $dataUpdate['kode_guru_mapel'] = $request->kode_guru_mapel;
+        }
 
-                if ($sql_check_kodeGuruMapel) {
-                    DB::rollBack();
-                    return redirect()->back()->with("duplicateKodeGuruMapel", "Kode Guru mapel sudah di gunakan");
-                }
+        if ($sql_guruMapel->mapel_id != $request->mapel_id) {
+            // check apakah ada mapel duplicate
+            $sql_checkDuplicate_mapel = DB::table('guru_mapel')
+                ->where("guru_id", $request->guru_id)
+                ->where("mapel_id", $request->mapel_id)
+                ->first();
 
-                $dataUpdate['kode_guru_mapel'] = $kode_guru_mapel[$i];
+            if ($sql_checkDuplicate_mapel) {
+                DB::rollBack();
+                return redirect()->back()->withInput()->with("duplicateMapel", "Gagal ! Mapel yg di pilih sudah di ajar oleh guru");
             }
 
-            if ($status[$i] != $sql_guruMapel->status) {
-                $dataUpdate['status'] = $status[$i];
-            }
+            $dataUpdate["mapel_id"] = $request->mapel_id;
+        }
 
-            if (!empty($dataUpdate)) {
-                $dataUpdate['updated_at'] = Carbon::now();
-                $dataUpdate['updated_by'] = auth()->guard("admin")->user()->user_id;
+        if ($sql_guruMapel->status != $request->mapel_id) {
+            $dataUpdate['status'] = $request->status;
+        }
 
-                GuruMapel::where("guru_mapel_id", $guru_mapel_id[$i])
-                    ->update($dataUpdate);
-            }
+        if (!empty($dataUpdate)) {
+            $dataUpdate['updated_by'] = auth()->guard("admin")->user()->user_id;
+            GuruMapel::where('guru_mapel_id', $request->guru_mapel_id)
+                ->update($dataUpdate);
         }
 
         DB::commit();

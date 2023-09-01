@@ -53,8 +53,9 @@
                             <tr>
                                 <th width="5px">#</th>
                                 <th width="100px" class="text-center">Kode Guru</th>
-                                <th>Username</th>
                                 <th>Nama Guru</th>
+                                <th>Nama Mapel</th>
+                                <th class="text-center">Kode Guru Mapel</th>
                                 <th class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -268,10 +269,13 @@
                         data: "kode_guru"
                     },
                     {
-                        data: "username"
+                        data: "nama"
                     },
                     {
-                        data: "nama"
+                        data: "nama_mapel"
+                    },
+                    {
+                        data: "kode_guru_mapel"
                     },
                     {
                         data: "settings"
@@ -282,61 +286,61 @@
 
         loadDatatable();
 
-        const csrfToken = $('meta[name="csrf-token"]').attr("content");
+        // const csrfToken = $('meta[name="csrf-token"]').attr("content");
 
-        $(document).on('click', ".detail-guru-mapel", function() {
-            $("#modal-body-dataMapel tbody").html(`
-            <tr>
-                <td colspan="2" class="text-center">Process...</td>
-            </tr>
-            `);
+        // $(document).on('click', ".detail-guru-mapel", function() {
+        //     $("#modal-body-dataMapel tbody").html(`
+    //     <tr>
+    //         <td colspan="2" class="text-center">Process...</td>
+    //     </tr>
+    //     `);
 
-            $("#detail-nama-guru").val("Process...");
+        //     $("#detail-nama-guru").val("Process...");
 
-            $.ajax({
-                type: "POST",
-                url: "/guru-mapels",
-                headers: {
-                    "X-CSRF-TOKEN": csrfToken
-                },
-                data: {
-                    guru_id: $(this).data("guru-id")
-                },
-                dataType: "json",
-                success: function(response) {
-                    console.log(response);
-                    $("#detail-nama-guru").val(response.guru.nama);
-                    let data = `
-                    <tr>
-                        <td colspan="3" class="text-center">Tidak ada mapel yang di ajar</td>
-                    </tr>
-                    `;
+        //     $.ajax({
+        //         type: "POST",
+        //         url: "/guru-mapels",
+        //         headers: {
+        //             "X-CSRF-TOKEN": csrfToken
+        //         },
+        //         data: {
+        //             guru_id: $(this).data("guru-id")
+        //         },
+        //         dataType: "json",
+        //         success: function(response) {
+        //             console.log(response);
+        //             $("#detail-nama-guru").val(response.guru.nama);
+        //             let data = `
+    //             <tr>
+    //                 <td colspan="3" class="text-center">Tidak ada mapel yang di ajar</td>
+    //             </tr>
+    //             `;
 
-                    if (response.mapels.length > 0) {
-                        data = ``;
-                        for (let i = 0; i < response.mapels.length; i++) {
-                            let status = "";
-                            if (response.mapels[i].status == 0) {
-                                status = `<span class="badge badge-danger p-2">Nonaktif</span>`;
-                            } else {
-                                status = `<span class="badge badge-success p-2">Aktif</span>`;
-                            }
+        //             if (response.mapels.length > 0) {
+        //                 data = ``;
+        //                 for (let i = 0; i < response.mapels.length; i++) {
+        //                     let status = "";
+        //                     if (response.mapels[i].status == 0) {
+        //                         status = `<span class="badge badge-danger p-2">Nonaktif</span>`;
+        //                     } else {
+        //                         status = `<span class="badge badge-success p-2">Aktif</span>`;
+        //                     }
 
-                            data += `
-                                    <tr>
-                                        <td>${response.mapels[i].kode_guru},${response.mapels[i].kode_guru_mapel}</td>
-                                        <td>${response.mapels[i].nama_mapel}</td>
-                                        <td class='text-center'>${status}</td>
-                                    </tr>
-                                    `;
+        //                     data += `
+    //                             <tr>
+    //                                 <td>${response.mapels[i].kode_guru},${response.mapels[i].kode_guru_mapel}</td>
+    //                                 <td>${response.mapels[i].nama_mapel}</td>
+    //                                 <td class='text-center'>${status}</td>
+    //                             </tr>
+    //                             `;
 
-                        }
-                    }
+        //                 }
+        //             }
 
-                    $("#modal-body-dataMapel tbody").html(data);
-                }
-            });
-        });
+        //             $("#modal-body-dataMapel tbody").html(data);
+        //         }
+        //     });
+        // });
 
         $('input[type="file"]').change(function(e) {
             var fileName = e.target.files[0].name;

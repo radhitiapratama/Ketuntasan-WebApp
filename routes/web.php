@@ -63,7 +63,7 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::get("/guru-mapel", [GuruController::class, 'guruMapel']);
     Route::get("/guru-mapel/add", [GuruController::class, 'guruMapel_add']);
     Route::post("/guru-mapel/store", [GuruController::class, 'guruMapel_store']);
-    Route::get("/guru-mapel/edit/{guru_id}", [GuruController::class, 'guruMapel_edit']);
+    Route::get("/guru-mapel/edit/{guru_mapel_id}", [GuruController::class, 'guruMapel_edit']);
     Route::post("/guru-mapel/update", [GuruController::class, 'guruMapel_update']);
     Route::post("/guru-mapels", [GuruController::class, 'getDataMapelByGuru']);
     Route::post("/guru-mapel/import", [GuruController::class, 'importGuruMapel']);
