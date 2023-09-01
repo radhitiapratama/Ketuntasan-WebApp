@@ -1,5 +1,7 @@
 @extends('layout.main')
 
+
+
 @section('content')
     <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
@@ -28,7 +30,7 @@
                         <div class="col-12">
                             <form action="/siswa/update" method="post" id="form">
                                 @csrf
-                                <input type="hidden" name="user_id" value="{{ $siswa->user_id }}">
+                                <input type="hidden" name="siswa_id" value="{{ $siswa->siswa_id }}">
                                 <input type="hidden" name="hide_tingkatan" value="{{ $siswa->tingkatan }}">
                                 <input type="hidden" name="hide_jurusan" value="{{ $siswa->jurusan_id }}">
                                 <input type="hidden" name="hide_kelas" value="{{ $siswa->kelas_id }}">
@@ -37,12 +39,15 @@
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="#">Tingkatan</label>
-                                            <select name="tingkatan_id" id="tingkatan" class="form-control" required>
+                                            <select name="tingkatan" id="tingkatan" class="form-control" required>
                                                 @foreach ($tingkatans as $key => $value)
-                                                    <option value="{{ $key }}" @selected($key == $siswa->tingkatan)>
+                                                    <option value="{{ $key }}" @selected(old('tingkatan', $siswa->tingkatan) == $key)>
                                                         {{ $value }}</option>
                                                 @endforeach
                                             </select>
+                                            @error('tingkatan')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
@@ -57,6 +62,9 @@
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            @error('kelas_id')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-4 col-12">
@@ -64,6 +72,9 @@
                                             <label for="#">Username</label>
                                             <input type="text" class="form-control" name="username"
                                                 value="{{ old('username', $siswa->username) }}"required>
+                                            @error('username')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-4 col-12">
@@ -71,6 +82,9 @@
                                             <label for="#">Nama Siswa</label>
                                             <input type="text" class="form-control" name="nama"
                                                 value="{{ old('nama', $siswa->nama) }}"required>
+                                            @error('nama')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-4 col-12">
@@ -78,10 +92,13 @@
                                             <label for="#">Status</label>
                                             <select name="status" id="status" class="form-control" required>
                                                 @foreach ($statuses as $key => $value)
-                                                    <option value="{{ $key }}" @selected($key == $siswa->status)>
+                                                    <option value="{{ $key }}" @selected(old('status', $siswa->status) == $key)>
                                                         {{ $value }}</option>
                                                 @endforeach
                                             </select>
+                                            @error('status')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>
@@ -160,10 +177,13 @@
             const hide_kelas = $("input[name='hide_kelas']").val();
 
             const tingkatan = $("#tingkatan").val();
-            const jurusan = $("#jurusan").val();
-            const kelas = $("#kelas").val();
 
-            if (hide_tingkatan != tingkatan || hide_jurusan != jurusan || hide_kelas != kelas) {
+            // [0] => jurusan_id
+            // [1] => kelas_id
+            const arrKelas = $("#kelas_id").val().split("|");
+
+
+            if (hide_tingkatan != tingkatan || hide_jurusan != arrKelas[0] || hide_kelas != arrKelas[1]) {
                 Swal.fire({
                     title: 'Peringatan',
                     text: "Mengubah tingkatan / jurusan / kelas akan berdampak buruk pada akun siswa ketika akan naik kelas ! apakah anda yakin ingin melakukan perubahannya ?",
@@ -178,6 +198,8 @@
                         $("#form").submit();
                     }
                 })
+
+                return;
             }
 
             Swal.fire({

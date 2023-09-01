@@ -133,6 +133,7 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::get("/siswa/edit/{user_id}", [SiswaController::class, 'edit']);
     Route::post("/siswa/update", [SiswaController::class, 'update']);
     Route::post("/siswa/import", [SiswaController::class, 'import']);
+    Route::post("/siswa/nonaktifkan-siswa", [SiswaController::class, 'nonaktifkanSiswa']);
 
     // Siswa Naik Kelass
     Route::get("/siswa-naik-kelas", [SiswaController::class, 'naikKelas']);

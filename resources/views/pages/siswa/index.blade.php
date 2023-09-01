@@ -87,17 +87,26 @@
         </div>
         <div class="card-body">
             <div class="row">
+                <div class="col-12 mb-3">
+                    <button class="btn-dark" id="btn-nonaktif-siswa">
+                        Nonaktifkan
+                        <i class="ri-check-line"></i>
+                    </button>
+                </div>
                 <div class="col-12 table-responsive">
                     <table class="table table-bordered" id="tbl-siswa" style="width: 100%">
                         <thead>
                             <tr>
-                                <th width="5px">#</th>
-                                <th>Username</th>
-                                <th>Nama Siswa</th>
-                                <th width="5px" class="text-center">Tingkatan</th>
-                                <th>Kelas</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-center">Aksi</th>
+                                <th class="vertical-align-middle" width="5px">#</th>
+                                <th class="text-center vertical-align-middle" width="20">
+                                    <input type="checkbox" name="checkall_nonaktif_siswa">
+                                </th>
+                                <th class="vertical-align-middle">Username</th>
+                                <th class="vertical-align-middle">Nama Siswa</th>
+                                <th width="5px" class="text-center vertical-align-middle">Tingkatan</th>
+                                <th class="vertical-align-middle">Kelas</th>
+                                <th class="text-center vertical-align-middle">Status</th>
+                                <th class="text-center vertical-align-middle">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -245,6 +254,9 @@
                         data: "no"
                     },
                     {
+                        data: "checkbox_nonaktif"
+                    },
+                    {
                         data: "username"
                     },
                     {
@@ -309,6 +321,68 @@
         $('input[type="file"]').change(function(e) {
             var fileName = e.target.files[0].name;
             $('.custom-file-label').html(fileName);
+        });
+
+        $("input[name='checkall_nonaktif_siswa']").click(function() {
+            $("input[name='siswa_id[]']").prop("checked", this.checked);
+        });
+
+        $("#btn-nonaktif-siswa").click(function() {
+            let siswaNonaktif = $("input[name='siswa_id[]']:checked");
+            if (siswaNonaktif.length <= 0) {
+                Swal.fire({
+                    title: "Minimal ada 1 Siswa yg di Nonaktifkan",
+                    icon: "error",
+                    iconColor: 'white',
+                    customClass: {
+                        popup: 'colored-toast'
+                    },
+                    toast: true,
+                    position: 'top-right',
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true
+                });
+                return;
+            }
+
+            const arrSiswaNonaktif = [];
+
+            for (let i = 0; i < siswaNonaktif.length; i++) {
+                arrSiswaNonaktif.push(siswaNonaktif[i].value);
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "{{ url('siswa/nonaktifkan-siswa') }}",
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: {
+                    siswa_id: arrSiswaNonaktif,
+                },
+                dataType: "json",
+                success: function(response) {
+                    if (response.message == "success") {
+                        Swal.fire({
+                            title: "Data Siswa berhasil di Nonaktifkan",
+                            icon: "success",
+                            iconColor: 'white',
+                            customClass: {
+                                popup: 'colored-toast'
+                            },
+                            toast: true,
+                            position: 'top-right',
+                            showConfirmButton: false,
+                            timer: 5000,
+                            timerProgressBar: true
+                        });
+
+                        clearDataTable();
+                        loadDataTable();
+                    }
+                }
+            });
         });
     </script>
 @endsection

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 use App\Models\Jurusan;
 use App\Models\Kelas;
+use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -28,8 +29,8 @@ class SiswaController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $columnsSearch = ['u.username', 'u.nama'];
-            $table = DB::table("users as u");
+            $columnsSearch = ['s.username', 's.nama'];
+            $table = DB::table("siswa as s");
 
             if ($request->input("search.value")) {
                 $table->where(function ($q) use ($columnsSearch, $request) {
@@ -40,20 +41,20 @@ class SiswaController extends Controller
             }
 
             $query = $table->select(
-                'u.user_id',
-                'u.username',
-                'u.nama',
-                'u.status',
-                'u.tingkatan',
+                's.siswa_id',
+                's.username',
+                's.nama',
+                's.status',
+                's.tingkatan',
                 'j.nama_jurusan',
                 'k.nama_kelas'
             )
-                ->join('jurusan as j', 'j.jurusan_id', '=', 'u.jurusan_id')
-                ->join('kelas as k', 'k.kelas_id', '=', 'u.kelas_id')
-                ->where('u.role', 3);
+                ->join('jurusan as j', 'j.jurusan_id', '=', 's.jurusan_id')
+                ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id');
+
 
             if ($request->tingkatan != null) {
-                $query->where('u.tingkatan', $request->tingkatan);
+                $query->where('s.tingkatan', $request->tingkatan);
             }
 
             if ($request->kelas_id != null) {
@@ -61,11 +62,11 @@ class SiswaController extends Controller
                 // [0] => jurusan_id
                 // [1] => kelas_id
                 $arr = explode("|", $request->kelas_id);
-                $query->where('u.kelas_id', $arr[1]);
+                $query->where('s.kelas_id', $arr[1]);
             }
 
             if ($request->status != null) {
-                $query->where('u.status', $request->status);
+                $query->where('s.status', $request->status);
             }
 
             $countRecords = $query->count();
@@ -73,7 +74,7 @@ class SiswaController extends Controller
             $result = $query
                 ->offset($request->start)
                 ->limit($request->length)
-                ->orderByRaw("u.user_id DESC,u.status ASC")
+                ->orderByRaw("s.siswa_id DESC,s.status ASC")
                 ->get();
 
             $dataResponse = [];
@@ -83,6 +84,7 @@ class SiswaController extends Controller
                 foreach ($result as $row) {
                     $i++;
                     $subData['no'] = $i;
+                    $subData['checkbox_nonaktif'] = "";
 
                     $subData['username'] = $row->username;
                     $subData['nama'] = $row->nama;
@@ -106,24 +108,29 @@ class SiswaController extends Controller
                     ';
 
                     $subData['kelas'] = $row->nama_jurusan . " | " .  $row->nama_kelas;
-
                     $subData['status'] = '
-                    <div class="text-center">
-                        <span class="badge badge-success p-2">Aktif</span>
-                    </div>
-                    ';
-
-                    if ($row->status == 0) {
-                        $subData['status'] = '
                     <div class="text-center">
                         <span class="badge badge-danger p-2">Nonaktif</span>
                     </div>
                     ';
+
+                    if ($row->status == 1) {
+                        $subData['status'] = '
+                        <div class="text-center">
+                            <span class="badge badge-success p-2">Aktif</span>
+                        </div>
+                        ';
+
+                        $subData['checkbox_nonaktif'] = '
+                        <div class="text-center">
+                            <input type="checkbox" name="siswa_id[]" class="nonaktif_siswa" value="' . $row->siswa_id . '">
+                        </div>
+                        ';
                     }
 
                     $subData['settings'] = '
                     <div class="setting-icons">
-                        <a href="/siswa/edit/' . $row->user_id . '" class="setting-edit">
+                        <a href="/siswa/edit/' . $row->siswa_id . '" class="setting-edit">
                             <i class="ri-pencil-line"></i>
                         </a>
                     </div>
@@ -185,13 +192,18 @@ class SiswaController extends Controller
             [
                 'tingkatan' => "required",
                 'kelas_id' => "required",
-                'username' => "required|unique:users,username",
+                'username' => "required|unique:siswa,username",
                 'nama_siswa' => "required",
                 'password' => "required|min:6",
             ],
             [
-                'required' => ":attribute wajib di isi",
-                'unique' => ":attribute sudah di gunakan"
+                'tingkatan.required' => "Tingkatan Wajib di isi",
+                'kelas_id.required' => "Kelas wajib di isi",
+                'username.required' => "Username wajib di isi",
+                'username.unique' => "Username sudah di gunakan",
+                'nama_siswa.required' => "Nama Siswa wajib di isi",
+                'password.required' => "Password wajib di isi",
+                'password.min' => "Password minimal 6 huruf",
             ]
         );
 
@@ -206,19 +218,45 @@ class SiswaController extends Controller
         // [1] => kelas_id
         $arr = explode("|", $request->kelas_id);
 
-        User::create([
+        $user =   User::create([
+            'created_by' => auth()->guard("admin")->user()->user_id,
+        ]);
+
+        $lastInsertUserId = $user->user_id;
+
+        Siswa::create([
+            'user_id' => $lastInsertUserId,
             'username' => $request->username,
             'nama' => $request->nama_siswa,
             'password' => Hash::make($request->password),
             'role' => 3,
             'tingkatan' => $request->tingkatan,
             'jurusan_id' => $arr[0],
-            'kelas_id' => $arr[1]
+            'kelas_id' => $arr[1],
+            'created_by' => auth()->guard("admin")->user()->user_id
         ]);
 
         return response()->json([
             'status' => "success",
         ]);
+    }
+
+    public function nonaktifkanSiswa(Request $request)
+    {
+        $siswa_id = $request->siswa_id;
+
+        for ($i = 0; $i < count($siswa_id); $i++) {
+            Siswa::where("siswa_id", $siswa_id[$i])
+                ->update([
+                    'status' => 0,
+                ]);
+        }
+
+        $dataResponse = [
+            'message' => "success",
+        ];
+
+        return response()->json($dataResponse);
     }
 
     public function naikKelasGetSiswaByKelas(Request $request)
@@ -258,35 +296,29 @@ class SiswaController extends Controller
         return response()->json($dataResponse);
     }
 
-    public function edit($user_id)
+    public function edit($siswa_id)
     {
-        if (!isset($user_id)) {
+        if (!isset($siswa_id)) {
             return redirect()->back();
         }
 
-        $sql_siswa = DB::table('users as u')
+        $sql_siswa = DB::table('siswa as s')
             ->select(
                 'j.jurusan_id',
                 'j.nama_jurusan',
                 'k.kelas_id',
                 'k.nama_kelas',
-                'u.username',
-                'u.nama',
-                'u.status',
-                'u.role',
-                'u.user_id',
-                'u.tingkatan'
+                's.username',
+                's.nama',
+                's.status',
+                's.role',
+                's.siswa_id',
+                's.tingkatan'
             )
-            ->join('jurusan as j', 'j.jurusan_id', '=', 'u.jurusan_id')
-            ->join('kelas as k', 'k.kelas_id', '=', 'u.kelas_id')
-            ->where('u.user_id', $user_id)
+            ->join('jurusan as j', 'j.jurusan_id', '=', 's.jurusan_id')
+            ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id')
+            ->where('s.siswa_id', $siswa_id)
             ->first();
-
-        if ($sql_siswa->role != 3) {
-            return redirect()->back();
-        }
-
-        // $sql_jurusan = Jurusan::where('status', 1)->get();
 
         $sql_kelas = Kelas::with([
             'jurusan' => function ($query) {
@@ -299,7 +331,6 @@ class SiswaController extends Controller
         $dataToView = [
             'siswa' => $sql_siswa,
             'tingkatans' => $this->tingkatans,
-            // 'jurusans' => $sql_jurusan,
             "kelases" => $sql_kelas,
             'statuses' => $this->statuses,
         ];
@@ -312,18 +343,22 @@ class SiswaController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'user_id' => "required",
+                'siswa_id' => "required",
                 'hide_tingkatan' => "required",
                 'hide_jurusan' => "required",
                 'hide_kelas' => "required",
-                'tingkatan_id' => "required",
+                'tingkatan' => "required",
                 'kelas_id' => "required",
                 'username' => 'required',
                 'nama' => "required",
                 'status' => 'required',
             ],
             [
-                'required' => ":attribute wajib di isi"
+                'tingkatan.required' => "Tingkatan wajib di isi",
+                'kelas_id.required' => "Kelas wajib di isi",
+                'username.required' => "Username wajib di isi",
+                'nama.required' => "Nama wajib di isi",
+                'status.required' => "Status wajib di isi",
             ]
         );
 
@@ -331,46 +366,48 @@ class SiswaController extends Controller
             return redirect()->back()->withInput()->withErrors($validator);
         }
 
-        $user = User::where("user_id", $request->user_id)->first();
+        $siswa = Siswa::where("siswa_id", $request->siswa_id)->first();
 
         $dataUpdate = [];
 
-        if ($user->username != $request->username) {
-            $sql_checkUsername = User::select("user_id")
+        if ($siswa->username != $request->username) {
+            $sql_checkUsername = Siswa::select("siswa_id")
                 ->where("username", $request->username)
                 ->first();
 
             if ($sql_checkUsername) {
-                return redirect()->back()->with('duplicate_username', 'duplicate_username');
+                return redirect()->back()->with('duplicate_username', 'duplicate_username')->withInput();
             }
 
             $dataUpdate['username'] = $request->username;
         }
 
-        if ($user->tingkatan_id != $request->tingkatan_id) {
-            $dataUpdate['tingkatan'] = $request->tingkatan_id;
+        if ($siswa->tingkatan != $request->tingkatan) {
+            $dataUpdate['tingkatan'] = $request->tingkatan;
         }
 
         // [0] => jurusan_id
         // [1] => kelas_id
         $arr = explode("|", $request->kelas_id);
 
-        if ($user->jurusan_id != $arr[0] || $user->kelas_id != $arr[1]) {
+        if ($siswa->jurusan_id != $arr[0] || $siswa->kelas_id != $arr[1]) {
             $dataUpdate['jurusan_id'] = $arr[0];
             $dataUpdate['kelas_id'] = $arr[1];
         }
 
-        if ($user->nama != $request->nama) {
+        if ($siswa->nama != $request->nama) {
             $dataUpdate['nama'] = $request->nama;
         }
 
-        if ($user->status != $request->status) {
+        if ($siswa->status != $request->status) {
             $dataUpdate['status'] = $request->status;
         }
 
         if (!empty($dataUpdate)) {
-            DB::table("users")
-                ->where('user_id', $request->user_id)
+            $dataUpdate['updated_by'] = auth()->guard("admin")->user()->user_id;
+
+            DB::table('siswa')
+                ->where("siswa_id", $request->siswa_id)
                 ->update($dataUpdate);
         }
 

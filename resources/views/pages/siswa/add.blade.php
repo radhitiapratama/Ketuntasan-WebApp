@@ -59,7 +59,7 @@
                                             <label for="#">Username</label>
                                             <input type="text" class="form-control" id="username" name="username"
                                                 placeholder="Contoh : jonokurnia123" disabled required>
-                                            <small class="text-danger" id="err-username"></small>
+                                            <small class="text-danger err-message" id="err-username"></small>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
@@ -74,7 +74,7 @@
                                                     </span>
                                                 </div>
                                             </div>
-                                            <small class="text-danger" id="err-password"></small>
+                                            <small class="text-danger err-message" id="err-password"></small>
                                         </div>
                                     </div>
                                     <div class="col-12">
@@ -82,7 +82,7 @@
                                             <label for="#">Nama Siswa</label>
                                             <input type="text" id="nama_siswa" class="form-control" name="nama_siswa"
                                                 placeholder="Contoh : Jono Kurniawan" disabled required>
-                                            <small class="text-danger" id="err-nama_siswa"></small>
+                                            <small class="text-danger err-message" id="err-nama_siswa"></small>
                                         </div>
                                     </div>
                                 </div>
@@ -221,6 +221,10 @@
 
                     $("#tingkatan_id").val("").trigger("change.select2");
                     $("#kelas_id").val("").trigger("change.select2");
+
+                    $(".err-message").each(function(i) {
+                        $(this).remove();
+                    });
 
                     Swal.fire({
                         title: "Siswa berhasil di tambahkan",
