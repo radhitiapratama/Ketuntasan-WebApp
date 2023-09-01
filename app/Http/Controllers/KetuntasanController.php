@@ -13,6 +13,8 @@ use App\Models\Kelas;
 use App\Models\Jurusan;
 use App\Models\TahunAjaran;
 use App\Models\Mapel;
+use App\Models\Siswa;
+use Illuminate\Support\Facades\Auth;
 
 class KetuntasanController extends Controller
 {
@@ -30,27 +32,27 @@ class KetuntasanController extends Controller
     public function index(Request $request)
     {
         // jika role superadmin
-        if (Gate::allows("admin")) {
+        if (auth()->guard("admin")->check()) {
             if ($request->ajax()) {
                 $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
                 $table = DB::table("ketuntasan as kt");
 
                 $query = $table->select(
-                    'u.tingkatan',
-                    'u.jurusan_id',
-                    'u.kelas_id',
+                    's.tingkatan',
+                    's.jurusan_id',
+                    's.kelas_id',
                     'j.nama_jurusan',
                     'k.nama_kelas'
                 )
-                    ->join('users as u', 'u.user_id', '=', 'kt.user_id')
-                    ->join('jurusan as j', 'j.jurusan_id', '=', 'u.jurusan_id')
-                    ->join('kelas as k', 'k.kelas_id', '=', 'u.kelas_id')
+                    ->join("siswa as s", 's.siswa_id', '=', 'kt.siswa_id')
+                    ->join('jurusan as j', 'j.jurusan_id', '=', 's.jurusan_id')
+                    ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id')
                     ->where("kt.tahun_ajaran_id", $tahun_ajaran->tahun_ajaran_id);
 
 
                 if ($request->tingkatan != null) {
-                    $query->where('u.tingkatan', $request->tingkatan);
+                    $query->where('s.tingkatan', $request->tingkatan);
                 }
 
                 if ($request->kelas_id != null) {
@@ -58,13 +60,13 @@ class KetuntasanController extends Controller
                     // [1] => kelas_id
                     $arr = explode("|", $request->kelas_id);
 
-                    $query->where('u.jurusan_id', $arr[0])
-                        ->where("u.kelas_id", $arr[1]);
+                    $query->where('s.jurusan_id', $arr[0])
+                        ->where("s.kelas_id", $arr[1]);
                 }
 
-                $records = count($query->groupBy("u.tingkatan", 'u.kelas_id')->get());
+                $records = count($query->groupBy("s.tingkatan", 's.kelas_id')->get());
 
-                $result = $query->groupBy("u.tingkatan", 'u.kelas_id')
+                $result = $query->groupBy("s.tingkatan", 's.kelas_id')
                     ->offset($request->start)
                     ->limit($request->length)
                     ->get();
@@ -125,7 +127,6 @@ class KetuntasanController extends Controller
                 ]);
             }
 
-            // $sql_jurusan = Jurusan::where("status", 1)->get();
             $sql_kelas =  Kelas::with([
                 'jurusan' => function ($query) {
                     $query->select("jurusan_id", 'nama_jurusan');
@@ -144,7 +145,7 @@ class KetuntasanController extends Controller
         }
 
         // jika role siswa 
-        if (Gate::allows("siswa")) {
+        if (Auth::guard("siswa")->check()) {
             if ($request->ajax()) {
                 $tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
 
@@ -219,7 +220,7 @@ class KetuntasanController extends Controller
             return view("pages.ketuntasan.index");
         }
 
-        if (Gate::allows("guru")) {
+        if (Auth::guard("guru")->check()) {
             if ($request->ajax()) {
                 $table = GuruMapel::with('mapel');
 
@@ -288,7 +289,6 @@ class KetuntasanController extends Controller
 
     public function store(Request $request)
     {
-        // return response()->json($request->semester);
         $tahun_ajaran  = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
         $sql_batasWaktu = DB::table("batas_waktu")
             ->select("batas_waktu_id")
@@ -325,8 +325,8 @@ class KetuntasanController extends Controller
             return response()->json($dataResponse);
         }
 
-        $sql_user = DB::table("users")
-            ->select('user_id')
+        $sql_siswa = DB::table("siswa")
+            ->select('siswa_id')
             ->where('tingkatan', $tingkatan_id)
             ->where('jurusan_id', $kelasArr[0])
             ->where('kelas_id', $kelasArr[1])
@@ -334,7 +334,7 @@ class KetuntasanController extends Controller
             ->where('role', 3)
             ->get();
 
-        if (count($sql_user) <= 0) {
+        if (count($sql_siswa) <= 0) {
             $dataResponse = [
                 'message' => "empty_siswa",
             ];
@@ -342,13 +342,13 @@ class KetuntasanController extends Controller
             return response()->json($dataResponse);
         }
 
-        foreach ($sql_user as $user) {
+        foreach ($sql_siswa as $siswa) {
             foreach ($sql_mapel as $mapel) {
                 // check duplicate ketuntasan
                 $sql_check = DB::table("ketuntasan")
                     ->select('ketuntasan_id')
                     ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
-                    ->where('user_id', $user->user_id)
+                    ->where('siswa_id', $siswa->siswa_id)
                     ->where('kelas_mapel_id', $mapel->kelas_mapel_id)
                     ->where("semester", $semester)
                     ->first();
@@ -359,11 +359,13 @@ class KetuntasanController extends Controller
 
                 DB::table('ketuntasan')
                     ->insert([
-                        'user_id' => $user->user_id,
+                        'siswa_id' => $siswa->siswa_id,
                         'kelas_mapel_id' => $mapel->kelas_mapel_id,
                         'tahun_ajaran_id' => $tahun_ajaran->tahun_ajaran_id,
                         'semester' => $semester,
                         'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                        'created_by' => auth()->guard("admin")->user()->user_id
                     ]);
             }
         }
@@ -395,8 +397,8 @@ class KetuntasanController extends Controller
         $tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
         $sql_ketuntasan = DB::table("ketuntasan as k")
-            ->select('u.nama', 'k.*')
-            ->join('users as u', 'u.user_id', '=', 'k.user_id')
+            ->select('s.nama', 'k.*')
+            ->join("siswa as s", 's.siswa_id', '=', 'k.siswa_id')
             ->where('k.ketuntasan_id', $ketuntasan_id)
             ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
             ->first();

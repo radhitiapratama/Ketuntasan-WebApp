@@ -30,7 +30,8 @@
                         <div class="row mb-3">
                             <div class="col-md-5 col-12 mb-3 mb-md-0">
                                 <label for="tingkatan">Tingkatan</label>
-                                <select name="tingkatan" id="tingkatan" class="form-control select2 select2-1" required>
+                                <select name="tingkatan" id="select2-1" class="form-control select2 select-tingkatan"
+                                    required>
                                     <option value="">Pilih..</option>
                                     @foreach ($tingkatans as $key => $value)
                                         <option value="{{ $key }}">{{ $value }}
@@ -43,7 +44,7 @@
                             </div>
                             <div class="col-md-7 col-12 mb-3 mb-md-0">
                                 <label for="kelas">Kelas</label>
-                                <select name="kelas" id="kelas" class="form-control select2 select2-2"required>
+                                <select name="kelas" id="select2-2" class="form-control select2 select-kelas"required>
                                     <option value="">Pilih..</option>
                                     @foreach ($kelases as $kelas)
                                         <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
@@ -57,26 +58,33 @@
                             </div>
                         </div>
 
-                        <div class="kode-guru-mapel-wrapper">
+                        <div class="mapel-wrapper">
                             <div class="row mb-3">
-                                <div class="col-12">
-                                    <div class="form-group">
-                                        <label for="#">Kode Guru Mapel</label>
-                                        <select name="kode_guru_mapel[]" id="kode_guru_mapel_1" class="form-control">
-                                            <option value="">Pilih...</option>
-                                            @foreach ($guruMapels as $guruMapel)
-                                                <option value="{{ $guruMapel->guru_mapel_id }}">
-                                                    @if ($guruMapel->kode_guru_mapel != null)
-                                                        {{ $guruMapel->kode_guru }},{{ $guruMapel->kode_guru_mapel }}
-                                                    @else
-                                                        {{ $guruMapel->kode_guru }}
-                                                    @endif
+                                <div class="col-md-5 col-12 mb-3 mb-md-0">
+                                    <div class="form-group parent_mapel_1" id="1">
+                                        <label for="mapel_id">Nama Mapel</label>
+                                        <select name="mapel_id[]" id="mapel_id_1" class="form-control select-mapel" disabled
+                                            required>
+                                            <option value=""></option>
+                                            @foreach ($mapels as $mapel)
+                                                <option value="{{ $mapel->mapel_id }}">{{ $mapel->nama_mapel }}
                                                 </option>
                                             @endforeach
-                                            @error('kode_guru_mapel')
-                                                <small class="text-danger">{{ $message }}</small>
-                                            @enderror
                                         </select>
+                                        @error('mapel_id')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-7 col-12 mb-3 mb-md-0">
+                                    <div class="form-group parent_guru_1" id="1">
+                                        <label for="guru_id">Nama Guru</label>
+                                        <select name="guru_id[]" id="guru_id_1" class="form-control select-guru" disabled
+                                            required>
+                                        </select>
+                                        @error('guru_id')
+                                            <small class="text-danger">{{ $message }}</small>
+                                        @enderror
                                     </div>
                                 </div>
                             </div>
@@ -84,7 +92,7 @@
 
                         <div class="row mb-3">
                             <div class="col-12">
-                                <button type="button" class="btn-dark m-auto" id="btn-add-mapel">
+                                <button type="button" class="btn-dark m-auto d-none" id="btn-add-mapel">
                                     <i class="ri-add-box-line"></i>
                                 </button>
                             </div>
@@ -99,21 +107,22 @@
         </div>
     </div>
 
-    <div class="row mb-3 d-none clone-el">
-        <div class="col-12">
-            <div class="form-group input-wrapper">
-                <label for="#">Kode Guru Mapel</label>
-                <select name="kode_guru_mapel[]" id="kode_guru_mapel" class="form-control select2">
-                    <option value="">Pilih...</option>
-                    @foreach ($guruMapels as $guruMapel)
-                        <option value="{{ $guruMapel->guru_mapel_id }}">
-                            @if ($guruMapel->kode_guru_mapel != null)
-                                {{ $guruMapel->kode_guru }},{{ $guruMapel->kode_guru_mapel }}
-                            @else
-                                {{ $guruMapel->kode_guru }}
-                            @endif
-                        </option>
+    <div class="row mb-3  clone-el d-none">
+        <div class="col-md-5 col-12 mb-3 mb-md-0">
+            <div class="form-group parent-mapel" id="1">
+                <label for="mapel_id">Nama Mapel</label>
+                <select name="mapel_id[]" id="mapel_id_1" class="form-control select-mapel" required>
+                    <option value=""></option>
+                    @foreach ($mapels as $mapel)
+                        <option value="{{ $mapel->mapel_id }}">{{ $mapel->nama_mapel }}</option>
                     @endforeach
+                </select>
+            </div>
+        </div>
+        <div class="col-md-7 col-12 mb-3 mb-md-0">
+            <div class="form-group parent-guru input-wrapper" id="1">
+                <label for="guru_id">Nama Guru</label>
+                <select name="guru_id[]" id="guru_id_1" class="form-control select-guru" disabled required>
                 </select>
                 <button type="button" class="btn-delete-input">
                     <i class="ri-close-circle-line"></i>
@@ -150,23 +159,69 @@
 
         const csrfToken = $('meta[name="csrf-token"]').attr("content");
 
-        const configSelect2 = {
-            theme: "bootstrap4",
-            width: "100%",
-        }
-
         // init select2 untuk select(tingkatan,jurusan,kelas)
         const select2 = document.querySelectorAll(".select2");
         for (let i = 1; i <= select2.length; i++) {
-            $(`.select2-${i}`).select2(configSelect2);
+            $(`#select2-${i}`).select2({
+                theme: "bootstrap4",
+                width: "100%",
+            });
         }
-
-        $("#kode_guru_mapel_1").select2(configSelect2);
 
         // select kelas
         $(".select-kelas").change(function() {
             $("#mapel_id_1").attr("disabled", false);
             $("#btn-add-mapel").removeClass("d-none");
+        });
+
+        $("#mapel_id_1").select2({
+            theme: "bootstrap4",
+            width: "100%",
+            placeholder: "Pilih..."
+        });
+
+        $("#guru_id_1").select2({
+            theme: "bootstrap4",
+            width: "100%",
+            placeholder: "Pilih..."
+        });
+
+        //select mapel change
+        $(document).on("change", '.select-mapel', function() {
+            let parentId = $(this).parent().attr("id"); // get data parent id untuk ambil select guru yg sebaris
+            console.log(parentId);
+            $(`.parent_guru_${parentId} #guru_id_${parentId}`).html("");
+            $(`.parent_guru_${parentId} #guru_id_${parentId}`).attr('disabled', true);
+
+            $.ajax({
+                type: "POST",
+                url: "/getDataGuruByMapel",
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: {
+                    mapel_id: $(this).val(),
+                },
+                dataType: "json",
+                success: function(response) {
+                    console.log(response);
+
+                    let opt = '<option value=""></option>';
+                    for (let i = 0; i < response.gurus.length; i++) {
+                        opt +=
+                            `<option value="${response.gurus[i].user_id}">${response.gurus[i].nama}</option>`
+                    }
+
+                    $(`.parent_guru_${parentId} #guru_id_${parentId}`).html(opt);
+                    $(`.parent_guru_${parentId} #guru_id_${parentId}`).select2({
+                        theme: "bootstrap4",
+                        width: "100%",
+                        placeholder: "Pilih...",
+                    });
+
+                    $(`.parent_guru_${parentId} #guru_id_${parentId}`).attr('disabled', false);
+                }
+            });
         });
 
         let countCloneEl = 1;
@@ -176,10 +231,22 @@
             countCloneEl++;
             let cloneElement = $(".clone-el").clone().removeClass("clone-el d-none");
 
-            cloneElement.find("#kode_guru_mapel").attr("id", `kode_guru_mapel_${countCloneEl}`);
+            // mapel
+            cloneElement.find(".parent-mapel").attr("id", countCloneEl);
+            cloneElement.find(".parent-mapel").addClass(`parent_mapel_${countCloneEl}`);
+            cloneElement.find(".select-mapel").attr("id", `mapel_id_${countCloneEl}`);
 
-            $(".kode-guru-mapel-wrapper").append(cloneElement);
-            $(`#kode_guru_mapel_${countCloneEl}`).select2(configSelect2);
+            // guru
+            cloneElement.find(".parent-guru").attr("id", countCloneEl);
+            cloneElement.find(".parent-guru").addClass(`parent_guru_${countCloneEl}`);
+            cloneElement.find(".select-guru").attr("id", `guru_id_${countCloneEl}`);
+
+            $(".mapel-wrapper").append(cloneElement);
+            $(`#mapel_id_${countCloneEl}`).select2({
+                theme: "bootstrap4",
+                width: "100%",
+                placeholder: "Pilih...",
+            });
         });
 
         //delete new mapel element

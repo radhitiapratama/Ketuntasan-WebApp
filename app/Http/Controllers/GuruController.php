@@ -280,11 +280,20 @@ class GuruController extends Controller
 
                     $subData['nama'] = $row->nama;
                     $subData['nama_mapel'] = $row->nama_mapel;
+
                     $subData['kode_guru_mapel'] = '
                     <div class="text-center">
-                        ' . $row->kode_guru . ',' . $row->kode_guru_mapel . ' 
+                        ' . $row->kode_guru . '
                     </div>
                     ';
+
+                    if ($row->kode_guru_mapel != null) {
+                        $subData['kode_guru_mapel'] = '
+                        <div class="text-center">
+                        ' . $row->kode_guru . ',' . $row->kode_guru_mapel . ' 
+                        </div>
+                        ';
+                    }
 
 
                     $subData['settings'] = '

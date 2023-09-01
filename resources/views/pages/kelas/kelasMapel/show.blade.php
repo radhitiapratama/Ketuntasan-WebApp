@@ -59,6 +59,7 @@
                             <th style="width: 5px">#</th>
                             <th>Nama Mapel</th>
                             <th>Nama Guru</th>
+                            <th>Kode Guru Mapel</th>
                             <th class="text-center">Status</th>
                         </tr>
                     </thead>
@@ -68,6 +69,11 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $mapel->nama_mapel }}</td>
                                 <td>{{ $mapel->nama }}</td>
+                                @if ($mapel->kode_guru_mapel != null)
+                                    <td>{{ $mapel->kode_guru }},{{ $mapel->kode_guru_mapel }}</td>
+                                @else
+                                    <td>{{ $mapel->kode_guru }}</td>
+                                @endif
                                 <td class="text-center">
                                     @if ($mapel->status == 1)
                                         <span class="badge badge-success p-2">Aktif</span>

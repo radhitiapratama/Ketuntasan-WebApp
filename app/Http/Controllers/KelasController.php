@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Imports\KelasImport;
 use App\Imports\KelasMapelImport;
+use App\Models\GuruMapel;
 use App\Models\Kelas;
 use App\Models\KelasMapel;
 use Carbon\Carbon;
@@ -11,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaran;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Testing\Constraints\CountInDatabase;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class KelasController extends Controller
@@ -346,8 +348,10 @@ class KelasController extends Controller
 
     public function kelasMapel_add()
     {
-        $sql_mapel = DB::table("mapel")
-            ->where('status', 1)
+        $sql_guruMapel = DB::table("guru_mapel as gm")
+            ->select("gm.guru_mapel_id", 'gm.guru_id', 'gm.kode_guru_mapel', 'g.kode_guru')
+            ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+            ->where("gm.status", 1)
             ->get();
 
         $sql_kelas = Kelas::with([
@@ -362,7 +366,7 @@ class KelasController extends Controller
         $dataToView = [
             'kelases' => $sql_kelas,
             'tingkatans' => $this->tingkatans,
-            'mapels' => $sql_mapel,
+            'guruMapels' => $sql_guruMapel
         ];
 
         return view("pages.kelas.kelasMapel.add", $dataToView);
@@ -393,8 +397,12 @@ class KelasController extends Controller
             [
                 'tingkatan' => "required",
                 'kelas' => "required",
-                'mapel_id' => "required",
-                'guru_id' => "required",
+                'kode_guru_mapel' => "required",
+            ],
+            [
+                "tingkatan.required" => "Tingkatan wajib di isi",
+                'kelas.required' => "Kelas wajib di isi",
+                'kode_guru_mapel.required' => "Kode Guru Mapel wajib di isi"
             ]
         );
 
@@ -402,49 +410,51 @@ class KelasController extends Controller
             return redirect()->back()->withInput()->withErrors($validator);
         }
 
-        $mapel_id = $request->mapel_id;
-        $guru_id = $request->guru_id;
+        $tahun_ajaran = TahunAjaran::select('tahun_ajaran_id')->where("superadmin_aktif", 1)->first();
 
         // [0] => jurusan_id
         // [1] => kelas_id
         $arrKelas = explode("|", $request->kelas);
 
-        $tahun_ajaran = TahunAjaran::select('tahun_ajaran_id')->where("superadmin_aktif", 1)->first();
+        $sql_guruMapelId = DB::table('kelas_mapel')
+            ->select("guru_mapel_id")
+            ->where("tingkatan", $request->tingkatan)
+            ->where("jurusan_id", $arrKelas[0])
+            ->where("kelas_id", $arrKelas[1])
+            ->where("tahun_ajaran_id", $tahun_ajaran->tahun_ajaran_id)
+            ->pluck("guru_mapel_id")->toArray();
 
-        for ($i = 0; $i < count($mapel_id); $i++) {
-            // check apakah mapel dan guru itu sdh ada atau tidak di dalam database
-            $sql_check = DB::table("kelas_mapel")
-                ->select('kelas_mapel_id')
-                ->where('tingkatan', $request->tingkatan)
-                ->where('jurusan_id', $arrKelas[0])
-                ->where('kelas_id', $arrKelas[1])
-                ->where('user_id', $guru_id[$i])
-                ->where('mapel_id', $mapel_id[$i])
-                ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
-                ->first();
+        // guru_mapel_id yg tidak ada di dalam table kelas_mapel
+        $filtered_kode_guru_mapel = array_diff(array_unique($request->kode_guru_mapel), $sql_guruMapelId);
+        $filtered_kode_guru_mapel = array_values($filtered_kode_guru_mapel);
 
-            if ($sql_check) {
-                continue;
+        DB::beginTransaction();
+
+        if (!empty($filtered_kode_guru_mapel)) {
+            for ($i = 0; $i < count($filtered_kode_guru_mapel); $i++) {
+                DB::table("kelas_mapel")
+                    ->insert([
+                        'tingkatan' => $request->tingkatan,
+                        'jurusan_id' => $arrKelas[0],
+                        'kelas_id' => $arrKelas[1],
+                        'guru_mapel_id' => $filtered_kode_guru_mapel[$i],
+                        'tahun_ajaran_id' => $tahun_ajaran->tahun_ajaran_id,
+                        'status' => 1,
+                        'created_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                        'created_by' => auth()->guard("admin")->user()->user_id
+                    ]);
             }
-
-            DB::table("kelas_mapel")
-                ->insert([
-                    'tingkatan' => $request->tingkatan,
-                    'jurusan_id' => $arrKelas[0],
-                    'kelas_id' => $arrKelas[1],
-                    'user_id' => $guru_id[$i],
-                    'mapel_id' => $mapel_id[$i],
-                    'tahun_ajaran_id' => $tahun_ajaran->tahun_ajaran_id,
-                    'created_at' => Carbon::now(),
-                ]);
         }
+
+        DB::commit();
 
         return redirect()->back()->with("successStore", "successStore");
     }
 
-    public function kelasMapel_show($tingkatan_id, $jurusan_id, $kelas_id)
+    public function kelasMapel_show($tingkatan, $jurusan_id, $kelas_id)
     {
-        if (!isset($tingkatan_id) || !isset($jurusan_id) || !isset($kelas_id)) {
+        if (!isset($tingkatan) || !isset($jurusan_id) || !isset($kelas_id)) {
             return redirect()->back();
         }
 
@@ -457,7 +467,7 @@ class KelasController extends Controller
             ->select('j.nama_jurusan', 'k.nama_kelas', 'km.tingkatan')
             ->join("jurusan as j", 'j.jurusan_id', '=', 'km.jurusan_id')
             ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
-            ->where('km.tingkatan', $tingkatan_id)
+            ->where('km.tingkatan', $tingkatan)
             ->where('km.jurusan_id', $jurusan_id)
             ->where('km.kelas_id', $kelas_id)
             ->where('km.tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
@@ -467,16 +477,27 @@ class KelasController extends Controller
             return redirect()->back();
         }
 
+        // $sql_mapels = DB::table("kelas_mapel as km")
+        //     ->select('m.nama_mapel', 'u.nama', 'km.status')
+        //     ->join("jurusan as j", 'j.jurusan_id', '=', 'km.jurusan_id')
+        //     ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
+        //     ->join('mapel as m', 'm.mapel_id', '=', 'km.mapel_id')
+        //     ->join('users as u', 'u.user_id', '=', 'km.user_id')
+        //     ->where('km.tingkatan', $tingkatan)
+        //     ->where('km.jurusan_id', $jurusan_id)
+        //     ->where('km.kelas_id', $kelas_id)
+        //     ->where('km.tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
+        //     ->get();
+
         $sql_mapels = DB::table("kelas_mapel as km")
-            ->select('m.nama_mapel', 'u.nama', 'km.status')
-            ->join("jurusan as j", 'j.jurusan_id', '=', 'km.jurusan_id')
-            ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
-            ->join('mapel as m', 'm.mapel_id', '=', 'km.mapel_id')
-            ->join('users as u', 'u.user_id', '=', 'km.user_id')
-            ->where('km.tingkatan', $tingkatan_id)
-            ->where('km.jurusan_id', $jurusan_id)
-            ->where('km.kelas_id', $kelas_id)
-            ->where('km.tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
+            ->select('m.nama_mapel', 'g.nama', 'g.kode_guru', 'gm.kode_guru_mapel', 'km.status')
+            ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+            ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+            ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+            ->where("km.tingkatan", $tingkatan)
+            ->where("km.jurusan_id", $jurusan_id)
+            ->where("km.kelas_id", $kelas_id)
+            ->where("km.tahun_ajaran_id", $tahun_ajaran->tahun_ajaran_id)
             ->get();
 
         $dataToView = [

@@ -15,7 +15,8 @@ return new class extends Migration
     {
         Schema::create('ketuntasan', function (Blueprint $table) {
             $table->id("ketuntasan_id");
-            $table->foreignId("user_id")->references('user_id')->on("users");
+            // $table->foreignId("user_id")->references('user_id')->on("users");
+            $table->foreignId("siswa_id")->references("siswa_id")->on("siswa");
             $table->foreignId("kelas_mapel_id")->references('kelas_mapel_id')->on("kelas_mapel");
             $table->text("desc")->nullable();
             $table->timestamp("tgl_tuntas")->nullable();
