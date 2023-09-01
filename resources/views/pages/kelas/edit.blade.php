@@ -45,6 +45,9 @@
                                         {{ $jurusan->nama_jurusan }}</option>
                                 @endforeach
                             </select>
+                            @error('jurusan_id')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <div class="form-group">
                             <label for="status">Status</label>
@@ -54,6 +57,9 @@
                                         {{ $value }}</option>
                                 @endforeach
                             </select>
+                            @error('status')
+                                {{ $message }}
+                            @enderror
                         </div>
                         <button type="submit" class="btn-dark m-auto" id="btn-update">
                             <i class="ri-check-line"></i>

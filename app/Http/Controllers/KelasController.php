@@ -139,8 +139,9 @@ class KelasController extends Controller
                 'jurusan_id' => 'required',
             ],
             [
-                'unique' => ":attribute sudah di gunakan",
-                'required' => ":attribute wajib di isi"
+                'nama_kelas.required' => "Nama Kelas Wajib di isi",
+                'nama_kelas.unique' => "Nama Kelas sudah di gunakan",
+                'jurusan_id.required' => "Jurusan ID Wajib di isi",
             ]
         );
 
@@ -151,6 +152,7 @@ class KelasController extends Controller
         Kelas::create([
             'nama_kelas' => strtoupper($request->nama_kelas),
             'jurusan_id' => $request->jurusan_id,
+            'created_by' => auth()->guard("admin")->user()->user_id
         ]);
 
         return redirect()->back()->with("successStore", "successStore");
@@ -194,7 +196,9 @@ class KelasController extends Controller
             'jurusan_id' => "required",
             'status' => "required",
         ], [
-            'required' => ":attribute wajib di isi"
+            'nama_kelas.required' => "Nama Kelas wajib di isi",
+            'jurusan_id.required' => "Nama Jurusan wajib di isi",
+            'status.required' => "Stataus wajib di isi",
         ]);
 
         if ($validator->fails()) {

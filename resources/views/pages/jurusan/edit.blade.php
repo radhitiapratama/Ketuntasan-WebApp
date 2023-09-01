@@ -48,6 +48,9 @@
                                                 {{ $value }}</option>
                                         @endforeach
                                     </select>
+                                    @error('status')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
                                 </div>
                                 <button type="submit" class="btn-dark">
                                     <i class="ri-check-line"></i>

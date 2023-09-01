@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use App\Imports\GuruMapelImport;
 use App\Imports\waliKelasImport;
 use App\Models\Mapel;
+use App\Models\WaliKelas;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -460,7 +461,7 @@ class GuruController extends Controller
                 'mapel_id' => "required",
                 'status' => "required",
                 'guru_mapel_id' => 'required',
-                'kode_guru_mapel' => "required|numeric",
+                'kode_guru_mapel' => "required|integer",
             ],
             [
                 'guru_id.required' => "User ID Wajib di isi",
@@ -470,7 +471,7 @@ class GuruController extends Controller
                 'kode_guru_mapel.required' => "Kode Guru Mapel wajib di isi",
                 'kode_guru_mapel.unique' => "Kode Guru Mapel sudah di gunakan",
                 'kode_guru.required' => "Kode Guru wajib di isi",
-                'kode_guru_mapel.numeric' => "Kode Guru wajib angka"
+                'kode_guru_mapel.integer' => "Kode Guru wajib angka"
             ]
         );
 
@@ -550,7 +551,8 @@ class GuruController extends Controller
         if ($request->ajax()) {
             $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
-            $columnsSearch = ['u.nama', 'k.nama_kelas'];
+            // $columnsSearch = ['u.nama', 'k.nama_kelas'];
+            $columnsSearch = ['g.nama', 'k.nama_kelas'];
             $table = DB::table("wali_kelas as wk");
 
             if ($request->input("search.value")) {
@@ -561,10 +563,10 @@ class GuruController extends Controller
                 });
             }
 
-            $query = $table->select('j.nama_jurusan', 'k.nama_kelas', 'u.nama', 'u.username', 'wk.wali_kelas_id', 'wk.tingkatan')
+            $query = $table->select('j.nama_jurusan', 'k.nama_kelas', 'g.nama', 'g.username', 'wk.wali_kelas_id', 'wk.tingkatan')
                 ->join('jurusan as j', 'j.jurusan_id', '=', 'wk.jurusan_id')
                 ->join('kelas as k', 'k.kelas_id', '=', 'wk.kelas_id')
-                ->join('users as u', 'u.user_id', '=', 'wk.user_id')
+                ->join('guru as g', 'g.guru_id', 'wk.guru_id')
                 ->where('wk.tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id);
 
             if ($request->tingkatan != null) {
@@ -659,13 +661,12 @@ class GuruController extends Controller
         $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
         $sql_guruWali = DB::table('wali_kelas')
-            ->select('user_id')
+            ->select('guru_id')
             ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id);
 
-        $sql_guru = DB::table("users")
-            ->where('role', 2)
-            ->where('status', 1)
-            ->whereNotIn('user_id', $sql_guruWali)
+        $sql_guru = DB::table("guru as g")
+            ->where("status", 1)
+            ->whereNotIn("guru_id", $sql_guruWali)
             ->get();
 
         $sql_kelas = Kelas::with([
@@ -691,12 +692,14 @@ class GuruController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'tingkatan_id' => "required",
+                'tingkatan' => "required",
                 'kelas_id' => "required",
-                'user_id' => "required",
+                'guru_id' => "required",
             ],
             [
-                'required' => ":attribute wajib di isi"
+                "tingkatan.required" => "Tingkatan wajib di isi",
+                'kelas_id.required' => "Nama Kelas wajib di isi",
+                'guru_id.required' => "Nama GUru wajib di isi",
             ]
         );
 
@@ -712,7 +715,7 @@ class GuruController extends Controller
 
         $sql_check = DB::table("wali_kelas")
             ->select('wali_kelas_id')
-            ->where('tingkatan', $request->tingkatan_id)
+            ->where('tingkatan', $request->tingkatan)
             ->where('jurusan_id', $arrKelas[0])
             ->where('kelas_id', $arrKelas[1])
             ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
@@ -722,15 +725,14 @@ class GuruController extends Controller
             return redirect()->back()->with(['failed' => "failed"]);
         }
 
-        DB::table("wali_kelas")
-            ->insert([
-                'tingkatan' => $request->tingkatan_id,
-                'jurusan_id' => $arrKelas[0],
-                'kelas_id' => $arrKelas[1],
-                'user_id' => $request->user_id,
-                'tahun_ajaran_id' => $tahun_ajaran->tahun_ajaran_id,
-                'created_at' => Carbon::now(),
-            ]);
+        WaliKelas::create([
+            'tingkatan' => $request->tingkatan,
+            'jurusan_id' => $arrKelas[0],
+            'kelas_id' => $arrKelas[1],
+            'guru_id' => $request->guru_id,
+            'tahun_ajaran_id' => $tahun_ajaran->tahun_ajaran_id,
+            'created_by' => auth()->guard("admin")->user()->user_id,
+        ]);
 
         return redirect()->back()->with("successStore", "successStore");
     }
@@ -745,7 +747,8 @@ class GuruController extends Controller
 
         $sql_waliKelas = DB::table("wali_kelas as wk")
             ->select('j.nama_jurusan', 'k.nama_kelas', 'wk.*')
-            ->join('users as u', 'u.user_id', '=', 'wk.user_id')
+            // ->join('users as u', 'u.user_id', '=', 'wk.user_id')
+            ->join("guru as g", 'g.guru_id', '=', 'wk.guru_id')
             ->join('jurusan as j', 'j.jurusan_id', '=', 'wk.jurusan_id')
             ->join('kelas as k', 'k.kelas_id', '=', 'wk.kelas_id')
             ->where('wk.tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
@@ -758,15 +761,14 @@ class GuruController extends Controller
 
         // select guru yg sdh jadi wali kelas
         $sql_guruWaliKelas = DB::table("wali_kelas")
-            ->select('user_id')
+            ->select('guru_id')
             ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
-            ->where('user_id', '!=', $sql_waliKelas->user_id);
+            ->where('guru_id', '!=', $sql_waliKelas->guru_id);
 
-        $sql_guru = DB::table("users")
-            ->select('user_id', 'nama')
+        $sql_guru = DB::table("guru")
+            ->select('user_id', 'nama', 'guru_id')
             ->where('status', 1)
-            ->where('role', 2)
-            ->whereNotIn('user_id', $sql_guruWaliKelas)
+            ->whereNotIn('guru_id', $sql_guruWaliKelas)
             ->get();
 
         $dataToView = [
@@ -783,10 +785,10 @@ class GuruController extends Controller
             $request->all(),
             [
                 'wali_kelas_id' => "required",
-                'user_id' => "required"
+                'guru_id' => "required"
             ],
             [
-                'required' => ":attribute wajib di isi"
+                'guru_id.required' => "Nama Guru wajib di isi",
             ]
         );
 
@@ -797,7 +799,7 @@ class GuruController extends Controller
         DB::table("wali_kelas")
             ->where('wali_kelas_id', $request->wali_kelas_id)
             ->update([
-                'user_id' => $request->user_id
+                'guru_id' => $request->guru_id
             ]);
 
         return redirect()->back()->with("successUpdate", 'successUpdate');

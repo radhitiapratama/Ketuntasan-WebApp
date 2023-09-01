@@ -32,13 +32,16 @@
                                     <div class="col-md-2 col-12">
                                         <div class="form-group">
                                             <label for="#">Tingkatan</label>
-                                            <select name="tingkatan_id" id="tingkatan" class="form-control" required>
+                                            <select name="tingkatan" id="tingkatan" class="form-control" required>
                                                 <option value=""></option>
                                                 @foreach ($tingkatans as $key => $value)
                                                     <option value="{{ $key }}">{{ $value }}
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            @error('tingkatan')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-5 col-12">
@@ -53,17 +56,23 @@
                                                     </option>
                                                 @endforeach
                                             </select>
+                                            @error('kelas_id')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
                                         </div>
                                     </div>
                                     <div class="col-md-5 col-12">
                                         <div class="form-group">
                                             <label for="#">Wali Kelas</label>
-                                            <select name="user_id" id="guru" class="form-control" disabled required>
+                                            <select name="guru_id" id="guru" class="form-control" disabled required>
                                                 <option value=""></option>
                                                 @foreach ($gurus as $guru)
-                                                    <option value="{{ $guru->user_id }}">{{ $guru->nama }}</option>
+                                                    <option value="{{ $guru->guru_id }}">{{ $guru->nama }}</option>
                                                 @endforeach
                                             </select>
+                                            @error('guru_id')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>

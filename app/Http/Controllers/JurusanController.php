@@ -103,7 +103,8 @@ class JurusanController extends Controller
                 'nama_jurusan' => "required|unique:jurusan,nama_jurusan"
             ],
             [
-                'unique' => ":attribute sudah ada"
+                'nama_jurusan.required' => "Nama Jurusan wajib di isi",
+                'nama_jurusan.unique' => "Nama Jurusan sudah di gunakan",
             ]
         );
 
@@ -112,7 +113,8 @@ class JurusanController extends Controller
         }
 
         Jurusan::create([
-            'nama_jurusan' => $request->nama_jurusan
+            'nama_jurusan' => $request->nama_jurusan,
+            'created_by' => auth()->guard("admin")->user()->user_id
         ]);
 
         return redirect()->back()->with("successStore", "successStore");
@@ -143,11 +145,19 @@ class JurusanController extends Controller
 
     public function update(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            "jurusan_id" => "required",
-            'nama_jurusan' => "required",
-            'status' => "required"
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                "jurusan_id" => "required",
+                'nama_jurusan' => "required",
+                'status' => "required"
+            ],
+            [
+                'jurusan_id.required' => "Jurusan ID Wajib di isi",
+                'nama_jurusan.required' => "Nama Jurusan Wajib di isi",
+                'status.required' => "Status Wajib di isi",
+            ]
+        );
 
         if ($validator->fails()) {
             redirect()->back()->withErrors($validator)->withInput();
@@ -168,10 +178,12 @@ class JurusanController extends Controller
             $dataUpdate['status'] = $request->status;
         }
 
+        if (!empty($dataUpdate)) {
+            DB::table("jurusan")
+                ->where('jurusan_id', $request->jurusan_id)
+                ->update($dataUpdate);
+        }
 
-        DB::table("jurusan")
-            ->where('jurusan_id', $request->input("jurusan_id"))
-            ->update($dataUpdate);
 
         return redirect()->back()->with("successUpdate", "successUpdate");
     }

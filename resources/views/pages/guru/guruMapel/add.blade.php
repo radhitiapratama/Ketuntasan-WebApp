@@ -35,6 +35,9 @@
                                             <option value="{{ $guru->guru_id }}">{{ $guru->nama }}</option>
                                         @endforeach
                                     </select>
+                                    @error('guru_id')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
                                 </div>
                                 <div class="form-group">
                                     <label for="mapel_id">Mata Pelajaran</label>
@@ -45,6 +48,9 @@
                                             <option value="{{ $mapel->mapel_id }}">{{ $mapel->nama_mapel }}</option>
                                         @endforeach
                                     </select>
+                                    @error('mapel_id')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
                                 </div>
                                 <div class="mapel-wrapper">
                                 </div>

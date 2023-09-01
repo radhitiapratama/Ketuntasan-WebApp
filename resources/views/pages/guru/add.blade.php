@@ -61,7 +61,7 @@
                                 <div class="form-group">
                                     <label for="#">Kode Guru</label>
                                     <input type="text" class="form-control" name="kode_guru" required
-                                        value="{{ old('kode_guru') }}">
+                                        value="{{ old('kode_guru') }}" onkeypress="return onlyNumberKey(event)">
                                     @error('kode_guru')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
@@ -112,5 +112,13 @@
                 showPass.html(`<i class="ri-eye-off-line"></i>`);
             }
         });
+
+
+        function onlyNumberKey(evt) {
+            var ASCIICode = (evt.which) ? evt.which : evt.keyCode
+            if (ASCIICode > 31 && (ASCIICode < 48 || ASCIICode > 57))
+                return false;
+            return true;
+        }
     </script>
 @endsection

@@ -50,13 +50,16 @@
                                     <div class="col-md-12 col-12">
                                         <div class="form-group">
                                             <label for="#">Wali Kelas</label>
-                                            <select name="user_id" id="user_id" class="form-control select2" required
+                                            <select name="guru_id" id="guru_id" class="form-control select2" required
                                                 required>
                                                 @foreach ($gurus as $guru)
-                                                    <option value="{{ $guru->user_id }}" @selected($waliKelas->user_id == $guru->user_id)>
+                                                    <option value="{{ $guru->guru_id }}" @selected($waliKelas->guru_id == $guru->guru_id)>
                                                         {{ $guru->nama }}</option>
                                                 @endforeach
                                             </select>
+                                            @error('guru_id')
+                                                <small class="text-danger">{{ $message }}</small>
+                                            @enderror
                                         </div>
                                     </div>
                                 </div>

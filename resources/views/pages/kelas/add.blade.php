@@ -53,6 +53,9 @@
                                             @endif
                                         @endforeach
                                     </select>
+                                    @error('jurusan_id')
+                                        <small class="text-dangert">{{ $message }}</small>
+                                    @enderror
                                 </div>
                                 <button type="submit" class="btn-dark">
                                     <i class="ri-check-line"></i>

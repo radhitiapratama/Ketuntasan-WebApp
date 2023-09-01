@@ -18,7 +18,8 @@ return new class extends Migration
             $table->integer("tingkatan");
             $table->foreignId("jurusan_id")->references("jurusan_id")->on("jurusan");
             $table->foreignId("kelas_id")->references('kelas_id')->on("kelas");
-            $table->foreignId("user_id")->references('user_id')->on("users");
+            // $table->foreignId("user_id")->references('user_id')->on("users");
+            $table->foreignId("guru_id")->references("guru_id")->on("guru");
             $table->foreignId("tahun_ajaran_id")->references("tahun_ajaran_id")->on("tahun_ajaran");
             $table->integer("status")->default(1);
             $table->timestamps();
