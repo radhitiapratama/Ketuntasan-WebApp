@@ -61,12 +61,13 @@
                         <table class="table table-bordered" id="tbl-siswa" style="width: 100%">
                             <thead>
                                 <tr>
-                                    <th width="5px">#</th>
-                                    <th class="text-center"><input type="checkbox" name="check_all" id="check_all"></th>
-                                    <th>Username</th>
-                                    <th>Nama Siswa</th>
-                                    <th width="5px" class="text-center">Tingkatan</th>
-                                    <th>Kelas</th>
+                                    <th class="vertical-align-middle" width="5px">#</th>
+                                    <th width="5px" class="text-center vertical-align-middle"><input type="checkbox"
+                                            name="check_all" id="check_all"></th>
+                                    <th class="vertical-align-middle">Username</th>
+                                    <th class="vertical-align-middle">Nama Siswa</th>
+                                    <th width="5px" class="text-center vertical-align-middle">Tingkatan</th>
+                                    <th class="vertical-align-middle">Kelas</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -87,9 +88,17 @@
     <script>
         @if (session()->has('successNaikKelas'))
             Swal.fire({
-                title: "Suksess",
-                text: "Siswa berhasil di naikkan",
+                title: "Siswa berhasil di naikkan",
                 icon: "success",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
             });
         @endif
     </script>
@@ -102,7 +111,7 @@
                 processing: true,
                 ordering: false,
                 ajax: {
-                    url: "{{ url('getDataSiswaNaikKelas') }}",
+                    url: "{{ url('siswa-naik-kelas') }}",
                     data: function(data) {
                         data.tingkatan = $("#tingkatan_id").val();
                         data.kelas_id = $("#kelas_id").val();
@@ -178,9 +187,17 @@
             const chekedLength = $("input[name='check_siswa_id[]']:checked").length;
             if (chekedLength <= 0) {
                 Swal.fire({
-                    title: "Gagal !",
-                    text: "Minimal ada 1 siswa yang ingin di naikkan kelasnya !",
+                    title: "Minimal ada 1 siswa yang di naikkan",
                     icon: "error",
+                    iconColor: 'white',
+                    customClass: {
+                        popup: 'colored-toast'
+                    },
+                    toast: true,
+                    position: 'top-right',
+                    showConfirmButton: false,
+                    timer: 5000,
+                    timerProgressBar: true
                 });
 
                 return;

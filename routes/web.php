@@ -180,8 +180,6 @@ Route::middleware(['checkAuth'])->group(function () {
 
     // ajax jgn di ubah
     Route::post("getDataGuruByMapel", [GuruController::class, 'getDataGuruByMapel']);
-    Route::get("/getDataSiswaNaikKelas", [SiswaController::class, 'getDataSiswaNaikKelas']);
-    // Route::post("/getDataKelasByJurusan", [KelasController::class, 'getDataKelasByJurusan']);
 
     Route::get("dashboard/kelas/siswas", [SiswaController::class, 'getDataSiswaByKelas']);
 

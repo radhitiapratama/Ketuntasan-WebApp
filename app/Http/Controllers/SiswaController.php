@@ -12,6 +12,7 @@ use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class SiswaController extends Controller
 {
@@ -414,8 +415,90 @@ class SiswaController extends Controller
         return redirect()->back()->with("successUpdate", "successUpdate");
     }
 
-    public function naikKelas()
+    public function naikKelas(Request $request)
     {
+        if ($request->ajax()) {
+            $columnsSearch = ['s.username', 's.nama'];
+            $table = DB::table("siswa as s");
+
+            if ($request->input("search.value")) {
+                $table->where(function ($q) use ($columnsSearch, $request) {
+                    foreach ($columnsSearch as $column) {
+                        $q->orWhere($column, 'like', '%' . $request->input("search.value") . "%");
+                    }
+                });
+            }
+
+            // [0] => jurusan_id
+            // [1] => kelas_id
+            $arr = explode("|", $request->kelas_id);
+
+            $result = $table->select(
+                's.username',
+                's.nama',
+                's.siswa_id',
+                's.tingkatan',
+                's.status',
+                'j.nama_jurusan',
+                'k.nama_kelas'
+            )
+                ->join('jurusan as j', 'j.jurusan_id', '=', 's.jurusan_id')
+                ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id')
+                ->where('s.role', 3)
+                ->where('s.status', 1)
+                ->where('s.tingkatan', $request->tingkatan)
+                ->where('s.kelas_id', $arr[1])
+                ->orderByRaw("s.nama ASC")
+                ->get();
+
+            $dataResponse = [];
+
+            if (!empty($result)) {
+                $i = $request->start;
+                foreach ($result as $row) {
+                    $i++;
+                    $subData = [];
+                    $subData['no'] = $i;
+                    $subData['checkbox'] = '
+                    <div class="text-center">
+                        <input type="checkbox" name="check_siswa_id[]" id="check_siswa_id" value="' . $row->siswa_id . '">
+                    </div>
+                    ';
+                    $subData['username'] = $row->username;
+                    $subData['nama'] = $row->nama;
+
+                    if ($row->tingkatan == 1) {
+                        $tingkatan = "X";
+                    }
+
+                    if ($row->tingkatan == 2) {
+                        $tingkatan = "XI";
+                    }
+
+                    if ($row->tingkatan == 3) {
+                        $tingkatan = "XII";
+                    }
+
+                    $subData['tingkatan'] = '
+                    <div class="text-center">
+                        ' . $tingkatan . '
+                    </div>
+                    ';
+
+                    $subData['kelas'] = $row->nama_jurusan . " | " . $row->nama_kelas;
+
+                    $dataResponse[] = $subData;
+                }
+            }
+
+            return response()->json([
+                'draw' => $request->draw,
+                'recordsFiltered' => 0,
+                'recordsTotal' => 0,
+                'data' => $dataResponse,
+            ]);
+        }
+
         $sql_kelas = Kelas::with([
             'jurusan' => function ($query) {
                 $query->select("jurusan_id", 'nama_jurusan')
@@ -436,114 +519,31 @@ class SiswaController extends Controller
 
     public function doNaikKelas(Request $request)
     {
-        $user_id = $request->check_siswa_id;
+        $siswa_id = $request->check_siswa_id;
 
-        for ($i = 0; $i < count($user_id); $i++) {
-            $sql_user = User::select("tingkatan")
-                ->where("user_id", $user_id[$i])
+        for ($i = 0; $i < count($siswa_id); $i++) {
+            $sql_user = Siswa::select("tingkatan")
+                ->where("siswa_id", $siswa_id[$i])
                 ->first();
 
             //jika tingkatan nya 3 (kls 12) update status user nya
             if ($sql_user->tingkatan == 3) {
-                DB::table("users")
-                    ->where('user_id', $user_id[$i])
+                Siswa::where("siswa_id", $siswa_id[$i])
                     ->update([
                         'status' => 0,
+                        'updated_by' => auth()->guard("admin")->user()->user_id
                     ]);
+
                 continue;
             }
 
-            DB::table("users")
-                ->where('user_id', $user_id[$i])
+            Siswa::where("siswa_id", $siswa_id[$i])
                 ->update([
                     'tingkatan' => $sql_user->tingkatan + 1,
                 ]);
         }
 
         return redirect("/siswa-naik-kelas")->with("successNaikKelas", 'successNaikKelas');
-    }
-
-    public function getDataSiswaNaikKelas(Request $request)
-    {
-        $columnsSearch = ['u.username', 'u.nama'];
-        $table = DB::table("users as u");
-
-        if ($request->input("search.value")) {
-            $table->where(function ($q) use ($columnsSearch, $request) {
-                foreach ($columnsSearch as $column) {
-                    $q->orWhere($column, 'like', '%' . $request->input("search.value") . "%");
-                }
-            });
-        }
-
-        // [0] => jurusan_id
-        // [1] => kelas_id
-        $arr = explode("|", $request->kelas_id);
-
-        $result = $table->select(
-            'u.username',
-            'u.nama',
-            'u.user_id',
-            'u.tingkatan',
-            'u.status',
-            'j.nama_jurusan',
-            'k.nama_kelas'
-        )
-            ->join('jurusan as j', 'j.jurusan_id', '=', 'u.jurusan_id')
-            ->join('kelas as k', 'k.kelas_id', '=', 'u.kelas_id')
-            ->where('u.role', 3)
-            ->where('u.status', 1)
-            ->where('u.tingkatan', $request->tingkatan)
-            ->where('u.kelas_id', $arr[1])
-            ->orderByRaw("u.nama ASC")
-            ->get();
-
-        $dataResponse = [];
-
-        if (!empty($result)) {
-            $i = $request->start;
-            foreach ($result as $row) {
-                $i++;
-                $subData = [];
-                $subData['no'] = $i;
-                $subData['checkbox'] = '
-                <div class="text-center">
-                    <input type="checkbox" name="check_siswa_id[]" id="check_siswa_id" value="' . $row->user_id . '">
-                </div>
-                ';
-                $subData['username'] = $row->username;
-                $subData['nama'] = $row->nama;
-
-                if ($row->tingkatan == 1) {
-                    $tingkatan = "X";
-                }
-
-                if ($row->tingkatan == 2) {
-                    $tingkatan = "XI";
-                }
-
-                if ($row->tingkatan == 3) {
-                    $tingkatan = "XII";
-                }
-
-                $subData['tingkatan'] = '
-                <div class="text-center">
-                    ' . $tingkatan . '
-                </div>
-                ';
-
-                $subData['kelas'] = $row->nama_jurusan . " | " . $row->nama_kelas;
-
-                $dataResponse[] = $subData;
-            }
-        }
-
-        return response()->json([
-            'draw' => $request->draw,
-            'recordsFiltered' => 0,
-            'recordsTotal' => 0,
-            'data' => $dataResponse,
-        ]);
     }
 
     public function import(Request $request)
