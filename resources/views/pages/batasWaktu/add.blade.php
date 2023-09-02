@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="{{ asset('plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/bootstrap-datepicker/css/bootstrap-datepicker.standalone.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
-    <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 
     <div class="card mb-1">
         <div class="card-body">
@@ -62,6 +61,8 @@
 
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
     <script src="{{ asset('plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js') }}"></script>
+    <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+
 
     <script>
         @if (session()->has('tglSelesaiLebihKecil'))

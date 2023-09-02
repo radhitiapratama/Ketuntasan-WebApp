@@ -11,9 +11,14 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaran;
+use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use Illuminate\Cache\RedisStore;
+use Illuminate\Contracts\Validation\ValidatesWhenResolved;
+use Illuminate\Database\Eloquent\JsonEncodingException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Testing\Constraints\CountInDatabase;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
+use PhpParser\JsonDecoder;
 
 class KelasController extends Controller
 {
@@ -397,17 +402,21 @@ class KelasController extends Controller
             [
                 'tingkatan' => "required",
                 'kelas' => "required",
-                'kode_guru_mapel' => "required",
+                'kode_guru_mapel.*' => "required",
             ],
             [
                 "tingkatan.required" => "Tingkatan wajib di isi",
                 'kelas.required' => "Kelas wajib di isi",
-                'kode_guru_mapel.required' => "Kode Guru Mapel wajib di isi"
+                'kode_guru_mapel.*.required' => "Kode Guru Mapel wajib di isi"
             ]
         );
 
         if ($validator->fails()) {
-            return redirect()->back()->withInput()->withErrors($validator);
+            return response()->json([
+                'status' => false,
+                'message' => "validation failed",
+                'data' => $validator->errors(),
+            ]);
         }
 
         $tahun_ajaran = TahunAjaran::select('tahun_ajaran_id')->where("superadmin_aktif", 1)->first();
@@ -416,6 +425,7 @@ class KelasController extends Controller
         // [1] => kelas_id
         $arrKelas = explode("|", $request->kelas);
 
+        // select data guru_mapel di table kelas_mapel
         $sql_guruMapelId = DB::table('kelas_mapel')
             ->select("guru_mapel_id")
             ->where("tingkatan", $request->tingkatan)
@@ -449,7 +459,13 @@ class KelasController extends Controller
 
         DB::commit();
 
-        return redirect()->back()->with("successStore", "successStore");
+        $dataResponse = [
+            'status' => true,
+            'message' => "success",
+            'success_message' => "Data Kelas Mapel berhasil di tambahkan"
+        ];
+
+        return response()->json($dataResponse);
     }
 
     public function kelasMapel_show($tingkatan, $jurusan_id, $kelas_id)
@@ -477,18 +493,6 @@ class KelasController extends Controller
             return redirect()->back();
         }
 
-        // $sql_mapels = DB::table("kelas_mapel as km")
-        //     ->select('m.nama_mapel', 'u.nama', 'km.status')
-        //     ->join("jurusan as j", 'j.jurusan_id', '=', 'km.jurusan_id')
-        //     ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
-        //     ->join('mapel as m', 'm.mapel_id', '=', 'km.mapel_id')
-        //     ->join('users as u', 'u.user_id', '=', 'km.user_id')
-        //     ->where('km.tingkatan', $tingkatan)
-        //     ->where('km.jurusan_id', $jurusan_id)
-        //     ->where('km.kelas_id', $kelas_id)
-        //     ->where('km.tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
-        //     ->get();
-
         $sql_mapels = DB::table("kelas_mapel as km")
             ->select('m.nama_mapel', 'g.nama', 'g.kode_guru', 'gm.kode_guru_mapel', 'km.status')
             ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
@@ -498,6 +502,7 @@ class KelasController extends Controller
             ->where("km.jurusan_id", $jurusan_id)
             ->where("km.kelas_id", $kelas_id)
             ->where("km.tahun_ajaran_id", $tahun_ajaran->tahun_ajaran_id)
+            ->orderByRaw("g.kode_guru ASC")
             ->get();
 
         $dataToView = [
@@ -508,9 +513,9 @@ class KelasController extends Controller
         return view("pages.kelas.kelasMapel.show", $dataToView);
     }
 
-    public function kelasMapel_edit($tingkatan_id, $jurusan_id, $kelas_id)
+    public function kelasMapel_edit($tingkatan, $jurusan_id, $kelas_id)
     {
-        if (!isset($tingkatan_id) || !isset($jurusan_id) || !isset($kelas_id)) {
+        if (!isset($tingkatan) || !isset($jurusan_id) || !isset($kelas_id)) {
             return redirect()->back();
         }
 
@@ -520,7 +525,7 @@ class KelasController extends Controller
             ->select('j.nama_jurusan', 'k.nama_kelas', 'km.tingkatan')
             ->join("jurusan as j", 'j.jurusan_id', '=', 'km.jurusan_id')
             ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
-            ->where('km.tingkatan', $tingkatan_id)
+            ->where('km.tingkatan', $tingkatan)
             ->where('km.jurusan_id', $jurusan_id)
             ->where('km.kelas_id', $kelas_id)
             ->where('km.tahun_ajaran_id', $tahun->tahun_ajaran_id)
@@ -530,35 +535,28 @@ class KelasController extends Controller
             return redirect()->back();
         }
 
-        $sql_kelasMapels = KelasMapel::from("kelas_mapel as km")
-            ->select(
-                "km.kelas_mapel_id",
-                'km.mapel_id',
-                'km.user_id',
-                'km.status'
-            )
-            ->where("km.tingkatan", $tingkatan_id)
+        $sql_kelasMapels = DB::table("kelas_mapel as km")
+            ->select("km.*", 'g.nama', 'm.nama_mapel')
+            ->join("guru_mapel as gm", 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+            ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+            ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+            ->where('km.tingkatan', $tingkatan)
             ->where("km.jurusan_id", $jurusan_id)
             ->where("km.kelas_id", $kelas_id)
             ->where("km.tahun_ajaran_id", $tahun->tahun_ajaran_id)
-            ->with(['guru_mapel_user' => function ($query) {
-                $query->select("users.*")->where("guru_mapel.status", 1);
-            }])
-            ->join("mapel as m", 'm.mapel_id', '=', 'km.mapel_id')
             ->get();
 
-
-        $sql_mapels = DB::table("mapel")
-            ->select('mapel_id', 'nama_mapel')
-            ->where('status', 1)
+        $sql_guruMapel = DB::table('guru_mapel as gm')
+            ->select("gm.guru_mapel_id", 'gm.kode_guru_mapel', 'gm.status', 'g.kode_guru')
+            ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
             ->get();
 
         $dataToView = [
             'detail' => $sql_detail,
             'kelas_mapels' => $sql_kelasMapels,
+            'guru_mapels' => $sql_guruMapel,
             'statuses' => $this->statuses,
-            'mapels' => $sql_mapels,
-            'tingkatan_id' => $tingkatan_id,
+            'tingkatan' => $tingkatan,
             'jurusan_id' => $jurusan_id,
             'kelas_id' => $kelas_id,
         ];
@@ -587,61 +585,63 @@ class KelasController extends Controller
 
     public function kelasMapel_update(Request $request)
     {
-        $validated = $request->validate([
-            'kelas_mapel_id' => "required",
-            'mapel_id' => "required",
-            'guru_id' => "required",
-            'status' => "required"
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'hidden_guru_mapel_id' => "required",
+                'hidden_status' => "required",
+                'hidden_kelas_mapel_id' => "required",
+                'kode_guru_mapel.*' => "required",
+                'status.*' => "required",
+            ],
+            [
+                'kode_guru_mapel.*.required' => "Kode Guru Mapel wajib di isi",
+                'status.*.required' => "Status wajib di isi",
+            ]
+        );
 
-        // array
-        $kelas_mapel_id = $request->kelas_mapel_id;
-        $mapel_id = $request->mapel_id;
-        $guru_id  = $request->guru_id;
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator);
+        }
+
+        $kode_guru_mapel = $request->kode_guru_mapel;
+        $duplicate = count($kode_guru_mapel) != count(array_unique($kode_guru_mapel));
+
+        if ($duplicate) {
+            return redirect()->back()->withInput()->with("duplicateKodeGuruMapel", "Kode Guru Mapel sudah ada di kelas yg di pilih");
+        }
+
+        $hidden_kelas_mapel_id = $request->hidden_kelas_mapel_id;
+        $hidden_guru_mapel_id = $request->hidden_guru_mapel_id;
+        $hidden_status = $request->hidden_status;
+        $kode_guru_mapel = $request->kode_guru_mapel; // valuenya guru_mapel_id
         $status = $request->status;
 
-        $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
+        DB::beginTransaction();
 
-        for ($i = 0; $i < count($mapel_id); $i++) {
-            // check apaka ada kelas_mapel_id 
-            $sql_checkMapelId = DB::table("kelas_mapel")
-                ->select('user_id', 'mapel_id', 'status')
-                ->where('kelas_mapel_id', $kelas_mapel_id[$i])
-                ->first();
+        for ($i = 0; $i < count($kode_guru_mapel); $i++) {
+            $dataUpdate = [];
 
-            if ($mapel_id[$i] != $sql_checkMapelId->mapel_id || $guru_id[$i] != $sql_checkMapelId->user_id) {
-                //check apakah data yg berubah itu ada yg sama dengan mapel_id dan guru_id di database
-                $sql_checkMapelAndUser = DB::table("kelas_mapel")
-                    ->where('mapel_id', $mapel_id[$i])
-                    ->where('user_id', $guru_id[$i])
-                    ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
-                    ->where('tingkatan', $request->tingkatan_id)
-                    ->where('jurusan_id', $request->jurusan_id)
-                    ->where('kelas_id', $request->kelas_id)
-                    ->first();
-
-                if ($sql_checkMapelAndUser) {
-                    return redirect()->back()->with('duplicate', 'duplicate');
-                }
-
-                DB::table("kelas_mapel")
-                    ->where('kelas_mapel_id', $kelas_mapel_id[$i])
-                    ->update([
-                        'mapel_id' => $mapel_id[$i],
-                        'user_id' => $guru_id[$i],
-                    ]);
+            if ($hidden_guru_mapel_id != $kode_guru_mapel[$i]) {
+                $dataUpdate['guru_mapel_id'] = $kode_guru_mapel[$i];
             }
 
-            if ($status[$i] != $sql_checkMapelId->status) {
+            if ($hidden_status != $status[$i]) {
+                $dataUpdate['status'] = $status[$i];
+            }
+
+            if (!empty($dataUpdate)) {
+                $dataUpdate['updated_by'] = auth()->guard("admin")->user()->user_id;
                 DB::table('kelas_mapel')
-                    ->where('kelas_mapel_id', $kelas_mapel_id[$i])
-                    ->update([
-                        'status' => $status[$i]
-                    ]);
+                    ->where("kelas_mapel_id", $hidden_kelas_mapel_id[$i])
+                    ->update($dataUpdate);
             }
         }
 
-        return redirect()->back()->with("successUpdate", "successUpdate");
+        DB::commit();
+
+        return redirect()->back()->withInput()->with("successUpdate", "Data Kelas Mapel berhasil di update");
     }
 
     public function import(Request $request)

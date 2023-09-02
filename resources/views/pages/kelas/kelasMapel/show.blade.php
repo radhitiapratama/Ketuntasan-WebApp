@@ -56,23 +56,25 @@
                 <table class="table table-bordered" id="tbl-kelasMapel">
                     <thead>
                         <tr>
-                            <th style="width: 5px">#</th>
-                            <th>Nama Mapel</th>
-                            <th>Nama Guru</th>
-                            <th>Kode Guru Mapel</th>
+                            <th width="5" class="vertical-align-middle">#</th>
+                            <th width="5" class="text-center"> Kode Guru</th>
+                            <th class="vertical-align-middle">Nama Mapel</th>
+                            <th class="vertical-align-middle">Nama Guru</th>
+                            <th width="100" class="vertical-align-middle text-center">Kode Guru Mapel</th>
                             <th class="text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($mapels as $mapel)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
+                                <td class="text-center">{{ $loop->iteration }}</td>
+                                <td class="text-center">{{ $mapel->kode_guru }}</td>
                                 <td>{{ $mapel->nama_mapel }}</td>
                                 <td>{{ $mapel->nama }}</td>
                                 @if ($mapel->kode_guru_mapel != null)
-                                    <td>{{ $mapel->kode_guru }},{{ $mapel->kode_guru_mapel }}</td>
+                                    <td class="text-center">{{ $mapel->kode_guru }},{{ $mapel->kode_guru_mapel }}</td>
                                 @else
-                                    <td>{{ $mapel->kode_guru }}</td>
+                                    <td class="text-center">{{ $mapel->kode_guru }}</td>
                                 @endif
                                 <td class="text-center">
                                     @if ($mapel->status == 1)
@@ -95,6 +97,8 @@
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
 
     <script>
-        $("#tbl-kelasMapel").DataTable();
+        $("#tbl-kelasMapel").DataTable({
+            ordering: false
+        });
     </script>
 @endsection

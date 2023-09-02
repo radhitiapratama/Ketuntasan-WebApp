@@ -182,6 +182,7 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::post("getDataGuruByMapel", [GuruController::class, 'getDataGuruByMapel']);
 
     Route::get("dashboard/kelas/siswas", [SiswaController::class, 'getDataSiswaByKelas']);
+    Route::post("getGuruMapelByGuruMapelId", [GuruController::class, 'getGuruMapelByGuruMapelId']);
 
     //logout
     Route::get('/logout', [AuthController::class, 'logout']);

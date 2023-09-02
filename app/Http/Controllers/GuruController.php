@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
+use Symfony\Component\CssSelector\Node\FunctionNode;
 
 class GuruController extends Controller
 {
@@ -1106,5 +1108,32 @@ class GuruController extends Controller
         $guruMapelImport->import($fileName);
 
         return redirect()->back()->with("success_import", "Data Wali kelas berhasil di import");
+    }
+
+    public function getGuruMapelByGuruMapelId(Request $request)
+    {
+        if ($request->guruMapelId == null) {
+            $dataResponse = [
+                'status' => false,
+                'message' => "emptyGuruMapelId",
+            ];
+
+            return response()->json($dataResponse);
+        }
+
+        $sql_guruMapel = DB::table("guru_mapel as gm")
+            ->select('g.nama', 'm.nama_mapel')
+            ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+            ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+            ->where("gm.guru_mapel_id", $request->guruMapelId)
+            ->first();
+
+        $dataResponse = [
+            'status' => true,
+            'message' => "success",
+            'data' => $sql_guruMapel,
+        ];
+
+        return response()->json($dataResponse);
     }
 }
