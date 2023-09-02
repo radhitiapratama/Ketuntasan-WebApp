@@ -210,10 +210,11 @@ class GuruController extends Controller
         $sql_guru = Guru::where("guru_id", $request->guru_id)->first();
 
         if ($request->kode_guru != $sql_guru->kode_guru) {
-            $check = Guru::where("kode_guru", $sql_guru->kode_guru)->first();
+            $check = Guru::where("kode_guru", $request->kode_guru)->first();
             if ($check) {
                 return redirect()->back()->with("duplicateKodeGuru", "duplicateKodeGuru")->withInput();
             }
+            $dataToUpdate['kode_guru'] = $request->kode_guru;
         }
 
         if ($request->username != $sql_guru->username) {
