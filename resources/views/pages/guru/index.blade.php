@@ -21,14 +21,6 @@
         </div>
     </div>
 
-    @if ($errors->any())
-        @foreach ($errors->all() as $error)
-            <div class="alert alert-danger mt-3" role="alert">
-                {{ $error }}
-            </div>
-        @endforeach
-    @endif
-
     <div class="card mb-1">
         <div class="card-body">
             <div class="row">
@@ -104,7 +96,7 @@
                                 </div>
                                 <div class="custom-file">
                                     <input type="file" class="custom-file-input" id="inputGroupFile01"
-                                        aria-describedby="inputGroupFileAddon01" name="excel_file" required>
+                                        aria-describedby="inputGroupFileAddon01" name="excel_file">
                                     <label class="custom-file-label" for="inputGroupFile01">Jenis File .xlsx</label>
                                 </div>
                             </div>
@@ -181,6 +173,54 @@
                 timerProgressBar: true
             });
         @endif
+
+        @if (session()->has('import_failed'))
+            Swal.fire({
+                title: "{{ session('import_failed') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('duplicate_kodeGuru'))
+            Swal.fire({
+                title: "{{ session('duplicate_kodeGuru') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @error('excel_file')
+            Swal.fire({
+                title: "{{ $message }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @enderror
     </script>
 
     <script>

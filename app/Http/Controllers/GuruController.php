@@ -203,9 +203,7 @@ class GuruController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $dataToUpdate = [
-            'status' => $request->status,
-        ];
+        $dataToUpdate = [];
 
         $sql_guru = Guru::where("guru_id", $request->guru_id)->first();
 
@@ -235,8 +233,15 @@ class GuruController extends Controller
             $dataToUpdate['nama'] = $request->nama;
         }
 
-        Guru::where("guru_id", $request->guru_id)
-            ->update($dataToUpdate);
+        if ($request->status != $sql_guru->status) {
+            $dataToUpdate['status'] = $request->status;
+        }
+
+        if (!empty($dataToUpdate)) {
+            $dataToUpdate['created_by'] = auth()->guard("admin")->user()->user_id;
+            Guru::where("guru_id", $request->guru_id)
+                ->update($dataToUpdate);
+        }
 
         return redirect()->back()->with("successEdit", 'successEdit');
     }
