@@ -14,7 +14,6 @@ use Maatwebsite\Excel\Concerns\WithStartRow;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 
 // gunakan WithCalculatedFormulas untuk mendapatkan value dari formulla excel
-
 class GuruImport implements ToCollection, WithStartRow, WithCalculatedFormulas
 {
 
@@ -27,13 +26,12 @@ class GuruImport implements ToCollection, WithStartRow, WithCalculatedFormulas
             [
                 '*.0' => "required",
                 '*.1' => "required",
-                "*.2" => "required|integer"
+                "*.2" => "required"
             ],
             [
                 '*.0.required' => "Gagal ! Username guru wajib di isi",
                 '*.1.required' => "Gagal ! Nama guru wajib di isi",
                 "*.2.required" => "Gagal ! Kode Guru wajib di isi",
-                '*.2.integer' =>  "Gagal ! Kode Guru wajib angka"
             ]
         );
 
@@ -46,22 +44,46 @@ class GuruImport implements ToCollection, WithStartRow, WithCalculatedFormulas
             return;
         }
 
+        $sql_siswa = DB::table("siswa")
+            ->select('username');
+
+        $sql_guru = DB::table('guru')
+            ->select('username');
+
+        $sql_admin = DB::table("admin")
+            ->select('username')
+            ->union($sql_siswa)
+            ->union($sql_guru)
+            ->get()->toArray();
+
+        $sql_kodeGuru = DB::table("guru")
+            ->select('kode_guru')
+            ->get()->toArray();
+
+        $charsReplace = [
+            '[', ']',
+        ];
+
+        $arr_username = array_column($sql_admin, "username");
+        $arr_kodeGuru = array_column($sql_kodeGuru, "kode_guru");
+
+
         DB::beginTransaction();
 
+        // $row[0] => username
+        // $row[1] => nama
+        // $row[2] => kode_guru
         foreach ($rows as $row) {
-            // $sql_checkUsername = User::where("username", $row[0])->first();
-            $sql_checkUsername = Guru::select("username")->where("username", $row[0])->first();
+            $kode_guru = str_replace($charsReplace, "", $row[2]);
 
-            // Check apakah ada username yg sama
-            if ($sql_checkUsername) {
-                session()->flash("username_not_unique", "Gagal! Username " . $row[0] . " sudah di gunakan");
+            if (in_array($kode_guru, $arr_username)) {
+                session()->flash("username_not_unique", "Gagal ! Username " . $row[0] . " sudah di gunakan");
                 DB::rollBack();
                 return;
             }
 
-            $sql_checkKodeGuru = Guru::select("kode_guru")->where("kode_guru", $row[2])->first();
-            if ($sql_checkKodeGuru) {
-                return redirect()->back()->with("duplicate_kodeGuru", "Gagal ! Kode guru " . $row[2] . " sudah di gunakan");
+            if (in_array($kode_guru, $arr_kodeGuru)) {
+                return redirect()->back()->with("duplicate_kodeGuru", "Gagal ! Kode guru " . $kode_guru . " sudah di gunakan");
                 DB::rollBack();
             }
 
@@ -75,7 +97,7 @@ class GuruImport implements ToCollection, WithStartRow, WithCalculatedFormulas
                 'nama' => $row[1],
                 'password' => Hash::make("123456"),
                 'role' => 2,
-                'kode_guru' => $row[2],
+                'kode_guru' => $kode_guru,
                 'status' => 1,
                 'created_by' => auth()->guard("admin")->user()->user_id
             ]);
@@ -86,6 +108,6 @@ class GuruImport implements ToCollection, WithStartRow, WithCalculatedFormulas
 
     public function startRow(): int
     {
-        return 2;
+        return 3;
     }
 }
