@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use PDO;
+use App\Models\Guru;
 use App\Models\Admin;
-use Illuminate\Support\Facades\Gate;
+use App\Models\Siswa;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use PDO;
 
 class AuthController extends Controller
 {
@@ -99,24 +101,22 @@ class AuthController extends Controller
 
     public function akun()
     {
-        if (Gate::allows("siswa")) {
-            $sql_user = DB::table('users as u')
-                ->join("jurusan as j", 'j.jurusan_id', '=', 'u.jurusan_id')
-                ->join('kelas as k', 'k.kelas_id', '=', 'u.kelas_id')
-                ->where('u.user_id', auth()->user()->user_id)
+        if (Auth::guard("siswa")->check()) {
+            $sql_siswa = DB::table("siswa as s")
+                ->join("jurusan as j", 'j.jurusan_id', '=', 's.jurusan_id')
+                ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id')
+                ->where('s.siswa_id', auth()->guard("siswa")->user()->siswa_id)
                 ->first();
 
             $dataToView = [
-                'user' => $sql_user,
+                'user' => $sql_siswa,
             ];
 
             return view("pages.akun.index", $dataToView);
         }
 
-        if (Gate::allows("admin")) {
-            $sql_user = DB::table('users as u')
-                ->where('u.user_id', auth()->user()->user_id)
-                ->first();
+        if (Auth::guard("admin")->check()) {
+            $sql_user = Admin::where("admin_id", auth()->guard("admin")->user()->admin_id)->first();
 
             $dataToView = [
                 'user' => $sql_user
@@ -125,14 +125,12 @@ class AuthController extends Controller
             return view("pages.akun.index", $dataToView);
         }
 
-        if (Gate::allows("guru")) {
-            $sql_user = DB::table("users")
-                ->where("user_id", auth()->user()->user_id)
-                ->first();
+        if (Auth::guard("guru")->check()) {
+            $sql_user = Guru::where("guru_id", auth()->guard("guru")->user()->guru_id)->first();
 
             $sql_mapel = DB::table("guru_mapel as gm")
                 ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
-                ->where("gm.user_id", auth()->user()->user_id)
+                ->where("gm.guru_id", auth()->guard("guru")->user()->guru_id)
                 ->where("gm.status", 1)
                 ->get();
 
@@ -157,6 +155,10 @@ class AuthController extends Controller
             [
                 'new_password' => "required|min:6",
 
+            ],
+            [
+                'new_password.required' => "Password wajib di isi",
+                'new_password.min' => "Password minimal 6 huruf"
             ]
         );
 
@@ -164,12 +166,28 @@ class AuthController extends Controller
             return redirect()->back()->withInput()->withErrors($validator);
         }
 
-        DB::table("users")
-            ->where('user_id', auth()->user()->user_id)
-            ->update([
-                'password' => Hash::make($request->new_password)
-            ]);
+        if (Auth::guard("admin")->check()) {
+            Admin::where("admin_id", auth()->guard("admin")->user()->admin_id)
+                ->update([
+                    'password' => Hash::make($request->new_password)
+                ]);
+            return redirect()->back()->with("successUpdate", "successUpdate");
+        }
 
-        return redirect()->back()->with("successUpdate", "successUpdate");
+        if (Auth::guard("guru")->check()) {
+            Guru::where("guru_id", auth()->guard("guru")->user()->guru_id)
+                ->update([
+                    'password' => Hash::make($request->new_password)
+                ]);
+            return redirect()->back()->with("successUpdate", "successUpdate");
+        }
+
+        if (Auth::guard("siswa")->check()) {
+            Siswa::where("siswa_id", auth()->guard("siswa")->user()->siswa_id)
+                ->update([
+                    'password' => Hash::make($request->new_password)
+                ]);
+            return redirect()->back()->with("successUpdate", "successUpdate");
+        }
     }
 }

@@ -35,6 +35,9 @@
                                             </span>
                                         </div>
                                     </div>
+                                    @error('new_password')
+                                        <small class="text-danger">{{ $message }}</small>
+                                    @enderror
                                 </div>
                                 <div class="row">
                                     <div class="col-12">

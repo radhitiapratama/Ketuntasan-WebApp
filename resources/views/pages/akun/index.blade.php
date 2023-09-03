@@ -1,7 +1,7 @@
 @extends('layout.main')
 
 @section('content')
-    @can('admin')
+    @auth('admin')
         <div class="card">
             <div class="card-body">
                 <div class="row">
@@ -41,9 +41,9 @@
                 </div>
             </div>
         </div>
-    @endcan
+    @endauth
 
-    @can('siswa')
+    @auth('siswa')
         <div class="card mb-1">
             <div class="card-body">
                 <div class="row">
@@ -98,9 +98,9 @@
                 </div>
             </div>
         </div>
-    @endcan
+    @endauth
 
-    @can('guru')
+    @auth('guru')
         <div class="card mb-1">
             <div class="card-body">
                 <div class="row">
@@ -151,5 +151,5 @@
                 </div>
             </div>
         </div>
-    @endcan
+    @endauth
 @endsection
