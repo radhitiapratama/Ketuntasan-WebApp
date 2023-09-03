@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Models\GuruMapel;
 use App\Models\User;
 use App\Models\Kelas;
 use App\Models\KelasMapel;
@@ -23,21 +24,24 @@ class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
      */
     public function collection(Collection $rows)
     {
-        Validator::make(
+        $validator =  Validator::make(
             $rows->toArray(),
             [
                 '*.0' => "required",
                 '*.1' => "required",
                 '*.2' => "required",
-                '*.3' => "required",
             ],
             [
                 '*.0.required' => "Tingkatan wajib di isi",
                 '*.1.required' => "Kode Kelas wajib di isi",
-                '*.2.required' => "Kode Mapel wajib di isi",
-                '*.3.required' => "Kode Guru wajib di isi",
+                '*.2.required' => "Kode Guru Mapel wajib di isi",
             ]
-        )->validate();
+        );
+
+
+        if ($validator->fails()) {
+            return redirect()->back()->with("validator_failed", "Gagal ! Terjadi kesalahan import");
+        }
 
         if (count($rows) > 200) {
             session()->flash("max_row", "Gagal! Row yg di import tidak boleh lebih dari 200");
@@ -48,23 +52,20 @@ class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
             '[', ']',
         ];
 
-        global $row_user_id;
-
         $tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
         DB::beginTransaction();
 
         foreach ($rows as $row) {
-            $tingkatan = null;
-
             $kelas_id = str_replace($stringReplace, "", $row[1]);
-            $mapel_id = str_replace($stringReplace, "", $row[2]);
-            $user_id = str_replace($stringReplace, "", $row[3]);
 
-            $row_user_id = $user_id;
+            // [0] => kode_guru
+            // [1] => kode_guru_mapel 
+            $arr_kodeGuruMapel = explode(",", str_replace($stringReplace, "", $row[2]));
 
             $row_tingkatan = strtoupper($row[0]);
 
+            $tingkatan = null;
             if ($row_tingkatan == "X") {
                 $tingkatan = 1;
             }
@@ -80,7 +81,7 @@ class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
             // Check tingkatan
             if ($tingkatan == null) {
                 session()->flash("invalid_tingkatan", "Gagal! " . $row_tingkatan . ' bukan termasuk tingkatan');
-                DB::rollBack();
+                DB::rollBoack();
                 return;
             }
 
@@ -95,42 +96,24 @@ class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
                 return;
             }
 
-            $sql_user = User::select("user_id", "role")->where("user_id", $user_id)->first();
-
-            // check apakah user ada
-            if (!$sql_user) {
-                session()->flash("user_null", "Gagal! Kode Guru " . $user_id . ' tidak di temukan');
-                DB::rollBack();
-                return;
+            if (count($arr_kodeGuruMapel) > 1) {
+                $sql_guruMapelId = DB::table('guru_mapel as gm')
+                    ->select('gm.guru_mapel_id')
+                    ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+                    ->where("g.kode_guru", $arr_kodeGuruMapel[0])
+                    ->where("gm.kode_guru_mapel", $arr_kodeGuruMapel[1])
+                    ->first();
+            } else {
+                $sql_guruMapelId = DB::table('guru_mapel as gm')
+                    ->select('gm.guru_mapel_id')
+                    ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+                    ->where("g.kode_guru", $arr_kodeGuruMapel[0])
+                    ->where("gm.kode_guru_mapel", null)
+                    ->first();
             }
 
-            // check role user
-            if ($sql_user && $sql_user->role != "2") {
-                session()->flash("user_not_teacher", "Gagal! Kode Guru " . $user_id . ' bukan guru');
-                DB::rollBack();
-                return;
-            }
-
-            $sql_mapel = Mapel::select("mapel_id")
-                ->with([
-                    'guru_mapel' => function ($query) {
-                        global $row_user_id;
-                        $query->where("user_id", $row_user_id);
-                    }
-                ])
-                ->where("mapel_id", $mapel_id)
-                ->first();
-
-            // Check mapel
-            if (!$sql_mapel) {
-                session()->flash("mapel_null", "Gagal! Kode Mapel " . $mapel_id . ' tidak ditemukan');
-                DB::rollBack();
-                return;
-            }
-
-            // Check apakah kode_user mengajar kode_mapel
-            if ($sql_mapel && count($sql_mapel->guru_mapel) <= 0) {
-                session()->flash("user_null_on_mapel", "Gagal! Kode Guru " . $user_id . ' tidak mengajar Kode mapel ' . $mapel_id);
+            if (empty($sql_guruMapelId)) {
+                session()->flash("guru_mapel_id_null", "Gagal ! Kode Guru Mapel tidak ditemukan");
                 DB::rollBack();
                 return;
             }
@@ -139,8 +122,7 @@ class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
                 ->where("tingkatan", $tingkatan)
                 ->where('jurusan_id', $sql_kelas->jurusan_id)
                 ->where("kelas_id", $kelas_id)
-                ->where("user_id", $user_id)
-                ->where("mapel_id", $mapel_id)
+                ->where("guru_mapel_id", $sql_guruMapelId->guru_mapel_id)
                 ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
                 ->first();
 
@@ -153,11 +135,10 @@ class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
                     'tingkatan' => $tingkatan,
                     'jurusan_id' => $sql_kelas->jurusan_id,
                     'kelas_id' => $kelas_id,
-                    'user_id' => $user_id,
-                    'mapel_id' => $mapel_id,
+                    'guru_mapel_id' => $sql_guruMapelId->guru_mapel_id,
                     'tahun_ajaran_id' => $tahun->tahun_ajaran_id,
                     'status' => 1,
-                    'created_by' => auth()->user()->user_id,
+                    'created_by' => auth()->guard("admin")->user()->user_id,
                 ]
             );
         }

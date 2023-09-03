@@ -35,14 +35,6 @@
         </div>
     </div>
 
-    @if ($errors->any())
-        @foreach ($errors->all() as $error)
-            <div class="alert alert-danger mt-3" role="alert">
-                {{ $error }}
-            </div>
-        @endforeach
-    @endif
-
     <div class="card mb-1">
         <div class="card-body">
             <div class="row">
@@ -223,9 +215,9 @@
             });
         @endif
 
-        @if (session()->has('user_null'))
+        @if (session()->has('validator_failed'))
             Swal.fire({
-                title: "{{ session('user_null') }}",
+                title: "{{ session('validator_failed') }}",
                 icon: "error",
                 iconColor: 'white',
                 customClass: {
@@ -239,41 +231,9 @@
             });
         @endif
 
-        @if (session()->has('user_not_teacher'))
+        @if (session()->has('guru_mapel_id_null'))
             Swal.fire({
-                title: "{{ session('user_not_teacher') }}",
-                icon: "error",
-                iconColor: 'white',
-                customClass: {
-                    popup: 'colored-toast'
-                },
-                toast: true,
-                position: 'top-right',
-                showConfirmButton: false,
-                timer: 5000,
-                timerProgressBar: true
-            });
-        @endif
-
-        @if (session()->has('mapel_null'))
-            Swal.fire({
-                title: "{{ session('mapel_null') }}",
-                icon: "error",
-                iconColor: 'white',
-                customClass: {
-                    popup: 'colored-toast'
-                },
-                toast: true,
-                position: 'top-right',
-                showConfirmButton: false,
-                timer: 5000,
-                timerProgressBar: true
-            });
-        @endif
-
-        @if (session()->has('user_null_on_mapel'))
-            Swal.fire({
-                title: "{{ session('user_null_on_mapel') }}",
+                title: "{{ session('guru_mapel_id_null') }}",
                 icon: "error",
                 iconColor: 'white',
                 customClass: {

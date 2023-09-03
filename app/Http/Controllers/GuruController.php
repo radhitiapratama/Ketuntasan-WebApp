@@ -17,10 +17,6 @@ use App\Models\WaliKelas;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Maatwebsite\Excel\Concerns\WithBatchInserts;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
-use Symfony\Component\CssSelector\Node\FunctionNode;
-use Symfony\Component\HttpKernel\EventListener\ValidateRequestListener;
 
 class GuruController extends Controller
 {
