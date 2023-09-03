@@ -6,14 +6,15 @@ use Carbon\Carbon;
 use App\Models\Guru;
 use App\Models\User;
 use App\Models\Kelas;
+use App\Models\Mapel;
+use App\Models\Siswa;
 use App\Models\GuruMapel;
+use App\Models\WaliKelas;
 use App\Imports\GuruImport;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 use App\Imports\GuruMapelImport;
 use App\Imports\waliKelasImport;
-use App\Models\Mapel;
-use App\Models\WaliKelas;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -858,7 +859,7 @@ class GuruController extends Controller
             ->select('wk.tingkatan', 'wk.jurusan_id', 'wk.kelas_id', 'j.nama_jurusan', 'k.nama_kelas')
             ->join('jurusan as j', 'j.jurusan_id', '=', 'wk.jurusan_id')
             ->join('kelas as k', 'k.kelas_id', '=', 'wk.kelas_id')
-            ->where('wk.user_id', auth()->user()->user_id)
+            ->where("wk.guru_id", auth()->guard("guru")->user()->guru_id)
             ->where('wk.tahun_ajaran_id', $tahun->tahun_ajaran_id)
             ->where("wk.status", 1)
             ->first();
@@ -870,7 +871,7 @@ class GuruController extends Controller
         if ($request->ajax()) {
 
             $columnsSearch = ['username', 'nama'];
-            $table = DB::table("users");
+            $table = DB::table("siswa");
 
             if ($request->input("search.value")) {
                 $table->where(function ($q) use ($columnsSearch, $request) {
@@ -880,7 +881,7 @@ class GuruController extends Controller
                 });
             }
 
-            $query = $table->select('user_id', 'username', 'nama')
+            $query = $table->select('siswa_id', 'username', 'nama')
                 ->where('tingkatan', $sql_waliKelas->tingkatan)
                 ->where("jurusan_id", $sql_waliKelas->jurusan_id)
                 ->where("kelas_id", $sql_waliKelas->kelas_id)
@@ -902,55 +903,53 @@ class GuruController extends Controller
                     $subData['no'] = $i;
                     $subData['nama'] = $row->nama;
 
-                    $sql_semester1 = DB::table("ketuntasan as k")
+                    //total mapel
+                    $sql_total_mapel = DB::table("kelas_mapel")
+                        ->select("kelas_mapel_id")
+                        ->where("tingkatan", $sql_waliKelas->tingkatan)
+                        ->where('jurusan_id', $sql_waliKelas->jurusan_id)
+                        ->where('kelas_id', $sql_waliKelas->kelas_id)
+                        ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
+                        ->where("status", 1)
+                        ->count();
+
+                    // mapel tuntas semester 1
+                    $sql_tuntas_semester1 = DB::table("ketuntasan as k")
+                        ->select('k.ketuntasan_id')
                         ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-                        ->where("k.user_id", $row->user_id)
+                        ->where("k.siswa_id", $row->siswa_id)
+                        ->where("k.tuntas", 1)
                         ->where("k.semester", 1)
+                        ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
                         ->where('km.status', 1)
-                        ->where('k.tahun_ajaran_id', $tahun->tahun_ajaran_id)
                         ->count();
 
-                    $sql_semester2 = DB::table("ketuntasan as k")
+                    // mapel tuntas semester 2
+                    $sql_tuntas_semester2 = DB::table("ketuntasan as k")
+                        ->select('k.ketuntasan_id')
                         ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-                        ->where("k.user_id", $row->user_id)
+                        ->where("k.siswa_id", $row->siswa_id)
+                        ->where("k.tuntas", 1)
                         ->where("k.semester", 2)
+                        ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
                         ->where('km.status', 1)
-                        ->where('k.tahun_ajaran_id', $tahun->tahun_ajaran_id)
-                        ->count();
-
-                    $sql_tuntas1 = DB::table("ketuntasan as k")
-                        ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-                        ->where("k.user_id", $row->user_id)
-                        ->where("k.semester", 1)
-                        ->where('km.status', 1)
-                        ->where('k.tahun_ajaran_id', $tahun->tahun_ajaran_id)
-                        ->where('k.tuntas', 1)
-                        ->count();
-
-                    $sql_tuntas2 = DB::table("ketuntasan as k")
-                        ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-                        ->where("k.user_id", $row->user_id)
-                        ->where("k.semester", 2)
-                        ->where('km.status', 1)
-                        ->where('k.tahun_ajaran_id', $tahun->tahun_ajaran_id)
-                        ->where('k.tuntas', 1)
                         ->count();
 
                     $subData['semester1'] = '
                     <div class="text-center">
-                       ' . $sql_tuntas1 . " / " . $sql_semester1 . '
+                       ' . $sql_tuntas_semester1 . " / " . $sql_total_mapel . '
                     </div> ';
 
                     $subData['semester2'] = '
                     <div class="text-center">
-                        ' . $sql_tuntas2 . " / " . $sql_semester2  . '
+                        ' . $sql_tuntas_semester2 . " / " . $sql_total_mapel  . '
                     </div>
                     ';
 
                     $subData['settings'] = '
                     <form action="' . url("guru/wali-kelas/siswa/detail") . '" method="post">
                     ' . csrf_field() . '
-                        <input type="hidden" name="user_id" value="' . $row->user_id . '">
+                        <input type="hidden" name="siswa_id" value="' . $row->siswa_id . '">
                         <div class="setting-icons">
                             <button type="submit" class="setting-detail">
                                 <i class="ri-eye-line"></i>
@@ -980,13 +979,13 @@ class GuruController extends Controller
 
     public function waliKelas_detailKetuntasanSiswa(Request $request)
     {
-        $user_id = $request->user_id;
+        $siswa_id = $request->siswa_id;
 
         if ($request->isMethod("GET")) {
             if ($request->ajax()) {
                 $tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
 
-                $columnsSearch = ['u.nama', 'm.nama_mapel'];
+                $columnsSearch = ['s.nama', 'm.nama_mapel'];
                 $table = DB::table("ketuntasan as k");
 
                 if ($request->input("search.value")) {
@@ -997,11 +996,14 @@ class GuruController extends Controller
                     });
                 }
 
-                $query = $table->select('k.*', 'u.nama', 'm.nama_mapel')
+                $query = $table->select('k.*', 's.nama', 'm.nama_mapel')
                     ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-                    ->join('users as u', 'u.user_id', '=', 'km.user_id')
-                    ->join('mapel as m', 'm.mapel_id', '=', 'km.mapel_id')
-                    ->where("k.user_id", $user_id)
+                    // ->join('users as u', 'u.user_id', '=', 'km.user_id')
+                    ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
+                    ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+                    ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+                    // ->where("k.user_id", $user_id)
+                    ->where("k.siswa_id", $siswa_id)
                     ->where('k.tahun_ajaran_id', $tahun->tahun_ajaran_id)
                     ->where('semester', $request->semester);
 
@@ -1062,17 +1064,17 @@ class GuruController extends Controller
             return redirect('/ketuntasan');
         }
 
-        if (!isset($user_id)) {
+        if (!isset($siswa_id)) {
             return redirect()->back();
         }
 
-        $sql_users = User::select("nama")
-            ->where("user_id", $user_id)
+        $sql_siswa = Siswa::select("nama")
+            ->where("siswa_id", $siswa_id)
             ->first();
 
         $dataToView = [
-            'user' => $sql_users,
-            'user_id' => $user_id,
+            'siswa' => $sql_siswa,
+            'siswa_id' => $siswa_id,
         ];
 
         return view("pages.ketuntasan.waliKelas.detail", $dataToView);

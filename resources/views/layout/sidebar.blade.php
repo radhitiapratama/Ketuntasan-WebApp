@@ -219,7 +219,12 @@
                 
                 $sql_wali = DB::table('wali_kelas')
                     ->select('tingkatan', 'jurusan_id', 'kelas_id')
-                    ->where('user_id', auth()->user()->user_id)
+                    ->where(
+                        'guru_id',
+                        auth()
+                            ->guard('guru')
+                            ->user()->guru_id,
+                    )
                     ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
                     ->where('status', 1)
                     ->first();

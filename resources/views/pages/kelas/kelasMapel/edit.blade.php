@@ -63,8 +63,8 @@
                                 $num = $loop->iteration - 1;
                             @endphp
 
-                            <input type="hidden" name="hidden_guru_mapel_id" value="{{ $kelas_mapel->guru_mapel_id }}">
-                            <input type="hidden" name="hidden_status" value="{{ $kelas_mapel->status }}">
+                            <input type="hidden" name="hidden_guru_mapel_id[]" value="{{ $kelas_mapel->guru_mapel_id }}">
+                            <input type="hidden" name="hidden_status[]" value="{{ $kelas_mapel->status }}">
                             <input type="hidden" name="hidden_kelas_mapel_id[]" value="{{ $kelas_mapel->kelas_mapel_id }}">
 
                             <div class="row mb-4" id="wrapper-{{ $loop->iteration }}">
@@ -144,7 +144,6 @@
             </div>
         </div>
     </form>
-
 
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
     <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>

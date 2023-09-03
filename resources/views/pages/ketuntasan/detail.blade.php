@@ -175,7 +175,7 @@
                         data.tingkatan = {{ $tingkatan }};
                         data.jurusan_id = {{ $jurusan_id }};
                         data.kelas_id = {{ $kelas_id }};
-                        data.user_id = {{ $user_id }}
+                        data.siswa_id = {{ $siswa_id }}
                     }
                 },
                 drawCallback: function(res) {

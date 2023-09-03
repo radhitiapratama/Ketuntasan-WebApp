@@ -9,7 +9,6 @@ use App\Models\Siswa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -41,54 +40,7 @@ class AuthController extends Controller
             return redirect()->intended("/ketuntasan");
         }
 
-
-
         return redirect()->back()->with("loginFailed", "loginFailed")->withInput();
-
-        // $credentials = array();
-
-        // $sql_admin = DB::table("users as u")
-        //     ->join('admin as ad', 'ad.user_id', '=', 'u.user_id')
-        //     ->where("ad.username", $request->username)
-        //     ->first();
-
-        // if (!empty($sql_admin)) {
-        //     $credentials = (array) $sql_admin;
-        // }
-
-        // $sql_guru = DB::table("users as u")
-        //     ->join('guru as g', 'g.user_id', '=', 'u.user_id')
-        //     ->where("g.username", $request->username)
-        //     ->first();
-
-        // if (!empty($sql_guru)) {
-        //     $credentials = (array) $sql_guru;
-        // }
-
-        // $sql_siswa = DB::table("users as u")
-        //     ->join('siswa as s', 's.user_id', '=', 'u.user_id')
-        //     ->where("s.username", $request->username)
-        //     ->first();
-
-        // if (!empty($sql_siswa)) {
-        //     $credentials = (array) $sql_siswa;
-        // }
-
-        // if (Auth::attempt($validated)) {
-        //     dd(auth()->user());
-
-        //     $request->session()->regenerate();
-
-
-        //     if (auth()->user()->role == 1) {
-        //         return redirect()->intended("/tahun-ajaran");
-        //     }
-
-        //     if (auth()->user()->role == 2 || auth()->user()->role == 3) {
-        //         return redirect()->intended("/ketuntasan");
-        //     }
-        // }
-
     }
 
     public function logout(Request $request)

@@ -16,7 +16,7 @@
                         <input type="hidden" name="tingkatan" value="{{ $tingkatan }}">
                         <input type="hidden" name="jurusan_id" value="{{ $jurusan_id }}">
                         <input type="hidden" name="kelas_id" value="{{ $kelas_id }}">
-                        <input type="hidden" name="user_id" value="{{ $user_id }}">
+                        <input type="hidden" name="siswa_id" value="{{ $siswa_id }}">
                         <button type="submit" class="btn-dark">
                             <i class="ri-arrow-left-line"></i>
                             Kembali
@@ -37,7 +37,7 @@
                                 <input type="hidden" name="tingkatan" value="{{ $tingkatan }}">
                                 <input type="hidden" name="jurusan_id" value="{{ $jurusan_id }}">
                                 <input type="hidden" name="kelas_id" value="{{ $kelas_id }}">
-                                <input type="hidden" name="user_id" value="{{ $user_id }}">
+                                <input type="hidden" name="siswa_id" value="{{ $siswa_id }}">
 
                                 <div class="form-group">
                                     <label for="#">Siswa</label>

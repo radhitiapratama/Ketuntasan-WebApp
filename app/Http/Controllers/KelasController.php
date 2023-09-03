@@ -625,11 +625,11 @@ class KelasController extends Controller
         for ($i = 0; $i < count($kode_guru_mapel); $i++) {
             $dataUpdate = [];
 
-            if ($hidden_guru_mapel_id != $kode_guru_mapel[$i]) {
+            if ($hidden_guru_mapel_id[$i] != $kode_guru_mapel[$i]) {
                 $dataUpdate['guru_mapel_id'] = $kode_guru_mapel[$i];
             }
 
-            if ($hidden_status != $status[$i]) {
+            if ($hidden_status[$i] != $status[$i]) {
                 $dataUpdate['status'] = $status[$i];
             }
 

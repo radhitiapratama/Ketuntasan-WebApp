@@ -23,7 +23,7 @@
         <div class="card-body">
             <div class="form-group">
                 <label for="#">Nama Siswa</label>
-                <input type="text" class="form-control" value="{{ $user->nama }}" disabled>
+                <input type="text" class="form-control" value="{{ $siswa->nama }}" disabled>
             </div>
         </div>
     </div>
@@ -56,13 +56,13 @@
                     <table class="table table-bordered" id="tbl-ketuntasan" style="width: 100%">
                         <thead>
                             <tr style="border-bottom: none !important">
-                                <th style="width: 5px">#</th>
-                                <th>Mapel</th>
-                                <th>Guru</th>
-                                <th class="text-center" style="width: 5px">Status</th>
-                                <th>Deskripsi</th>
-                                <th>Tgl Tuntas</th>
-                                <th class="text-center" style="width: 5px">Semester</th>
+                                <th class="vertical-align-middle" width="5px">#</th>
+                                <th class="vertical-align-middle">Mapel</th>
+                                <th class="vertical-align-middle">Guru</th>
+                                <th class="text-center" width="5px">Status</th>
+                                <th class="vertical-align-middle" width="300px">Deskripsi</th>
+                                <th class="vertical-align-middle">Tgl Tuntas</th>
+                                <th class="text-center" width="5px">Semester</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -91,7 +91,7 @@
                     url: "{{ url('guru/wali-kelas/siswa/detail') }}",
                     data: function(data) {
                         data.semester = $("#semester").val();
-                        data.user_id = {{ $user_id }};
+                        data.siswa_id = {{ $siswa_id }};
                         data.tuntas = $("#tuntas").val();
                     }
                 },
