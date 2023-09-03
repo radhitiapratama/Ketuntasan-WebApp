@@ -22,14 +22,6 @@
         </div>
     </div>
 
-    @if ($errors->any())
-        @foreach ($errors->all() as $error)
-            <div class="alert alert-danger mt-3" role="alert">
-                {{ $error }}
-            </div>
-        @endforeach
-    @endif
-
     <div class="card mb-1">
         <div class="card-body">
             <div class="row">
@@ -162,6 +154,38 @@
                 timerProgressBar: true
             });
         @endif
+
+        @if (session()->has('validation_failed'))
+            Swal.fire({
+                title: "{{ session('validation_failed') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @error('excel_file')
+            Swal.fire({
+                title: "{{ $message }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @enderror
     </script>
 
     <script>

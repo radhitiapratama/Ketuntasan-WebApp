@@ -37,7 +37,7 @@ class JurusanController extends Controller
 
             $result = $table->offset($request->start)
                 ->limit($request->length)
-                ->orderByRaw("jurusan_id DESC")
+                ->orderByRaw("jurusan_id ASC")
                 ->get();
 
             $data = [];
@@ -179,6 +179,7 @@ class JurusanController extends Controller
         }
 
         if (!empty($dataUpdate)) {
+            $dataUpdate['updated_by'] = auth()->guard("admin")->user()->user_id;
             DB::table("jurusan")
                 ->where('jurusan_id', $request->jurusan_id)
                 ->update($dataUpdate);
