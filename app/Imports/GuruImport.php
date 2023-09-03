@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithStartRow;
+use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 
+// gunakan WithCalculatedFormulas untuk mendapatkan value dari formulla excel
 
-
-class GuruImport implements ToCollection, WithStartRow
+class GuruImport implements ToCollection, WithStartRow, WithCalculatedFormulas
 {
 
     use Importable;
