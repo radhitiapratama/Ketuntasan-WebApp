@@ -222,24 +222,6 @@
                         return;
                     }
 
-                    if (response.message == "duplicate_mapel") {
-                        Swal.fire({
-                            title: "Gagal,mapel tidak boleh duplikat",
-                            icon: "error",
-                            iconColor: 'white',
-                            customClass: {
-                                popup: 'colored-toast'
-                            },
-                            toast: true,
-                            position: 'top-right',
-                            showConfirmButton: false,
-                            timer: 5000,
-                            timerProgressBar: true
-                        });
-
-                        return;
-                    }
-
                     $(".select2").each(function() {
                         $(this).val("").trigger("change.select2");
                     });

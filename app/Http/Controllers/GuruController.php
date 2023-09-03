@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 use Symfony\Component\CssSelector\Node\FunctionNode;
+use Symfony\Component\HttpKernel\EventListener\ValidateRequestListener;
 
 class GuruController extends Controller
 {
@@ -343,34 +344,28 @@ class GuruController extends Controller
 
     public function guruMapel_store(Request $request)
     {
-        $mapel_id = $request->mapel_id;
+        $validator = Validator::make($request->all(), [
+            'mapel_id' => "required",
+        ]);
 
-        if (!isset($mapel_id)) {
+        if ($validator->fails()) {
             return response()->json([
                 'message' => "failed",
             ]);
         }
 
-        //check apakah ada mapel yang duplikat
-        $temp_mapel = array_unique($mapel_id);
+        // Hapus mapel_id yg duplicate
+        $mapel_id = array_unique($request->mapel_id);
 
-        $duplicate_mapel = sizeof($temp_mapel) != sizeof($request->mapel_id);
+        $sql_guruMapel = DB::table("guru_mapel")
+            ->select('mapel_id')
+            ->where('guru_id', $request->guru_id)
+            ->get()->toArray();
 
-        if ($duplicate_mapel) {
-            $dataResponse = [
-                'message' => "duplicate_mapel",
-            ];
-
-            return response()->json($dataResponse);
-        }
+        $arr_guruMapel = array_column($sql_guruMapel, "mapel_id");
 
         for ($i = 0; $i < count($mapel_id); $i++) {
-            $sql_checkDuplicate = DB::table("guru_mapel")
-                ->where("guru_id", $request->guru_id)
-                ->where("mapel_id", $mapel_id[$i])
-                ->first();
-
-            if ($sql_checkDuplicate) {
+            if (in_array($mapel_id[$i], $arr_guruMapel)) {
                 continue;
             }
 
@@ -453,6 +448,10 @@ class GuruController extends Controller
             ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
             ->where("gm.guru_mapel_id", $guru_mapel_id)
             ->first();
+
+        if (empty($sql_guru_mapel)) {
+            return redirect()->back();
+        }
 
         $sql_mapels = DB::table("mapel")
             ->where('status', 1)

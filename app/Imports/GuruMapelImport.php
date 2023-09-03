@@ -2,9 +2,9 @@
 
 namespace App\Imports;
 
+use App\Models\Guru;
 use App\Models\GuruMapel;
 use App\Models\Mapel;
-use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -19,7 +19,7 @@ class GuruMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
 
     public function collection(Collection $rows)
     {
-        Validator::make(
+        $validator = Validator::make(
             $rows->toArray(),
             [
                 '*.0' => "required",
@@ -27,11 +27,14 @@ class GuruMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
             ],
             [
                 '*.0.required' => "Kode Guru wajib di isi",
-                '*.0.integer' => "Kode Guru harus angka",
                 '*.1.required' => "Kode Mapel wajib di isi",
 
             ]
-        )->validate();
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->with("failed_import", "Gagal ! Terjadi kesalah saat mengimport");
+        }
 
         if (count($rows) > 200) {
             session()->flash("max_count", "Gagal! Row yg di import tidak boleh lebih dari 200");
@@ -45,20 +48,13 @@ class GuruMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
         DB::beginTransaction();
 
         foreach ($rows as $row) {
-            $user_id = str_replace($stringsReplace, "", $row[0]);
+            $kode_guru = str_replace($stringsReplace, "", $row[0]);
 
-            $sql_user = User::where("user_id", $user_id)->first();
+            $sql_guru = Guru::select("guru_id")->where("kode_guru", $kode_guru)->first();
 
-            // Check apakah user ada
-            if (!$sql_user) {
-                session()->flash("user_null", "Gagal Import ! Kode Guru " . $user_id . " tidak di temukan");
-                DB::rollBack();
-                return;
-            }
-
-            // Check apakah role user nya adalah guru
-            if ($sql_user && $sql_user->role != 2) {
-                session()->flash("user_not_teacher", "Gagal Import ! Kode Guru " . $user_id . " bukan Guru");
+            // Check apakah guru ada
+            if (!$sql_guru) {
+                session()->flash("user_null", "Gagal Import ! Kode Guru " . $kode_guru . " tidak di temukan");
                 DB::rollBack();
                 return;
             }
@@ -81,7 +77,7 @@ class GuruMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
                 }
 
                 $sql_check_guruMapel = GuruMapel::select("guru_mapel_id")
-                    ->where("user_id", $user_id)
+                    ->where("guru_id", $sql_guru->guru_id)
                     ->where("mapel_id", $mapel)
                     ->first();
 
@@ -89,12 +85,41 @@ class GuruMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
                     continue;
                 }
 
-                GuruMapel::create([
-                    'user_id' => $user_id,
-                    'mapel_id' => $mapel,
-                    'status' => 1,
-                    'created_by' => auth()->user()->user_id,
-                ]);
+                $sql_countGuruMapel = DB::table('guru_mapel')
+                    ->select("guru_mapel_id")
+                    ->where("guru_id", $sql_guru->guru_id)
+                    ->count();
+
+                if ($sql_countGuruMapel == 0) {
+                    GuruMapel::create([
+                        'guru_id' => $sql_guru->guru_id,
+                        'mapel_id' => $mapel,
+                        'kode_guru_mapel' => null,
+                        'status' => 1,
+                        'created_by' => auth()->guard('admin')->user()->user_id,
+                    ]);
+                } else if ($sql_countGuruMapel == 1) {
+                    GuruMapel::where("guru_id", $sql_guru->guru_id)
+                        ->update([
+                            'kode_guru_mapel' => 1,
+                        ]);
+
+                    GuruMapel::create([
+                        'guru_id' => $sql_guru->guru_id,
+                        'mapel_id' => $mapel,
+                        'kode_guru_mapel' => $sql_countGuruMapel + 1,
+                        'status' => 1,
+                        'created_by' => auth()->guard('admin')->user()->user_id,
+                    ]);
+                } else {
+                    GuruMapel::create([
+                        'guru_id' => $sql_guru->guru_id,
+                        'mapel_id' => $mapel,
+                        'kode_guru_mapel' => $sql_countGuruMapel + 1,
+                        'status' => 1,
+                        'created_by' => auth()->guard('admin')->user()->user_id,
+                    ]);
+                }
             }
         }
 
