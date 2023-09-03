@@ -94,6 +94,22 @@
                 timerProgressBar: true
             });
         @endif
+
+        @if (session()->has('guru_is_waliKelas'))
+            Swal.fire({
+                title: "{{ session('guru_is_waliKelas') }}",
+                icon: "success",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
     </script>
 
     <script>

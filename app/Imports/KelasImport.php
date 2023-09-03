@@ -20,7 +20,7 @@ class KelasImport implements ToCollection, WithStartRow
      */
     public function collection(Collection $rows)
     {
-        Validator::make(
+        $validator =   Validator::make(
             $rows->toArray(),
             [
                 '*.0' => "required",
@@ -30,7 +30,11 @@ class KelasImport implements ToCollection, WithStartRow
                 '*.0.required' => "Gagal! Kode Jurusan wajib di isi",
                 '*.1.required' => "Gagal! Nama Kelas wajib di isi",
             ]
-        )->validate();
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->with("validation_failed", "Gagal ! Terjadi kesalahan saat mengimport");
+        }
 
         if (count($rows) > 200) {
             session()->flash("max_row", "Gagal! Row yg di import tidak boleh lebih dari 200");
@@ -64,9 +68,9 @@ class KelasImport implements ToCollection, WithStartRow
 
             Kelas::create([
                 'jurusan_id' => $jurusan_id,
-                'nama_kelas' => $row[1],
+                'nama_kelas' => strtoupper($row[1]),
                 'status' => 1,
-                'created_by' => auth()->user()->user_id
+                'created_by' => auth()->guard("admin")->user()->user_id
             ]);
         }
 

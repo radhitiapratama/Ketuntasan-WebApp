@@ -2,10 +2,11 @@
 
 namespace App\Imports;
 
+use Carbon\Carbon;
+use App\Models\Guru;
 use App\Models\User;
 use App\Models\Kelas;
 use App\Models\TahunAjaran;
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -23,7 +24,7 @@ class waliKelasImport implements ToCollection, WithStartRow
      */
     public function collection(Collection $rows)
     {
-        Validator::make(
+        $validator =  Validator::make(
             $rows->toArray(),
             [
                 '*.0' => "required",
@@ -37,7 +38,11 @@ class waliKelasImport implements ToCollection, WithStartRow
                 '*.2.required' => "Gagal! Kode Kelas wajib di isi",
                 '*.2.integer' => "Gagal! Kode Kelas wajib angka",
             ]
-        )->validate();
+        );
+
+        if ($validator->fails()) {
+            return redirect()->back()->with("validation_failed", "Gagal ! Terjadi kesalahan saat mengimport");
+        }
 
         if (count($rows) > 200) {
             session()->flash("max_count", "Gagal! Row yg di import tidak boleh lebih dari 200");
@@ -55,21 +60,13 @@ class waliKelasImport implements ToCollection, WithStartRow
         DB::beginTransaction();
 
         foreach ($rows as $row) {
-            $user_id = str_replace($stringsReplace, "", $row[0]);
+            $kode_guru = str_replace($stringsReplace, "", $row[0]);
             $kelas_id = str_replace($stringsReplace, "", $row[2]);
 
-            $sql_user = User::select("user_id", 'role')->where("user_id", $user_id)->first();
+            $sql_guru = Guru::select("guru_id")->where("kode_guru", $kode_guru)->first();
 
-            // check apakah user ada
-            if (!$sql_user) {
-                session()->flash("user_null", "Gagal!, Kode Guru " . $user_id . " tidak di temukan");
-                DB::rollBack();
-                return;
-            }
-
-            // check apakah user rolenya bukan guru
-            if ($sql_user && $sql_user->role != 2) {
-                session()->flash("user_not_teacher", "Kode Guru " . $user_id . " bukan Guru");
+            if (!$sql_guru) {
+                session()->flash("user_null", "Gagal!, Kode Guru " . $kode_guru . " tidak di temukan");
                 DB::rollBack();
                 return;
             }
@@ -97,7 +94,6 @@ class waliKelasImport implements ToCollection, WithStartRow
 
             $sql_kelas = Kelas::select("kelas_id", 'jurusan_id')->where("kelas_id", $kelas_id)->first();
 
-            // check apakah kelas ada
             if (!$sql_kelas) {
                 session()->flash("kode_kelas_null", "Gagal!,Kode Kelas " . $kelas_id . " tidak di temukan");
                 DB::rollBack();
@@ -108,11 +104,10 @@ class waliKelasImport implements ToCollection, WithStartRow
                 ->where("tingkatan", $tingkatan)
                 ->where("jurusan_id", $sql_kelas->jurusan_id)
                 ->where("kelas_id", $kelas_id)
-                ->where("user_id", $user_id)
+                ->where("guru_id", $sql_guru->guru_id)
                 ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
                 ->first();
 
-            // jika sudah ada data wali kelas maka skip
             if ($sql_check) {
                 continue;
             }
@@ -122,11 +117,12 @@ class waliKelasImport implements ToCollection, WithStartRow
                     'tingkatan' => $tingkatan,
                     'jurusan_id' => $sql_kelas->jurusan_id,
                     'kelas_id' => $sql_kelas->kelas_id,
-                    'user_id' => $user_id,
+                    'guru_id' => $sql_guru->guru_id,
                     'tahun_ajaran_id' => $tahun->tahun_ajaran_id,
                     'status' => 1,
                     'created_at' => Carbon::now(),
-                    'created_by' => auth()->user()->user_id
+                    'updated_at' => Carbon::now(),
+                    'created_by' => auth()->guard("admin")->user()->user_id
                 ]);
         }
 

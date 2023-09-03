@@ -564,7 +564,6 @@ class GuruController extends Controller
         if ($request->ajax()) {
             $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
-            // $columnsSearch = ['u.nama', 'k.nama_kelas'];
             $columnsSearch = ['g.nama', 'k.nama_kelas'];
             $table = DB::table("wali_kelas as wk");
 
@@ -807,6 +806,17 @@ class GuruController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()->withInput()->withErrors($validator);
+        }
+
+        $tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
+
+        $sql_checkWaliKelas = DB::table("wali_kelas")
+            ->where("guru_id", $request->guru_id)
+            ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
+            ->first();
+
+        if ($sql_checkWaliKelas) {
+            return redirect()->back()->with("guru_is_waliKelas", "Gagal ! Guru sudah jadi wali kelas");
         }
 
         DB::table("wali_kelas")

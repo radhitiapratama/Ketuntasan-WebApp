@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaran;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
+use Egulias\EmailValidator\Result\Reason\EmptyReason;
 use Illuminate\Cache\RedisStore;
 use Illuminate\Contracts\Validation\ValidatesWhenResolved;
 use Illuminate\Database\Eloquent\JsonEncodingException;
@@ -178,13 +179,13 @@ class KelasController extends Controller
             ->where('j.status', 1)
             ->first();
 
-        $sql_jurusan = DB::table("jurusan")
-            ->where('status', 1)
-            ->get();
-
         if (empty($sql_kelas)) {
             return redirect()->back();
         }
+
+        $sql_jurusan = DB::table("jurusan")
+            ->where('status', 1)
+            ->get();
 
         $dataToView = [
             'kelas' => $sql_kelas,
@@ -233,6 +234,7 @@ class KelasController extends Controller
         }
 
         if (!empty($dataUpdate)) {
+            $dataUpdate['updated_by'] = auth()->guard("admin")->user_id;
             DB::table("kelas")
                 ->where('kelas_id', $request->kelas_id)
                 ->update($dataUpdate);

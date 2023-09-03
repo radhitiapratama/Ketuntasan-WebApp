@@ -35,14 +35,6 @@
         </div>
     </div>
 
-    @if ($errors->any())
-        @foreach ($errors->all() as $error)
-            <div class="alert alert-danger mt-3" role="alert">
-                {{ $error }}
-            </div>
-        @endforeach
-    @endif
-
     <div class="card mb-1">
         <div class="card-body">
             <div class="row">
@@ -209,22 +201,6 @@
             });
         @endif
 
-        @if (session()->has('user_not_teacher'))
-            Swal.fire({
-                title: '{{ session('user_not_teacher') }}',
-                icon: "error",
-                iconColor: 'white',
-                customClass: {
-                    popup: 'colored-toast'
-                },
-                toast: true,
-                position: 'top-right',
-                showConfirmButton: false,
-                timer: 5000,
-                timerProgressBar: true
-            });
-        @endif
-
         @if (session()->has('invalid_tingkatan'))
             Swal.fire({
                 title: '{{ session('invalid_tingkatan') }}',
@@ -258,6 +234,22 @@
         @endif
 
         @if (session()->has('max_count'))
+            Swal.fire({
+                title: '{{ session('max_count') }}',
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('validation_failed'))
             Swal.fire({
                 title: '{{ session('max_count') }}',
                 icon: "error",
