@@ -51,7 +51,9 @@ class SiswaController extends Controller
                 'k.nama_kelas'
             )
                 ->join('jurusan as j', 'j.jurusan_id', '=', 's.jurusan_id')
-                ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id');
+                ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id')
+                ->where('j.status', 1)
+                ->where("k.status", 1);
 
 
             if ($request->tingkatan != null) {
@@ -150,13 +152,20 @@ class SiswaController extends Controller
             ]);
         }
 
-        $sql_kelas = Kelas::with([
-            'jurusan' => function ($query) {
-                $query->select("jurusan_id", 'nama_jurusan')
-                    ->where("status", 1);
-            }
-        ])
-            ->where("kelas.status", 1)
+        // $sql_kelas = Kelas::with([
+        //     'jurusan' => function ($query) {
+        //         $query->select("jurusan_id", 'nama_jurusan')
+        //             ->where("status", 1);
+        //     }
+        // ])
+        //     ->where("kelas.status", 1)
+        //     ->get();
+
+        $sql_kelas = DB::table("kelas as k")
+            ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
+            ->where('j.status', 1)
+            ->where('k.status', 1)
+            ->select('j.jurusan_id', 'j.nama_jurusan', 'k.kelas_id', 'k.nama_kelas')
             ->get();
 
         $dataToView = [
@@ -170,12 +179,18 @@ class SiswaController extends Controller
 
     public function add()
     {
-        $sql_kelas = Kelas::with([
-            'jurusan' => function ($query) {
-                $query->select("jurusan_id", "nama_jurusan")
-                    ->where("status", 1);
-            }
-        ])->where("status", 1)
+        // $sql_kelas = Kelas::with([
+        //     'jurusan' => function ($query) {
+        //         $query->select("jurusan_id", "nama_jurusan")
+        //             ->where("status", 1);
+        //     }
+        // ])->where("status", 1)
+        //     ->get();
+
+        $sql_kelas = DB::table("kelas as k")
+            ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
+            ->where('j.status', 1)
+            ->where('k.status', 1)
             ->get();
 
         $dataToView = [
@@ -499,15 +514,20 @@ class SiswaController extends Controller
             ]);
         }
 
-        $sql_kelas = Kelas::with([
-            'jurusan' => function ($query) {
-                $query->select("jurusan_id", 'nama_jurusan')
-                    ->where("status", 1);
-            }
-        ])
-            ->where("kelas.status", 1)
-            ->get();
+        // $sql_kelas = Kelas::with([
+        //     'jurusan' => function ($query) {
+        //         $query->select("jurusan_id", 'nama_jurusan')
+        //             ->where("status", 1);
+        //     }
+        // ])
+        //     ->where("kelas.status", 1)
+        //     ->get();
 
+        $sql_kelas = DB::table("kelas as k")
+            ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
+            ->where('j.status', 1)
+            ->where('k.status', 1)
+            ->get();
 
         $dataToView = [
             'kelases' => $sql_kelas,

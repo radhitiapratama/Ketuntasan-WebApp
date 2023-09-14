@@ -36,7 +36,7 @@ class BatasWaktuController extends Controller
             $result = $table->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
                 ->offset($request->start)
                 ->limit($request->length)
-                ->orderByRaw("batas_waktu_id DESC")
+                ->orderByRaw("start_date ASC")
                 ->get();
 
             $data = [];
@@ -190,12 +190,7 @@ class BatasWaktuController extends Controller
             return redirect()->back()->withInput()->with("tglSelesaiLebihKecil", "tglSelesaiLebihKecil");
         }
 
-        if ($request->status == 0) {
-            return redirect()->back();
-        }
-
         if ($request->status == 1) {
-            // Update semua batas waktu menjadi nonaktif di tahun ajaran yang sama
             DB::table("batas_waktu")
                 ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
                 ->update([
@@ -210,7 +205,17 @@ class BatasWaktuController extends Controller
                     'end_date' => $tgl_selesai,
                     'status' => $request->status,
                 ]);
+        } else {
+            DB::table("batas_waktu")
+                ->where('batas_waktu_id', $request->batas_waktu_id)
+                ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                ->update([
+                    'start_date' => $tgl_mulai,
+                    'end_date' => $tgl_selesai,
+                    'status' => $request->status,
+                ]);
         }
+
 
         return redirect()->back()->with("successUpdate", "successUpdate");
     }

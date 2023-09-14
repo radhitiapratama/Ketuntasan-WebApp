@@ -154,10 +154,12 @@ class KetuntasanController extends Controller
                 $table = DB::table("ketuntasan as k");
 
                 $query = $table
+                    ->select('k.*', 'm.nama_mapel', 'g.nama')
                     ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
                     ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
                     ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
                     ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+                    ->join('guru as g', 'g.guru_id', 'gm.guru_id')
                     ->where('k.siswa_id', auth()->guard("siswa")->user()->siswa_id)
                     ->where('km.status', 1)
                     ->where('k.tahun_ajaran_id', $tahun->tahun_ajaran_id);
@@ -496,6 +498,7 @@ class KetuntasanController extends Controller
 
                 $query = $table
                     ->select('siswa_id', 'nama')
+                    ->where('status', 1)
                     ->where('tingkatan', $tingkatan)
                     ->where('jurusan_id', $jurusan_id)
                     ->where('kelas_id', $kelas_id);
@@ -633,7 +636,7 @@ class KetuntasanController extends Controller
                 $query = $table->select(
                     'k.*',
                     'm.nama_mapel',
-                    's.nama',
+                    'g.nama',
                 )
                     ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
                     ->join("guru_mapel as gm", 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')

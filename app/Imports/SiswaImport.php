@@ -2,10 +2,9 @@
 
 namespace App\Imports;
 
-use App\Models\Jurusan;
-use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 
 use Maatwebsite\Excel\Concerns\Importable;
@@ -24,6 +23,7 @@ class SiswaImport implements ToCollection, WithStartRow
 
     public function collection(Collection $rows)
     {
+        // dd($rows);
         $validator =  Validator::make(
             $rows->toArray(),
             [
@@ -63,7 +63,6 @@ class SiswaImport implements ToCollection, WithStartRow
         $sql_kelas = DB::table("kelas as k")
             ->select('k.kelas_id', 'j.jurusan_id')
             ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
-            ->where("k.status", 1)
             ->get()->toArray();
 
         $sql_getLastUserId = DB::table('users')
@@ -73,31 +72,30 @@ class SiswaImport implements ToCollection, WithStartRow
 
         $last_user_id = $sql_getLastUserId->user_id;
 
-        $arr_kelas_id = array_column($sql_kelas, 'kelas_id');
-        $arr_jurusan_id = array_column($sql_kelas, "jurusan_id");
+        $arr_kelas = array_column($sql_kelas, "kelas_id");
+        $arr_jurusan = array_column($sql_kelas, 'jurusan_id');
 
-        $stringReplace = [
-            '[', ']'
-        ];
+        // $stringReplace = [
+        //     '[', ']'
+        // ];
 
         $data_userId = [];
         $data_siswa = [];
 
         DB::beginTransaction();
 
-
         foreach ($rows as $row) {
-            $kelas_id = str_replace($stringReplace, "", $row[2]);
+            if ($row[0] == null || $row[1] == null || $row[2] == null) {
+                return null;
+            }
 
-            $index_kelas_id = array_keys($arr_kelas_id, $kelas_id);
+            $kelas_id = $row[2];
 
-            if (!$index_kelas_id) {
+            if (!in_array($kelas_id, $arr_kelas)) {
                 session()->flash("kode_kelas_null", "Gagal! Kode Kelas " . $kelas_id . " tidak ditemukan");
                 DB::rollBack();
                 return;
             }
-
-            $jurusan_id = $arr_jurusan_id[$index_kelas_id[0]];
 
             $tingkatan = null;
 
@@ -122,36 +120,113 @@ class SiswaImport implements ToCollection, WithStartRow
                 return;
             }
 
+            $jurusan_id = array_search($kelas_id, $arr_kelas);
+            $jurusan_id = $arr_jurusan[$jurusan_id];
+
+            $str_namaReplace = [
+                '`', "'", '"'
+            ];
+
+            $nama_siswa = str_replace($str_namaReplace, "", $row[0]);
+
             //buat username dan check apakah username ada atau tidak di database 
-            $username_isUnique = $this->checkIfUsernameExist($row[0]);
+            $username_isUnique = $this->checkIfUsernameExist($nama_siswa);
 
             if ($username_isUnique) {
                 $last_user_id++;
 
-                $data_userId = [
+                $data_userId[] = [
                     'user_id' => $last_user_id,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
                     'created_by' => auth()->guard("admin")->user()->user_id,
                 ];
 
-                $data_siswa = [
+                $data_siswa[] = [
                     'user_id' => $last_user_id,
                     'username' => $this->username,
-                    'nama' => $row[0],
+                    'nama' => $nama_siswa,
                     'password' => Hash::make("123456"),
                     'role' => 3,
                     'status' => 1,
                     'tingkatan' => $tingkatan,
                     'jurusan_id' => $jurusan_id,
                     'kelas_id' => $kelas_id,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
                     'created_by' => auth()->guard("admin")->user()->user_id
                 ];
             }
         }
 
-        User::create($data_userId);
-        Siswa::create($data_siswa);
+        User::insert($data_userId);
+        Siswa::insert($data_siswa);
 
         DB::commit();
+
+        // foreach ($rows as $row) {
+        //     $kelas_id = str_replace($stringReplace, "", $row[2]);
+
+        //     $index_kelas_id = array_keys($arr_kelas_id, $kelas_id);
+
+        //     if (!$index_kelas_id) {
+        //         session()->flash("kode_kelas_null", "Gagal! Kode Kelas " . $kelas_id . " tidak ditemukan");
+        //         DB::rollBack();
+        //         return;
+        //     }
+
+        //     $jurusan_id = $arr_jurusan_id[$index_kelas_id[0]];
+
+        //     $tingkatan = null;
+
+        //     $row_tingkatan = strtoupper($row[1]);
+
+        //     if ($row_tingkatan == "X") {
+        //         $tingkatan = 1;
+        //     }
+
+        //     if ($row_tingkatan == "XI") {
+        //         $tingkatan = 2;
+        //     }
+
+        //     if ($row_tingkatan == "XII") {
+        //         $tingkatan = 3;
+        //     }
+
+        //     // Check tingkatan
+        //     if ($tingkatan == null) {
+        //         session()->flash("invalid_tingkatan", "Gagal! " . $row_tingkatan . ' bukan termasuk tingkatan');
+        //         DB::rollBack();
+        //         return;
+        //     }
+
+        //     //buat username dan check apakah username ada atau tidak di database 
+        //     $username_isUnique = $this->checkIfUsernameExist($row[0]);
+
+        //     if ($username_isUnique) {
+        //         $last_user_id++;
+
+        //         $data_userId = [
+        //             'user_id' => $last_user_id,
+        //             'created_by' => auth()->guard("admin")->user()->user_id,
+        //         ];
+
+        //         $data_siswa = [
+        //             'user_id' => $last_user_id,
+        //             'username' => $this->username,
+        //             'nama' => $row[0],
+        //             'password' => Hash::make("123456"),
+        //             'role' => 3,
+        //             'status' => 1,
+        //             'tingkatan' => $tingkatan,
+        //             'jurusan_id' => $jurusan_id,
+        //             'kelas_id' => $kelas_id,
+        //             'created_by' => auth()->guard("admin")->user()->user_id
+        //         ];
+        //     }
+        // }
+
+
     }
 
     public function makeUsername($username)

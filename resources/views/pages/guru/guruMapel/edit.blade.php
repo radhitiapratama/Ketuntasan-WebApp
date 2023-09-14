@@ -31,15 +31,20 @@
                 @csrf
                 <input type="hidden" name="guru_mapel_id" value="{{ $guruMapel->guru_mapel_id }}">
                 <input type="hidden" name="guru_id" value="{{ $guruMapel->guru_id }}">
-                <div class="form-group">
+                {{-- <div class="form-group">
                     <label for="">Kode Guru Mapel</label>
-                    <input type="text" name="kode_guru_mapel" class="form-control"
-                        value="{{ old('kode_guru_mapel', $guruMapel->kode_guru_mapel) }}"
-                        onkeypress="return onlyNumberKey(event)" required>
+                    @if ($guruMapel->kode_guru_mapel != null)
+                        <input type="text" name="kode_guru_mapel" class="form-control"
+                            value="{{ old('kode_guru_mapel', $guruMapel->kode_guru_mapel) }}"
+                            onkeypress="return onlyNumberKey(event)" required>
+                    @else
+                        <input type="text" name="kode_guru_mapel" class="form-control"
+                            value="{{ old('kode_guru_mapel', 1) }}" onkeypress="return onlyNumberKey(event)" required>
+                    @endif
                     @error('kode_guru_mapel')
                         <small class="text-danger">{{ $message }}</small>
                     @enderror
-                </div>
+                </div> --}}
                 <div class="form-group">
                     <label for="#">Mapel</label>
                     <select name="mapel_id" id="mapel_id" class="form-control select2 select2-1">
@@ -67,7 +72,7 @@
                         <small class="text-danger">{{ $message }}</small>
                     @enderror
                 </div>
-                <button type="submit" class="btn-dark">Submit</button>
+                <button type="submit" class="btn-dark">Update</button>
             </form>
         </div>
     </div>
@@ -137,11 +142,11 @@
             });
         });
 
-        function onlyNumberKey(evt) {
-            var ASCIICode = (evt.which) ? evt.which : evt.keyCode
-            if (ASCIICode > 31 && (ASCIICode < 48 || ASCIICode > 57))
-                return false;
-            return true;
-        }
+        // function onlyNumberKey(evt) {
+        //     var ASCIICode = (evt.which) ? evt.which : evt.keyCode
+        //     if (ASCIICode > 31 && (ASCIICode < 48 || ASCIICode > 57))
+        //         return false;
+        //     return true;
+        // }
     </script>
 @endsection

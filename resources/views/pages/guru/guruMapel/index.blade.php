@@ -193,9 +193,9 @@
             });
         @endif
 
-        @if (session()->has('user_null'))
+        @if (session()->has('guru_null'))
             Swal.fire({
-                title: "{{ session('user_null') }}",
+                title: "{{ session('guru_null') }}",
                 icon: "error",
                 iconColor: 'white',
                 customClass: {

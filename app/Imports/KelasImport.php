@@ -4,6 +4,8 @@ namespace App\Imports;
 
 use App\Models\Kelas;
 use App\Models\Jurusan;
+use Carbon\Carbon;
+use Carbon\Doctrine\CarbonDoctrineType;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -41,44 +43,54 @@ class KelasImport implements ToCollection, WithStartRow
             return;
         }
 
-        $stringReplace = [
-            "[", "]"
-        ];
+        $sql_jurusan = DB::table("jurusan")
+            ->select('jurusan_id')
+            ->get()->toArray();
+
+        $arr_jurusan = array_column($sql_jurusan, 'jurusan_id');
+
+        $sql_kelas = DB::table("kelas")
+            ->select('nama_kelas')
+            ->get()->toArray();
+
+        $arr_namaKelas = array_column($sql_kelas, "nama_kelas");
+
+        $data_kelas = [];
+
+        DB::beginTransaction();
 
         foreach ($rows as $row) {
-            $jurusan_id = str_replace($stringReplace, "", $row[0]);
+            $jurusan_id = $row[0];
+            $nama_kelas = strtoupper($row[1]);
 
-            $sql_jurusan = Jurusan::where("jurusan_id", $jurusan_id)->first();
-
-            // check apakah ada jurusan
-            if (!$sql_jurusan) {
+            if (!in_array($jurusan_id, $arr_jurusan)) {
                 session()->flash("jurusan_null", "Gagal! Kode Jurusan " . $jurusan_id . " tidak di temukan");
                 DB::rollBack();
                 return;
             }
 
-            $sql_kelas = Kelas::select("kelas_id")
-                ->where("jurusan_id", $jurusan_id)
-                ->where("nama_kelas", $row[1])
-                ->first();
-
-            if ($sql_kelas) {
+            if (in_array($nama_kelas, $arr_namaKelas)) {
                 continue;
             }
 
-            Kelas::create([
+            $data_kelas[] = [
                 'jurusan_id' => $jurusan_id,
-                'nama_kelas' => strtoupper($row[1]),
+                'nama_kelas' => $nama_kelas,
                 'status' => 1,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
                 'created_by' => auth()->guard("admin")->user()->user_id
-            ]);
+            ];
         }
+
+        DB::table("kelas")
+            ->insert($data_kelas);
 
         DB::commit();
     }
 
     public function startRow(): int
     {
-        return 3;
+        return 2;
     }
 }

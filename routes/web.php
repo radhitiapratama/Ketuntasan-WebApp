@@ -12,6 +12,8 @@ use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
+use Illuminate\Support\Facades\DB;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -186,4 +188,25 @@ Route::middleware(['checkAuth'])->group(function () {
 
     //logout
     Route::get('/logout', [AuthController::class, 'logout']);
+});
+
+Route::get("test", function () {
+    $mapel1 = DB::table('mapel')
+        ->select('nama_mapel')
+        ->get();
+
+    $nama_gada = array();
+
+    foreach ($mapel1 as $row) {
+        $mapel2 = DB::table("mapel_me")
+            ->select('nama_mapel')
+            ->where('nama_mapel', $row->nama_mapel)
+            ->count();
+
+        if ($mapel2 < 1) {
+            array_push($nama_gada, $row->nama_mapel);
+        };
+    }
+
+    dd($nama_gada);
 });

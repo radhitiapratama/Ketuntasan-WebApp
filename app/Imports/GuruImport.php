@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Guru;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -60,12 +61,22 @@ class GuruImport implements ToCollection, WithStartRow, WithCalculatedFormulas
             ->select('kode_guru')
             ->get()->toArray();
 
+        $sql_userID = DB::table("users")
+            ->select('user_id')
+            ->orderBy("user_id", 'DESC')
+            ->first();
+
+        $last_user_id = $sql_userID->user_id;
+
         $charsReplace = [
             '[', ']',
         ];
 
         $arr_username = array_column($sql_admin, "username");
         $arr_kodeGuru = array_column($sql_kodeGuru, "kode_guru");
+
+        $data_guru = [];
+        $data_user = [];
 
 
         DB::beginTransaction();
@@ -87,21 +98,31 @@ class GuruImport implements ToCollection, WithStartRow, WithCalculatedFormulas
                 DB::rollBack();
             }
 
-            $user = User::create([
-                'created_by' => auth()->guard("admin")->user()->user_id
-            ]);
+            $last_user_id++;
 
-            Guru::create([
-                'user_id' => $user->user_id,
+            $data_user[] = [
+                'user_id' => $last_user_id,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'created_by' => auth()->guard("admin")->user()->user_id
+            ];
+
+            $data_guru[] = [
+                'user_id' => $last_user_id,
                 'username' => $row[0],
                 'nama' => $row[1],
                 'password' => Hash::make("123456"),
                 'role' => 2,
                 'kode_guru' => $kode_guru,
                 'status' => 1,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
                 'created_by' => auth()->guard("admin")->user()->user_id
-            ]);
+            ];
         }
+
+        User::insert($data_user);
+        Guru::insert($data_guru);
 
         DB::commit();
     }

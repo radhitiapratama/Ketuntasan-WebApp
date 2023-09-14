@@ -8,6 +8,7 @@ use App\Models\Kelas;
 use App\Models\KelasMapel;
 use App\Models\Mapel;
 use App\Models\TahunAjaran;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -48,67 +49,72 @@ class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
             return;
         }
 
-        $stringReplace = [
-            '[', ']',
-        ];
+        // $stringReplace = [
+        //     '[', ']',
+        // ];
 
         $tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
+
+        $sql_kelas = DB::table("kelas")
+            ->select("kelas_id", "jurusan_id")
+            ->get()->toArray();
+
+        $arr_kelasId = array_column($sql_kelas, "kelas_id");
+        $arr_jurusanId = array_column($sql_kelas, "jurusan_id");
+
+        $dataKelasMapel = [];
 
         DB::beginTransaction();
 
         foreach ($rows as $row) {
-            $kelas_id = str_replace($stringReplace, "", $row[1]);
-
-            // [0] => kode_guru
-            // [1] => kode_guru_mapel 
-            $arr_kodeGuruMapel = explode(",", str_replace($stringReplace, "", $row[2]));
-
-            $row_tingkatan = strtoupper($row[0]);
+            $kode_guru_mapel = str_replace(".", ",", $row[2]);
+            $kelas_id = $row[1];
 
             $tingkatan = null;
-            if ($row_tingkatan == "X") {
+
+            if (strtoupper($row[0]) == "X") {
                 $tingkatan = 1;
             }
 
-            if ($row_tingkatan == "XI") {
+            if (strtoupper($row[0]) == "XI") {
                 $tingkatan = 2;
             }
 
-            if ($row_tingkatan == "XII") {
+
+            if (strtoupper($row[0]) == "XII") {
                 $tingkatan = 3;
             }
 
-            // Check tingkatan
             if ($tingkatan == null) {
-                session()->flash("invalid_tingkatan", "Gagal! " . $row_tingkatan . ' bukan termasuk tingkatan');
+                session()->flash("invalid_tingkatan", "Gagal! " . strtoupper($row[0]) . ' bukan termasuk tingkatan');
                 DB::rollBoack();
                 return;
             }
 
-            $sql_kelas = Kelas::select("kelas_id", "jurusan_id")
-                ->where("kelas_id", $kelas_id)
-                ->first();
-
-            // Check kelas
-            if (!$sql_kelas) {
+            if (!in_array($kelas_id, $arr_kelasId)) {
                 session()->flash("kode_kelas_null", "Gagal! " . $kelas_id . ' tidak di temukan');
                 DB::rollBack();
                 return;
             }
 
+            $arr_kodeGuruMapel = explode(",", $kode_guru_mapel);
+
+            $jurusan_id = array_search($kelas_id, $arr_kelasId);
+            $jurusan_id = $arr_jurusanId[$jurusan_id];
+
             if (count($arr_kodeGuruMapel) > 1) {
-                $sql_guruMapelId = DB::table('guru_mapel as gm')
+                $sql_guruMapelId = DB::table("guru_mapel as gm")
                     ->select('gm.guru_mapel_id')
                     ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
-                    ->where("g.kode_guru", $arr_kodeGuruMapel[0])
-                    ->where("gm.kode_guru_mapel", $arr_kodeGuruMapel[1])
+                    ->where("g.guru_id", $arr_kodeGuruMapel[0])
+                    ->where('gm.kode_guru_mapel', $arr_kodeGuruMapel[1])
                     ->first();
             } else {
-                $sql_guruMapelId = DB::table('guru_mapel as gm')
-                    ->select('gm.guru_mapel_id')
+                $sql_guruMapelId = DB::table("guru_mapel as gm")
+                    ->select("gm.guru_mapel_id")
                     ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
-                    ->where("g.kode_guru", $arr_kodeGuruMapel[0])
-                    ->where("gm.kode_guru_mapel", null)
+                    ->where('g.guru_id', $arr_kodeGuruMapel[0])
+                    ->where('gm.kode_guru_mapel', null)
                     ->first();
             }
 
@@ -120,7 +126,7 @@ class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
 
             $sql_checkKelasMapel = KelasMapel::select("kelas_mapel_id")
                 ->where("tingkatan", $tingkatan)
-                ->where('jurusan_id', $sql_kelas->jurusan_id)
+                ->where('jurusan_id', $jurusan_id)
                 ->where("kelas_id", $kelas_id)
                 ->where("guru_mapel_id", $sql_guruMapelId->guru_mapel_id)
                 ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
@@ -130,18 +136,112 @@ class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
                 continue;
             }
 
-            KelasMapel::create(
-                [
-                    'tingkatan' => $tingkatan,
-                    'jurusan_id' => $sql_kelas->jurusan_id,
-                    'kelas_id' => $kelas_id,
-                    'guru_mapel_id' => $sql_guruMapelId->guru_mapel_id,
-                    'tahun_ajaran_id' => $tahun->tahun_ajaran_id,
-                    'status' => 1,
-                    'created_by' => auth()->guard("admin")->user()->user_id,
-                ]
-            );
+            $dataKelasMapel[] = [
+                'tingkatan' => $tingkatan,
+                'jurusan_id' => $jurusan_id,
+                'kelas_id' => $kelas_id,
+                'guru_mapel_id' => $sql_guruMapelId->guru_mapel_id,
+                'tahun_ajaran_id' => $tahun->tahun_ajaran_id,
+                'status' => 1,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+                'created_by' => auth()->guard("admin")->user()->user_id,
+            ];
         }
+
+        DB::table("kelas_mapel")
+            ->insert($dataKelasMapel);
+
+        DB::commit();
+
+        // foreach ($rows as $row) {
+        //     $kode_guru_mapel = str_replace(".", ',', $row[1]);
+
+        //     $kelas_id = str_replace($stringReplace, "", $row[1]);
+
+        //     // [0] => kode_guru
+        //     // [1] => kode_guru_mapel 
+        //     $arr_kodeGuruMapel = explode(",", str_replace($stringReplace, "", $row[2]));
+
+        //     $row_tingkatan = strtoupper($row[0]);
+
+        //     $tingkatan = null;
+        //     if ($row_tingkatan == "X") {
+        //         $tingkatan = 1;
+        //     }
+
+        //     if ($row_tingkatan == "XI") {
+        //         $tingkatan = 2;
+        //     }
+
+        //     if ($row_tingkatan == "XII") {
+        //         $tingkatan = 3;
+        //     }
+
+        //     // Check tingkatan
+        //     if ($tingkatan == null) {
+        //         session()->flash("invalid_tingkatan", "Gagal! " . $row_tingkatan . ' bukan termasuk tingkatan');
+        //         DB::rollBoack();
+        //         return;
+        //     }
+
+        //     $sql_kelas = Kelas::select("kelas_id", "jurusan_id")
+        //         ->where("kelas_id", $kelas_id)
+        //         ->first();
+
+        //     // Check kelas
+        //     if (!$sql_kelas) {
+        //         session()->flash("kode_kelas_null", "Gagal! " . $kelas_id . ' tidak di temukan');
+        //         DB::rollBack();
+        //         return;
+        //     }
+
+        //     if (count($arr_kodeGuruMapel) > 1) {
+        //         $sql_guruMapelId = DB::table('guru_mapel as gm')
+        //             ->select('gm.guru_mapel_id')
+        //             ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+        //             ->where("g.kode_guru", $arr_kodeGuruMapel[0])
+        //             ->where("gm.kode_guru_mapel", $arr_kodeGuruMapel[1])
+        //             ->first();
+        //     } else {
+        //         $sql_guruMapelId = DB::table('guru_mapel as gm')
+        //             ->select('gm.guru_mapel_id')
+        //             ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+        //             ->where("g.kode_guru", $arr_kodeGuruMapel[0])
+        //             ->where("gm.kode_guru_mapel", null)
+        //             ->first();
+        //     }
+
+        //     if (empty($sql_guruMapelId)) {
+        //         session()->flash("guru_mapel_id_null", "Gagal ! Kode Guru Mapel tidak ditemukan");
+        //         DB::rollBack();
+        //         return;
+        //     }
+
+        //     $sql_checkKelasMapel = KelasMapel::select("kelas_mapel_id")
+        //         ->where("tingkatan", $tingkatan)
+        //         ->where('jurusan_id', $sql_kelas->jurusan_id)
+        //         ->where("kelas_id", $kelas_id)
+        //         ->where("guru_mapel_id", $sql_guruMapelId->guru_mapel_id)
+        //         ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
+        //         ->first();
+
+        //     if ($sql_checkKelasMapel) {
+        //         continue;
+        //     }
+
+        //     KelasMapel::create(
+        //         [
+        //             'tingkatan' => $tingkatan,
+        //             'jurusan_id' => $sql_kelas->jurusan_id,
+        //             'kelas_id' => $kelas_id,
+        //             'guru_mapel_id' => $sql_guruMapelId->guru_mapel_id,
+        //             'tahun_ajaran_id' => $tahun->tahun_ajaran_id,
+        //             'status' => 1,
+        //             'created_by' => auth()->guard("admin")->user()->user_id,
+        //         ]
+        //     );
+        // }
 
         DB::commit();
     }

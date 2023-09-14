@@ -11,15 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\TahunAjaran;
-use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
-use Egulias\EmailValidator\Result\Reason\EmptyReason;
-use Illuminate\Cache\RedisStore;
-use Illuminate\Contracts\Validation\ValidatesWhenResolved;
-use Illuminate\Database\Eloquent\JsonEncodingException;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Testing\Constraints\CountInDatabase;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
-use PhpParser\JsonDecoder;
 
 class KelasController extends Controller
 {
@@ -234,7 +226,7 @@ class KelasController extends Controller
         }
 
         if (!empty($dataUpdate)) {
-            $dataUpdate['updated_by'] = auth()->guard("admin")->user_id;
+            $dataUpdate['updated_by'] = auth()->guard("admin")->user()->user_id;
             DB::table("kelas")
                 ->where('kelas_id', $request->kelas_id)
                 ->update($dataUpdate);
@@ -262,6 +254,8 @@ class KelasController extends Controller
             $query = $table->select('km.*', 'k.nama_kelas', 'j.nama_jurusan')
                 ->join('jurusan as j', 'j.jurusan_id', '=', 'km.jurusan_id')
                 ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
+                ->where('k.status', 1)
+                ->where('j.status', 1)
                 ->where('km.tahun_ajaran_id', $tahun->tahun_ajaran_id);
 
             if ($request->tingkatan != null) {
@@ -336,13 +330,19 @@ class KelasController extends Controller
             ]);
         }
 
-        $sql_kelas = Kelas::with([
-            'jurusan' => function ($query) {
-                $query->select("jurusan_id", 'nama_jurusan')
-                    ->where("status", 1);
-            }
-        ])
-            ->where("status", 1)
+        // $sql_kelas = Kelas::with([
+        //     'jurusan' => function ($query) {
+        //         $query->select("jurusan_id", 'nama_jurusan')
+        //             ->where("status", 1);
+        //     }
+        // ])
+        //     ->where("status", 1)
+        //     ->get();
+
+        $sql_kelas = DB::table("kelas as k")
+            ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
+            ->where('j.status', 1)
+            ->where('k.status', 1)
             ->get();
 
         $dataToView = [
@@ -361,13 +361,19 @@ class KelasController extends Controller
             ->where("gm.status", 1)
             ->get();
 
-        $sql_kelas = Kelas::with([
-            'jurusan' => function ($query) {
-                $query->select("jurusan_id", 'nama_jurusan')
-                    ->where("status", 1);
-            }
-        ])
-            ->where("status", 1)
+        // $sql_kelas = Kelas::with([
+        //     'jurusan' => function ($query) {
+        //         $query->select("jurusan_id", 'nama_jurusan')
+        //             ->where("status", 1);
+        //     }
+        // ])
+        //     ->where("status", 1)
+        //     ->get();
+
+        $sql_kelas = DB::table("kelas as k")
+            ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
+            ->where('j.status', 1)
+            ->where('k.status', 1)
             ->get();
 
         $dataToView = [
@@ -504,6 +510,7 @@ class KelasController extends Controller
             ->where("km.jurusan_id", $jurusan_id)
             ->where("km.kelas_id", $kelas_id)
             ->where("km.tahun_ajaran_id", $tahun_ajaran->tahun_ajaran_id)
+            ->where('m.status', 1)
             ->orderByRaw("g.kode_guru ASC")
             ->get();
 
@@ -546,11 +553,14 @@ class KelasController extends Controller
             ->where("km.jurusan_id", $jurusan_id)
             ->where("km.kelas_id", $kelas_id)
             ->where("km.tahun_ajaran_id", $tahun->tahun_ajaran_id)
+            ->where('m.status', 1)
             ->get();
 
         $sql_guruMapel = DB::table('guru_mapel as gm')
             ->select("gm.guru_mapel_id", 'gm.kode_guru_mapel', 'gm.status', 'g.kode_guru')
             ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+            ->where('g.status', 1)
+            ->where('gm.status', 1)
             ->get();
 
         $dataToView = [

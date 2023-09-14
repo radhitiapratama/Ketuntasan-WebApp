@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Mapel;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -31,22 +32,30 @@ class MapelImport implements ToCollection, WithStartRow
             return;
         }
 
+        $sql_mapel = DB::table('mapel')
+            ->get()->toArray();
+
+        $arr_namaMapel = array_column($sql_mapel, "nama_mapel");
+
+        $dataMapel = [];
+
         DB::beginTransaction();
 
         foreach ($rows as $row) {
-            $sql_mapel = Mapel::where("nama_mapel", $row[0])->first();
-
-            if ($sql_mapel) {
+            if (in_array($row[0], $arr_namaMapel)) {
                 continue;
             }
 
-            Mapel::create([
+            $dataMapel[] = [
                 'nama_mapel' => $row[0],
                 'status' => 1,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
                 'created_by' => auth()->guard("admin")->user()->user_id,
-            ]);
+            ];
         }
 
+        Mapel::insert($dataMapel);
         DB::commit();
     }
 

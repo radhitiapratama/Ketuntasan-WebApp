@@ -21,13 +21,13 @@
         </div>
     </div>
 
-    @if ($errors->any())
+    {{-- @if ($errors->any())
         @foreach ($errors->all() as $error)
             <div class="alert alert-danger mt-3" role="alert">
                 {{ $error }}
             </div>
         @endforeach
-    @endif
+    @endif --}}
 
     <div class="card mb-1">
         <div class="card-body">

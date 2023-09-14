@@ -18,6 +18,7 @@ use App\Imports\waliKelasImport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Psy\Command\WhereamiCommand;
 
 class GuruController extends Controller
 {
@@ -261,7 +262,8 @@ class GuruController extends Controller
             $query = $table->select("gm.*", 'g.username', 'g.nama', 'g.kode_guru', 'm.nama_mapel')
                 ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
                 ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
-                ->where("g.status", 1);
+                ->where("g.status", 1)
+                ->where('m.status', 1);
 
             $filtered = $query->count();
 
@@ -409,30 +411,6 @@ class GuruController extends Controller
         return response()->json($dataResponse);
     }
 
-    // public function getDataMapelByGuru(Request $request)
-    // {
-    //     $guru_id = $request->guru_id;
-
-    //     $sql_mapel = DB::table("guru_mapel as gm")
-    //         ->select("m.nama_mapel", 'gm.kode_guru_mapel', 'gm.status', 'gm.kode_guru_mapel', 'g.kode_guru')
-    //         ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
-    //         ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
-    //         ->where("gm.guru_id", $guru_id)
-    //         ->get();
-
-    //     $sql_guru = DB::table('guru')
-    //         ->select("nama")
-    //         ->where("guru_id", $guru_id)
-    //         ->first();
-
-    //     $dataToView  = [
-    //         'mapels' => $sql_mapel,
-    //         'guru' => $sql_guru,
-    //     ];
-
-    //     return response()->json($dataToView);
-    // }
-
     public function guruMapel_edit($guru_mapel_id)
     {
         if (!isset($guru_mapel_id)) {
@@ -451,6 +429,7 @@ class GuruController extends Controller
         }
 
         $sql_mapels = DB::table("mapel")
+            ->select('mapel_id', 'nama_mapel')
             ->where('status', 1)
             ->get();
 
@@ -469,14 +448,14 @@ class GuruController extends Controller
             $request->all(),
             [
                 'guru_mapel_id' => "required",
-                'kode_guru_mapel' => "required|integer",
+                // 'kode_guru_mapel' => "required|integer",
                 'mapel_id' => "required",
                 'status' => "required",
             ],
             [
                 'guru_mapel_id.required' => "Guru Mapel wajib di isi",
-                'kode_guru_mapel.required' => "Kode Guru Mapel wajib di isi",
-                'kode_guru_mapel.integer' => "Kode Guru Mapel wajib angka",
+                // 'kode_guru_mapel.required' => "Kode Guru Mapel wajib di isi",
+                // 'kode_guru_mapel.integer' => "Kode Guru Mapel wajib angka",
                 'mapel_id.required' => "Mapel wajib di isi",
                 'status.required' => "Status wajib di isi",
             ]
@@ -492,21 +471,21 @@ class GuruController extends Controller
 
         $sql_guruMapel = DB::table("guru_mapel")->where("guru_mapel_id", $request->guru_mapel_id)->first();
 
-        if ($sql_guruMapel->kode_guru_mapel != $request->kode_guru_mapel) {
-            // check apakah ada kode guru mapel yg sama
-            $sql_checkDuplicate_KodeGuruMapel = DB::table("guru_mapel")
-                ->select("guru_mapel_id")
-                ->where("guru_id", $request->guru_id)
-                ->where("kode_guru_mapel", $request->kode_guru_mapel)
-                ->first();
+        // if ($sql_guruMapel->kode_guru_mapel != $request->kode_guru_mapel) {
+        //     // check apakah ada kode guru mapel yg sama
+        //     $sql_checkDuplicate_KodeGuruMapel = DB::table("guru_mapel")
+        //         ->select("guru_mapel_id")
+        //         ->where("guru_id", $request->guru_id)
+        //         ->where("kode_guru_mapel", $request->kode_guru_mapel)
+        //         ->first();
 
-            if ($sql_checkDuplicate_KodeGuruMapel) {
-                DB::rollBack();
-                return redirect()->back()->withInput()->with("duplicateKodeGuruMapel", "Gagal ! Kode Guru mapel sudah di gunakan");
-            }
+        //     if ($sql_checkDuplicate_KodeGuruMapel) {
+        //         DB::rollBack();
+        //         return redirect()->back()->withInput()->with("duplicateKodeGuruMapel", "Gagal ! Kode Guru mapel sudah di gunakan");
+        //     }
 
-            $dataUpdate['kode_guru_mapel'] = $request->kode_guru_mapel;
-        }
+        //     $dataUpdate['kode_guru_mapel'] = $request->kode_guru_mapel;
+        // }
 
         if ($sql_guruMapel->mapel_id != $request->mapel_id) {
             // check apakah ada mapel duplicate
@@ -576,6 +555,9 @@ class GuruController extends Controller
                 ->join('jurusan as j', 'j.jurusan_id', '=', 'wk.jurusan_id')
                 ->join('kelas as k', 'k.kelas_id', '=', 'wk.kelas_id')
                 ->join('guru as g', 'g.guru_id', 'wk.guru_id')
+                ->where('j.status', 1)
+                ->where('k.status', 1)
+                ->where("g.status", 1)
                 ->where('wk.tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id);
 
             if ($request->tingkatan != null) {
@@ -648,13 +630,19 @@ class GuruController extends Controller
             ]);
         }
 
-        $sql_kelas = Kelas::with([
-            'jurusan' => function ($query) {
-                $query->select("jurusan_id", 'nama_jurusan')
-                    ->where("status", 1);
-            }
-        ])
-            ->where("status", 1)
+        // $sql_kelas = Kelas::with([
+        //     'jurusan' => function ($query) {
+        //         $query->select("jurusan_id", 'nama_jurusan')
+        //             ->where("status", 1);
+        //     }
+        // ])
+        //     ->where("status", 1)
+        //     ->get();
+
+        $sql_kelas = DB::table("kelas as k")
+            ->join('jurusan as j', 'j.jurusan_Id', '=', 'k.jurusan_id')
+            ->where("j.status", 1)
+            ->where('k.status', 1)
             ->get();
 
         $dataToView = [
@@ -678,13 +666,20 @@ class GuruController extends Controller
             ->whereNotIn("guru_id", $sql_guruWali)
             ->get();
 
-        $sql_kelas = Kelas::with([
-            'jurusan' => function ($query) {
-                $query->select("jurusan_id", 'nama_jurusan')
-                    ->where("status", 1);
-            }
-        ])
-            ->where("status", 1)
+        // $sql_kelas = Kelas::with([
+        //     'jurusan' => function ($query) {
+        //         $query->select("jurusan_id", 'nama_jurusan')
+        //             ->where("status", 1);
+        //     }
+        // ])
+        //     ->where("status", 1)
+        //     ->get();
+
+
+        $sql_kelas = DB::table("kelas as k")
+            ->join('jurusan as j', 'j.jurusan_Id', '=', 'k.jurusan_id')
+            ->where("j.status", 1)
+            ->where('k.status', 1)
             ->get();
 
         $dataToView = [
@@ -762,6 +757,7 @@ class GuruController extends Controller
             ->join('kelas as k', 'k.kelas_id', '=', 'wk.kelas_id')
             ->where('wk.tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
             ->where('wk.wali_kelas_id', $wali_kelas_id)
+            ->where('g.status', 1)
             ->first();
 
         if (empty($sql_waliKelas) || $sql_waliKelas->tahun_ajaran_id != $tahun_ajaran->tahun_ajaran_id) {
@@ -996,11 +992,12 @@ class GuruController extends Controller
                     });
                 }
 
-                $query = $table->select('k.*', 's.nama', 'm.nama_mapel')
+                $query = $table->select('k.*', 'g.nama', 'm.nama_mapel')
                     ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
                     // ->join('users as u', 'u.user_id', '=', 'km.user_id')
                     ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
                     ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+                    ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
                     ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
                     // ->where("k.user_id", $user_id)
                     ->where("k.siswa_id", $siswa_id)

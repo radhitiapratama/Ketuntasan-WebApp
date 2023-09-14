@@ -72,8 +72,8 @@
                         <select name="kelas_id" id="kelas_id" class="form-control">
                             <option value="">Pilih..</option>
                             @foreach ($kelases as $kelas)
-                                <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
-                                    {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}</option>
+                                <option value="{{ $kelas->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                    {{ $kelas->nama_jurusan }} | {{ $kelas->nama_kelas }}</option>
                             @endforeach
                         </select>
                     </div>

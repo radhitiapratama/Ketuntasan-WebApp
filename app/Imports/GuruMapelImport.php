@@ -19,6 +19,8 @@ class GuruMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
 
     public function collection(Collection $rows)
     {
+        // dd($rows);
+
         $validator = Validator::make(
             $rows->toArray(),
             [
@@ -41,93 +43,157 @@ class GuruMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
             return;
         }
 
-        $stringsReplace = [
-            '[', ']'
-        ];
-
         DB::beginTransaction();
 
         foreach ($rows as $row) {
-            $kode_guru = str_replace($stringsReplace, "", $row[0]);
+            $kode_guru = $row[0];
+            $kode_mapel = $row[1];
 
             $sql_guru = Guru::select("guru_id")->where("kode_guru", $kode_guru)->first();
 
-            // Check apakah guru ada
             if (!$sql_guru) {
-                session()->flash("user_null", "Gagal Import ! Kode Guru " . $kode_guru . " tidak di temukan");
+                session()->flash("guru_null", "Gagal Import ! Kode Guru " . $kode_guru . " tidak di temukan");
                 DB::rollBack();
                 return;
             }
 
-            $mapels = str_replace($stringsReplace, "", $row[1]);
-            $mapels = explode("'", $mapels);
+            $sql_checkGuruMapel = DB::table('guru_mapel')
+                ->select('guru_mapel_id')
+                ->where('guru_id', $sql_guru->guru_id)
+                ->where('mapel_id', $kode_mapel)
+                ->first();
 
-            foreach ($mapels as $mapel) {
-                if ($mapel == " ") {
-                    continue;
-                }
+            if ($sql_checkGuruMapel) {
+                continue;
+            }
 
-                $sql_mapel = Mapel::select("mapel_id")->where("mapel_id", $mapel)->first();
+            $sql_countGuruMapel = DB::table('guru_mapel')
+                ->select("guru_mapel_id")
+                ->where("guru_id", $sql_guru->guru_id)
+                ->count();
 
-                // check apakah mapel ada
-                if (!$sql_mapel) {
-                    session()->flash("mapel_null", " Gagal Import ! Kode Mapel " . $mapel . " tidak di temukan");
-                    DB::rollBack();
-                    return;
-                }
-
-                $sql_check_guruMapel = GuruMapel::select("guru_mapel_id")
-                    ->where("guru_id", $sql_guru->guru_id)
-                    ->where("mapel_id", $mapel)
-                    ->first();
-
-                if ($sql_check_guruMapel) {
-                    continue;
-                }
-
-                $sql_countGuruMapel = DB::table('guru_mapel')
-                    ->select("guru_mapel_id")
-                    ->where("guru_id", $sql_guru->guru_id)
-                    ->count();
-
-                if ($sql_countGuruMapel == 0) {
-                    GuruMapel::create([
-                        'guru_id' => $sql_guru->guru_id,
-                        'mapel_id' => $mapel,
-                        'kode_guru_mapel' => null,
-                        'status' => 1,
-                        'created_by' => auth()->guard('admin')->user()->user_id,
+            if ($sql_countGuruMapel == 0) {
+                GuruMapel::create([
+                    'guru_id' => $sql_guru->guru_id,
+                    'mapel_id' => $kode_mapel,
+                    'kode_guru_mapel' => null,
+                    'status' => 1,
+                    'created_by' => auth()->guard('admin')->user()->user_id,
+                ]);
+            } else if ($sql_countGuruMapel == 1) {
+                GuruMapel::where("guru_id", $sql_guru->guru_id)
+                    ->update([
+                        'kode_guru_mapel' => 1,
                     ]);
-                } else if ($sql_countGuruMapel == 1) {
-                    GuruMapel::where("guru_id", $sql_guru->guru_id)
-                        ->update([
-                            'kode_guru_mapel' => 1,
-                        ]);
 
-                    GuruMapel::create([
-                        'guru_id' => $sql_guru->guru_id,
-                        'mapel_id' => $mapel,
-                        'kode_guru_mapel' => $sql_countGuruMapel + 1,
-                        'status' => 1,
-                        'created_by' => auth()->guard('admin')->user()->user_id,
-                    ]);
-                } else {
-                    GuruMapel::create([
-                        'guru_id' => $sql_guru->guru_id,
-                        'mapel_id' => $mapel,
-                        'kode_guru_mapel' => $sql_countGuruMapel + 1,
-                        'status' => 1,
-                        'created_by' => auth()->guard('admin')->user()->user_id,
-                    ]);
-                }
+                GuruMapel::create([
+                    'guru_id' => $sql_guru->guru_id,
+                    'mapel_id' => $kode_mapel,
+                    'kode_guru_mapel' => $sql_countGuruMapel + 1,
+                    'status' => 1,
+                    'created_by' => auth()->guard('admin')->user()->user_id,
+                ]);
+            } else {
+                GuruMapel::create([
+                    'guru_id' => $sql_guru->guru_id,
+                    'mapel_id' => $kode_mapel,
+                    'kode_guru_mapel' => $sql_countGuruMapel + 1,
+                    'status' => 1,
+                    'created_by' => auth()->guard('admin')->user()->user_id,
+                ]);
             }
         }
 
         DB::commit();
+
+
+        // $stringsReplace = [
+        //     '[', ']'
+        // ];
+
+        // DB::beginTransaction();
+
+        // foreach ($rows as $row) {
+        //     $kode_guru = str_replace($stringsReplace, "", $row[0]);
+
+        //     $sql_guru = Guru::select("guru_id")->where("kode_guru", $kode_guru)->first();
+
+        //     // Check apakah guru ada
+        //     if (!$sql_guru) {
+        //         session()->flash("user_null", "Gagal Import ! Kode Guru " . $kode_guru . " tidak di temukan");
+        //         DB::rollBack();
+        //         return;
+        //     }
+
+        //     $mapels = str_replace($stringsReplace, "", $row[1]);
+        //     $mapels = explode("'", $mapels);
+
+        //     foreach ($mapels as $mapel) {
+        //         if ($mapel == " ") {
+        //             continue;
+        //         }
+
+        //         $sql_mapel = Mapel::select("mapel_id")->where("mapel_id", $mapel)->first();
+
+        //         // check apakah mapel ada
+        //         if (!$sql_mapel) {
+        //             session()->flash("mapel_null", " Gagal Import ! Kode Mapel " . $mapel . " tidak di temukan");
+        //             DB::rollBack();
+        //             return;
+        //         }
+
+        //         $sql_check_guruMapel = GuruMapel::select("guru_mapel_id")
+        //             ->where("guru_id", $sql_guru->guru_id)
+        //             ->where("mapel_id", $mapel)
+        //             ->first();
+
+        //         if ($sql_check_guruMapel) {
+        //             continue;
+        //         }
+
+        //         $sql_countGuruMapel = DB::table('guru_mapel')
+        //             ->select("guru_mapel_id")
+        //             ->where("guru_id", $sql_guru->guru_id)
+        //             ->count();
+
+        //         if ($sql_countGuruMapel == 0) {
+        //             GuruMapel::create([
+        //                 'guru_id' => $sql_guru->guru_id,
+        //                 'mapel_id' => $mapel,
+        //                 'kode_guru_mapel' => null,
+        //                 'status' => 1,
+        //                 'created_by' => auth()->guard('admin')->user()->user_id,
+        //             ]);
+        //         } else if ($sql_countGuruMapel == 1) {
+        //             GuruMapel::where("guru_id", $sql_guru->guru_id)
+        //                 ->update([
+        //                     'kode_guru_mapel' => 1,
+        //                 ]);
+
+        //             GuruMapel::create([
+        //                 'guru_id' => $sql_guru->guru_id,
+        //                 'mapel_id' => $mapel,
+        //                 'kode_guru_mapel' => $sql_countGuruMapel + 1,
+        //                 'status' => 1,
+        //                 'created_by' => auth()->guard('admin')->user()->user_id,
+        //             ]);
+        //         } else {
+        //             GuruMapel::create([
+        //                 'guru_id' => $sql_guru->guru_id,
+        //                 'mapel_id' => $mapel,
+        //                 'kode_guru_mapel' => $sql_countGuruMapel + 1,
+        //                 'status' => 1,
+        //                 'created_by' => auth()->guard('admin')->user()->user_id,
+        //             ]);
+        //         }
+        //     }
+        // }
+
+        // DB::commit();
     }
 
     public function startRow(): int
     {
-        return 3;
+        return 2;
     }
 }
