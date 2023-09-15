@@ -275,6 +275,7 @@ class KelasController extends Controller
             $result = $query->groupBy('km.tingkatan', 'km.kelas_id')
                 ->offset($request->start)
                 ->limit($request->length)
+                ->orderBy("km.tingkatan")
                 ->get();
 
             $data = [];

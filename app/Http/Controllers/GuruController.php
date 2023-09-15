@@ -269,7 +269,9 @@ class GuruController extends Controller
 
             $result = $query->offset($request->start)
                 ->limit($request->length)
-                ->orderByRaw("g.kode_guru ASC")
+                // ->orderByRaw("g.kode_guru ASC")
+                ->orderBy("g.kode_guru", "ASC")
+                ->orderBy("gm.kode_guru_mapel", "ASC")
                 ->get();
 
             $data = [];
@@ -578,6 +580,7 @@ class GuruController extends Controller
 
             $result = $query->offset($request->start)
                 ->limit($request->length)
+                ->orderBy("wk.tingkatan", "ASC")
                 ->get();
 
             $data = [];
