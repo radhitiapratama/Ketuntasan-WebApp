@@ -58,7 +58,7 @@
         </div>
         <div class="card-header">
             <div class="form-group mt-3">
-                @if ($status_batasWaktu == 'dalamBatasWaktu')
+                @if ($status_batasWaktu == 'dalam')
                     <button type="button" class="btn-dark btn-modal-tuntaskan">
                         <i class="ri-check-line"></i>
                         Tuntaskan
@@ -102,7 +102,7 @@
         </div>
     </div>
 
-    @if ($status_batasWaktu == 'dalamBatasWaktu')
+    @if ($status_batasWaktu == 'dalam')
         <!-- Modal Tuntaskan -->
         <div class="modal fade" id="modal_desc" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -236,7 +236,7 @@
             $("input[name='ketuntasan_id[]']").prop("checked", this.checked);
         });
 
-        @if ($status_batasWaktu == 'dalamBatasWaktu')
+        @if ($status_batasWaktu == 'dalam')
             $(".btn-modal-tuntaskan").click(function() {
                 const checked = $("input[name='ketuntasan_id[]']:checked").length;
                 if (checked <= 0) {

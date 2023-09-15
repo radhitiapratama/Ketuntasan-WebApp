@@ -742,7 +742,7 @@ class KetuntasanController extends Controller
             ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
             ->first();
 
-        $status_batasWaktu = "dalamBatasWaktu";
+        $status_batasWaktu = "dalam";
 
         if (date("Y-m-d H:i:s") < $sql_batasWaktu->start_date . " 00:00:00") {
             $status_batasWaktu = "kurang";
@@ -1098,7 +1098,7 @@ class KetuntasanController extends Controller
             ->first();
 
         $today = date("Y-m-d H:i:s");
-        $status_insert = "true";
+        $status_insert = "dalam";
 
         if ($today < $batasWaktu->start_date) {
             $status_insert = "kurang";
@@ -1124,7 +1124,7 @@ class KetuntasanController extends Controller
             return response()->json($dataResponse);
         }
 
-        if ($status_insert == "true") {
+        if ($status_insert == "dalam") {
             $ketuntasan_id = $request->ketuntasan_id;
             $desc = $request->desc ? $request->desc : null;
 
