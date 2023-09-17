@@ -1,12 +1,8 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\GuruController;
 use App\Http\Controllers\API\KetuntasanController;
-use App\Models\Ketuntasan;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Psy\Command\ListCommand\FunctionEnumerator;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,32 +15,17 @@ use Psy\Command\ListCommand\FunctionEnumerator;
 |
 */
 
-Route::post("login", [AuthController::class, 'login']);
+Route::post("login", [AuthController::class, 'login']); //login
 
 Route::middleware(["auth:sanctum"])->group(function () {
-    // Route::get("hello", function () {
-    //     return response()->json("Hello world");
-    // });
-
     Route::post("logout", [AuthController::class, 'logout']);
-    Route::post("change-password", [AuthController::class, 'changePassword']);
 
-    // Ketuntasan
-    Route::post("siswa/ketuntasan", [KetuntasanController::class, 'siswa']);
+    Route::get("ketuntasan", [KetuntasanController::class, 'index']);
+    Route::get("account", [AuthController::class, 'account']);
+    Route::post("account/change-password", [AuthController::class, 'changePassword']);
 
-    Route::post("guru/ketuntasan/mapel", [KetuntasanController::class, 'guru_mapel']);
-    Route::post("guru/ketuntasan/mapel/kelas", [KetuntasanController::class, 'guru_kelas']);
-    Route::post("guru/ketuntasan/mapel/kelas/siswa", [KetuntasanController::class, 'guru_siswa']);
+    Route::post("ketuntasan/update", [KetuntasanController::class, 'update']);
+    Route::get("ketuntasan/edit", [KetuntasanController::class, 'edit']);
 
-    Route::put("guru/ketuntasan/mapel/kelas/siswa/edit", [KetuntasanController::class, 'update']);
-
-    Route::post("guru/ketuntasan/tuntaskan", [KetuntasanController::class, 'tuntaskan']);
-
-
-
-    // Account Setting
-    Route::post("account", [AuthController::class, 'account']);
-
-    // Wali Kelas
-    Route::post("wali-kelas/ketuntasan/siswa", [GuruController::class, 'siswa']);
+    Route::post("ketuntasan/tuntaskan", [KetuntasanController::class, 'tuntaskan']);
 });

@@ -2,246 +2,183 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
-use App\Models\TahunAjaran;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Models\Siswa;
+use App\Models\TahunAjaran;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class KetuntasanController extends Controller
 {
     protected $tahun;
 
-    public function siswa(Request $request)
+    public function index(Request $request)
     {
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'user_id' => "required",
-                'semester' => "required",
-            ],
-            [
-                'user_id.required' => "User ID wajib di isi",
-                'semester.required' => "Semester wajib di isi"
-            ]
-        );
+        $this->tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
 
-        if ($validator->fails()) {
+        $page = $request->query("page");
+        $siswa_id = $request->query("siswa");
+        $semester = $request->query("semester");
+        $status = $request->query("status");
+
+        $guru_id = $request->query("guru");
+        $mapel_id = $request->query('mapel');
+        $tingkatan = $request->query('tingkatan');
+        $jurusan_id = $request->query('jurusan');
+        $kelas_id = $request->query('kelas');
+
+        if (isset($siswa_id) && $page == "ketuntasan-siswa") {
+            $select_column = ['m.nama_mapel', 'g.nama', 'k.*'];
+
+            $sql_ketuntasan = DB::table("ketuntasan as k")
+                ->select($select_column)
+                ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
+                ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+                ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+                ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+                ->where('k.tahun_ajaran_id', $this->tahun->tahun_ajaran_id)
+                ->where('k.siswa_id', $siswa_id)
+                ->where('k.semester', $semester);
+
+            if (isset($status)) {
+                $sql_ketuntasan->where("k.tuntas", $status);
+            }
+
             return response()->json([
-                'status' => false,
-                'message' => "failed",
-                'errors' => $validator->errors()
+                'status' => "success",
+                'data' => $sql_ketuntasan->get(),
             ]);
         }
 
-        $tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
+        if (isset($guru_id) && $page == "ketuntasan-mapel") {
+            $sql_guruMapel = DB::table("guru_mapel as gm")
+                ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+                ->where('gm.guru_id', $guru_id)
+                ->where("gm.status", 1)
+                ->select('m.mapel_id', 'm.nama_mapel')
+                ->get();
 
-        $user_id = $request->user_id;
-        $semester = $request->semester;
-
-
-
-        $ketuntasan = DB::table('ketuntasan as k')
-            ->select('m.nama_mapel', 'u.nama', 'k.*')
-            ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-            ->join('users as u', 'u.user_id', '=', 'km.user_id')
-            ->join('mapel as m', 'm.mapel_id', '=', 'km.mapel_id')
-            ->where("k.user_id", $user_id)
-            ->where("k.semester", $semester)
-            ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
-            ->get();
-
-
-        if (empty($ketuntasan)) {
             return response()->json([
-                'status' => false,
-                'message' => "data ketuntasan not found"
+                'status' => "success",
+                'data' => $sql_guruMapel,
             ]);
         }
 
-        return response()->json([
-            'status' => true,
-            'message' => "success",
-            'data' => $ketuntasan
-        ]);
+        if (isset($guru_id) && $page == "ketuntasan-kelas") {
+            $sql_kelas = DB::table("kelas_mapel as km")
+                ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+                ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
+                ->join('jurusan as j', 'j.jurusan_id', '=', 'km.jurusan_id')
+                ->where('gm.guru_id', $guru_id)
+                ->where('gm.mapel_id', $mapel_id)
+                ->where('km.status', 1)
+                ->where('km.tahun_ajaran_id', $this->tahun->tahun_ajaran_id)
+                ->select('km.tingkatan', 'km.jurusan_id', 'km.kelas_id', 'j.nama_jurusan', 'k.nama_kelas')
+                ->get();
+
+            return response()->json([
+                'status' => "success",
+                'data' => $sql_kelas,
+            ]);
+        }
+
+        if (isset($guru_id) && $page == "ketuntasan-siswa") {
+            $sql_ketuntasan = DB::table("ketuntasan as k")
+                ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
+                ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+                ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+                ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+                ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
+                ->where('k.tahun_ajaran_id', $this->tahun->tahun_ajaran_id)
+                ->where('k.semester', $semester)
+                ->where('km.status', 1)
+                ->where('gm.guru_id', $guru_id)
+                ->where('gm.mapel_id', $mapel_id)
+                ->where('km.tingkatan', $tingkatan)
+                ->where('km.jurusan_id', $jurusan_id)
+                ->where('km.kelas_id', $kelas_id)
+                ->select('k.*', 's.nama')
+                ->get();
+
+            return response()->json([
+                'status' => "success",
+                'data' => $sql_ketuntasan,
+            ]);
+        }
+
+        if ($page == "wali-kelas") {
+
+            //total mapel
+            $sql_total_mapel = DB::table("kelas_mapel")
+                ->select("kelas_mapel_id")
+                ->where("tingkatan", $tingkatan)
+                ->where('jurusan_id', $jurusan_id)
+                ->where('kelas_id', $kelas_id)
+                ->where("tahun_ajaran_id", $this->tahun->tahun_ajaran_id)
+                ->where("status", 1)
+                ->count();
+
+            $sql_siswa = Siswa::with([
+                'ketuntasan' => function ($query) {
+                    $query->where("semester", 1)
+                        ->where("tahun_ajaran_id", $this->tahun->tahun_ajaran_id)
+                        ->where("tuntas", 1)
+                        ->get();
+                },
+                'ketuntasan2' =>
+                function ($query) {
+                    $query->where("semester", 2)
+                        ->where("tahun_ajaran_id", $this->tahun->tahun_ajaran_id)
+                        ->where("tuntas", 1)
+                        ->get();
+                },
+            ])
+                ->where("tingkatan", $tingkatan)
+                ->where("jurusan_id", $jurusan_id)
+                ->where("kelas_id", $kelas_id)
+                ->get();
+
+            $dataResponse = [];
+
+            if (!empty($sql_siswa)) {
+                foreach ($sql_siswa as $row) {
+                    $dataResponse[] = [
+                        'siswa_id' => $row->siswa_id,
+                        'nama' => $row->nama,
+                        'semester1' => count($row->ketuntasan) . " / " . $sql_total_mapel,
+                        'semester2' => count($row->ketuntasan2) . " / " . $sql_total_mapel,
+                    ];
+                }
+            }
+
+            return response()->json([
+                'status' => "success",
+                'data' => $dataResponse,
+            ]);
+        }
     }
 
-    public function guru_mapel(Request $request)
+    public function edit(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'user_id' => "required",
-        ], [
-            'user_id.required' => "User ID wajib di isi"
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => "failed",
-                'errors' => $validator->fails()
-            ]);
-        }
-
-        $mapel = DB::table("guru_mapel as gm")
-            ->select('m.mapel_id', 'm.nama_mapel')
+        $ketuntasan_id = $request->query('ketuntasan');
+        $sql_ketuntasan = DB::table("ketuntasan as k")
+            ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
+            ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
+            ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
             ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
-            ->where("gm.user_id", $request->user_id)
-            ->where("gm.status", 1)
-            ->get();
-
-
-        return response()->json([
-            'status' => true,
-            'message' => "success",
-            'data' => $mapel,
-        ]);
-    }
-
-    public function guru_kelas(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'user_id' => "required",
-            'mapel_id' => "required"
-        ], [
-            'user_id.required' => "User ID wajib di isi",
-            'mapel_id.required' => "Mapel ID wajib di isi",
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => "failed",
-                'errors' => $validator->fails(),
-            ]);
-        }
-
-        $this->tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
-
-        $sql_kelas = DB::table("kelas_mapel as km")
-            ->select("km.tingkatan", 'km.kelas_id', 'km.jurusan_id', 'k.nama_kelas')
-            ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
-            ->join('jurusan as j', 'j.jurusan_id', '=', 'km.jurusan_id')
-            ->where("km.user_id", $request->user_id)
-            ->where("km.mapel_id", $request->mapel_id)
-            ->where("km.tahun_ajaran_id", $this->tahun->tahun_ajaran_id)
-            ->get();
+            ->where("k.ketuntasan_id", $ketuntasan_id)
+            ->select('k.ketuntasan_id', 'k.tuntas', 'k.desc', 'm.nama_mapel', 's.nama')
+            ->first();
 
         return response()->json([
-            'status' => false,
-            'message' => "success",
-            'data' => $sql_kelas
-        ]);
-    }
-
-    public function guru_siswa(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'user_id' => "required",
-            'mapel_id' => "required",
-            'tingkatan' => "required",
-            'jurusan_id' => "required",
-            'kelas_id' => "required",
-            "semester" => "required"
-        ], [
-            'user_id.required' => "User ID wajib di isi",
-            'mapel_id.required' => "Mapel ID wajib di isi",
-            'tingkatan.required' => "Tingkatan wajib di isi",
-            'kelas_id' => "Kelas ID wajib di isi",
-            'jurusan_id' => "Jurusan ID wajib di isi",
-            'semester' => "Semester wajib di isi"
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => "failed",
-                'errors' => $validator->fails(),
-            ]);
-        }
-
-        $this->tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
-
-        $sql_user = DB::table("users as u")
-            ->select("k.ketuntasan_id", 'k.tuntas', 'k.desc', 'k.tgl_tuntas', 'k.semester', 'u.nama')
-            ->join('ketuntasan as k', 'k.user_id', '=', 'u.user_id')
-            ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-            ->where("k.semester", $request->semester)
-            ->where("k.tahun_ajaran_id", $this->tahun->tahun_ajaran_id)
-            ->where("u.tingkatan", $request->tingkatan)
-            ->where("u.jurusan_id", $request->jurusan_id)
-            ->where("u.kelas_id", $request->kelas_id)
-            ->where("km.status", 1)
-            ->where("km.user_id", $request->user_id)
-            ->where("km.mapel_id", $request->mapel_id)
-            ->get();
-
-        return response()->json([
-            'status' => true,
-            'message' => "success",
-            'data' => $sql_user
-        ]);
-    }
-
-    public function tuntaskan(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'ketuntasan_id' => "required",
-        ], [
-            'ketuntasan_id.required' => "Ketuntasan ID Wajib di isi"
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => "failed",
-                'errors' => $validator->fails(),
-            ]);
-        }
-
-        $ketuntasan_id = $request->ketuntasan_id;
-        $desc = null;
-        if ($request->desc != null) {
-            $desc = $request->desc;
-        }
-
-        for ($i = 0; $i < count($ketuntasan_id); $i++) {
-            DB::table("ketuntasan")
-                ->where("ketuntasan_id", $ketuntasan_id[$i])
-                ->update([
-                    'tuntas' => 1,
-                    'desc' => $desc,
-                    'tgl_tuntas' => Carbon::now(),
-                ]);
-        }
-
-        return response()->json([
-            'status' => true,
-            'message' => "Data siswa berhasil di tuntaskan",
-            'desc' => $desc,
+            'status' => "success",
+            'data' => $sql_ketuntasan,
         ]);
     }
 
     public function update(Request $request)
     {
-        // return response()->json($request->all());
-
-        $validator = Validator::make($request->all(), [
-            'ketuntasan_id' => "required",
-            'tuntas' => "required",
-        ], [
-            'ketuntasan_id.required' => "User ID Wajib di isi",
-            'tuntas.required' => "Status Tuntas wajib di isi"
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => "failed",
-                'errors' => $validator->fails(),
-            ]);
-        }
-
         $dataUpdate['desc']  =  $request->desc ? $request->desc : null;
         $dataUpdate['tuntas'] = $request->tuntas;
 
@@ -257,9 +194,31 @@ class KetuntasanController extends Controller
             ->where("ketuntasan_id", $request->ketuntasan_id)
             ->update($dataUpdate);
 
+        $sql_ketuntasan = DB::table("ketuntasan")
+            ->where("ketuntasan_id", $request->ketuntasan_id)
+            ->first();
+
         return response()->json([
-            'status' => true,
-            'message' => "Data ketuntasan berhasil di update",
+            'status' => 'success',
+            'data' => $sql_ketuntasan,
+        ]);
+    }
+
+    public function tuntaskan(Request $request)
+    {
+        $ketuntasan_id = $request->ketuntasan_id;
+
+        foreach ($ketuntasan_id as $row) {
+            DB::table("ketuntasan")
+                ->where('ketuntasan_id', $row)
+                ->update([
+                    'tuntas' => 1,
+                    'desc' => $request->desc ? $request->desc : null,
+                ]);
+        }
+
+        return response()->json([
+            'status' => "success",
         ]);
     }
 }
