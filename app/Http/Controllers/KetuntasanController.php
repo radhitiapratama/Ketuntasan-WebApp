@@ -491,29 +491,54 @@ class KetuntasanController extends Controller
         if ($request->isMethod("GET")) {
 
             if ($request->ajax()) {
+                global $tahun;
                 $tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
                 $columnsSearch = ['username', 'nama'];
-                $table = DB::table("siswa");
 
-                $query = $table
-                    ->select('siswa_id', 'nama')
+                //total mapel
+                $sql_total_mapel = DB::table('kelas_mapel')
+                    ->select('kelas_mapel_id')
+                    ->where('tingkatan', $tingkatan)
+                    ->where('jurusan_id', $jurusan_id)
+                    ->where('kelas_id', $kelas_id)
+                    ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                    ->where('status', 1)
+                    ->count();
+
+                $sql_mapelTuntas = Siswa::with([
+                    'ketuntasan' => function ($q) {
+                        $q->join("kelas_mapel", 'kelas_mapel.kelas_mapel_id', '=', 'ketuntasan.kelas_mapel_id')
+                            ->where("kelas_mapel.status", 1)
+                            ->where("ketuntasan.tuntas", 1)
+                            ->where("ketuntasan.tahun_ajaran_id", $GLOBALS['tahun']->tahun_ajaran_id)
+                            ->where("ketuntasan.semester", 1)
+                            ->get();
+                    },
+                    'ketuntasan2' => function ($q) {
+                        $q->join("kelas_mapel", 'kelas_mapel.kelas_mapel_id', '=', 'ketuntasan.kelas_mapel_id')
+                            ->where("ketuntasan.tuntas", 1)
+                            ->where("ketuntasan.tahun_ajaran_id", $GLOBALS['tahun']->tahun_ajaran_id)
+                            ->where("ketuntasan.semester", 2)
+                            ->get();
+                    }
+                ])
                     ->where('status', 1)
                     ->where('tingkatan', $tingkatan)
                     ->where('jurusan_id', $jurusan_id)
                     ->where('kelas_id', $kelas_id);
 
                 if ($request->input("search.value")) {
-                    $table->where(function ($q) use ($columnsSearch, $request) {
+                    $sql_mapelTuntas->where(function ($q) use ($columnsSearch, $request) {
                         foreach ($columnsSearch as $column) {
                             $q->orWhere($column, 'like', '%' . $request->input("search.value") . "%");
                         }
                     });
                 }
 
-                $records  = $table->count();
+                $records = $sql_mapelTuntas->count();
 
-                $result = $query->offset($request->start)->limit($request->length)->get();
+                $result = $sql_mapelTuntas->offset($request->start)->limit($request->length)->get();
 
                 $dataResponse = [];
 
@@ -524,48 +549,15 @@ class KetuntasanController extends Controller
                         $subData['no'] = $no;
                         $subData['nama'] = $row->nama;
 
-                        //total mapel
-                        $sql_total_mapel = DB::table("kelas_mapel")
-                            ->select("kelas_mapel_id")
-                            ->where("tingkatan", $tingkatan)
-                            ->where('jurusan_id', $jurusan_id)
-                            ->where('kelas_id', $kelas_id)
-                            ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
-                            ->where("status", 1)
-                            ->count();
-
-                        // mapel tuntas semester 1
-                        $sql_tuntas_semester1 = DB::table("ketuntasan as k")
-                            ->select('k.ketuntasan_id')
-                            ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-                            ->where("k.siswa_id", $row->siswa_id)
-                            ->where("k.tuntas", 1)
-                            ->where("k.semester", 1)
-                            ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
-                            ->where('km.status', 1)
-                            ->count();
-
-                        // mapel tuntas semester 2
-                        $sql_tuntas_semester2 = DB::table("ketuntasan as k")
-                            ->select('k.ketuntasan_id')
-                            ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-                            ->where("k.siswa_id", $row->siswa_id)
-                            ->where("k.tuntas", 1)
-                            ->where("k.semester", 2)
-                            ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
-                            ->where('km.status', 1)
-                            ->count();
-
-
                         $subData['semester1'] = '
                         <div class="text-center">
-                            ' . $sql_tuntas_semester1 . " / " . $sql_total_mapel . '
+                            ' . count($row->ketuntasan) . " / " . $sql_total_mapel . '
                         </div>
                         ';
 
                         $subData['semester2'] = '
                         <div class="text-center">
-                            ' . $sql_tuntas_semester2 . " / " . $sql_total_mapel . '
+                            ' . count($row->ketuntasan2) . " / " . $sql_total_mapel . '
                         </div>
                         ';
 

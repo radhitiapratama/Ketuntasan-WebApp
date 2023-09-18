@@ -851,6 +851,7 @@ class GuruController extends Controller
 
     public function waliKelas_dataSiswa(Request $request)
     {
+        global $tahun;
         $tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
 
         // select data kelas dri table wali kelas
@@ -868,29 +869,55 @@ class GuruController extends Controller
         }
 
         if ($request->ajax()) {
+            //total mapel
+            $sql_total_mapel = DB::table("kelas_mapel")
+                ->select("kelas_mapel_id")
+                ->where("tingkatan", $sql_waliKelas->tingkatan)
+                ->where('jurusan_id', $sql_waliKelas->jurusan_id)
+                ->where('kelas_id', $sql_waliKelas->kelas_id)
+                ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
+                ->where("status", 1)
+                ->count();
 
             $columnsSearch = ['username', 'nama'];
-            $table = DB::table("siswa");
+
+            $sql_mapelTuntas = Siswa::with([
+                'ketuntasan' => function ($q) {
+                    $q->join("kelas_mapel", 'kelas_mapel.kelas_mapel_id', '=', 'ketuntasan.kelas_mapel_id')
+                        ->where("kelas_mapel.status", 1)
+                        ->where("ketuntasan.tuntas", 1)
+                        ->where("ketuntasan.tahun_ajaran_id", $GLOBALS['tahun']->tahun_ajaran_id)
+                        ->where("ketuntasan.semester", 1)
+                        ->get();
+                },
+                'ketuntasan2' => function ($q) {
+                    $q->join("kelas_mapel", 'kelas_mapel.kelas_mapel_id', '=', 'ketuntasan.kelas_mapel_id')
+                        ->where("ketuntasan.tuntas", 1)
+                        ->where("ketuntasan.tahun_ajaran_id", $GLOBALS['tahun']->tahun_ajaran_id)
+                        ->where("ketuntasan.semester", 2)
+                        ->get();
+                }
+            ])
+                ->select('siswa_id', "username", 'nama')
+                ->where('status', 1)
+                ->where('tingkatan', $sql_waliKelas->tingkatan)
+                ->where('jurusan_id', $sql_waliKelas->jurusan_id)
+                ->where('kelas_id', $sql_waliKelas->kelas_id);
 
             if ($request->input("search.value")) {
-                $table->where(function ($q) use ($columnsSearch, $request) {
+                $sql_mapelTuntas->where(function ($q) use ($columnsSearch, $request) {
                     foreach ($columnsSearch as $column) {
                         $q->orWhere($column, 'like', '%' . $request->input("search.value") . "%");
                     }
                 });
             }
 
-            $query = $table->select('siswa_id', 'username', 'nama')
-                ->where('tingkatan', $sql_waliKelas->tingkatan)
-                ->where("jurusan_id", $sql_waliKelas->jurusan_id)
-                ->where("kelas_id", $sql_waliKelas->kelas_id)
-                ->where("status", 1);
+            $records = $sql_mapelTuntas->count();
 
-            $count = $query->count();
-
-            $result = $query->offset($request->start)
+            $result = $sql_mapelTuntas
+                ->offset($request->start)
                 ->limit($request->length)
-                ->orderByRaw("nama ASC")
+                ->orderBy("nama", 'ASC')
                 ->get();
 
             $data = [];
@@ -902,46 +929,14 @@ class GuruController extends Controller
                     $subData['no'] = $i;
                     $subData['nama'] = $row->nama;
 
-                    //total mapel
-                    $sql_total_mapel = DB::table("kelas_mapel")
-                        ->select("kelas_mapel_id")
-                        ->where("tingkatan", $sql_waliKelas->tingkatan)
-                        ->where('jurusan_id', $sql_waliKelas->jurusan_id)
-                        ->where('kelas_id', $sql_waliKelas->kelas_id)
-                        ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
-                        ->where("status", 1)
-                        ->count();
-
-                    // mapel tuntas semester 1
-                    $sql_tuntas_semester1 = DB::table("ketuntasan as k")
-                        ->select('k.ketuntasan_id')
-                        ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-                        ->where("k.siswa_id", $row->siswa_id)
-                        ->where("k.tuntas", 1)
-                        ->where("k.semester", 1)
-                        ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
-                        ->where('km.status', 1)
-                        ->count();
-
-                    // mapel tuntas semester 2
-                    $sql_tuntas_semester2 = DB::table("ketuntasan as k")
-                        ->select('k.ketuntasan_id')
-                        ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-                        ->where("k.siswa_id", $row->siswa_id)
-                        ->where("k.tuntas", 1)
-                        ->where("k.semester", 2)
-                        ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
-                        ->where('km.status', 1)
-                        ->count();
-
                     $subData['semester1'] = '
                     <div class="text-center">
-                       ' . $sql_tuntas_semester1 . " / " . $sql_total_mapel . '
+                       ' . count($row->ketuntasan) . " / " . $sql_total_mapel . '
                     </div> ';
 
                     $subData['semester2'] = '
                     <div class="text-center">
-                        ' . $sql_tuntas_semester2 . " / " . $sql_total_mapel  . '
+                        ' . count($row->ketuntasan2) . " / " . $sql_total_mapel  . '
                     </div>
                     ';
 
@@ -963,8 +958,8 @@ class GuruController extends Controller
 
             return response()->json([
                 'draw' => $request->draw,
-                'recordsFiltered' => $count,
-                'recordsTotal' => $count,
+                'recordsFiltered' => $records,
+                'recordsTotal' => $records,
                 'data' => $data,
             ]);
         }
