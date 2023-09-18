@@ -494,3 +494,8 @@ label {
     font-size: 14px;
     color: gray;
 }
+
+.input-group-text {
+    background-color: var(--white);
+    cursor: pointer;
+}

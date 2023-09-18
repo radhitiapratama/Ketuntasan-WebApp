@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Psr\Http\Message\ResponseInterface;
 
 class AuthController extends Controller
 {
@@ -140,6 +141,90 @@ class AuthController extends Controller
                     'password' => Hash::make($request->new_password)
                 ]);
             return redirect()->back()->with("successUpdate", "successUpdate");
+        }
+    }
+
+    public function resetPassword()
+    {
+        return view("pages.reset-password.index");
+    }
+
+    public function getDataAccountByUsername(Request $request)
+    {
+        $sql_admin = Admin::where("username", $request->username)->first();
+
+        if (isset($sql_admin)) {
+            return response()->json($sql_admin);
+        }
+
+        $sql_guru = Guru::where("username", $request->username)->first();
+
+        if (isset($sql_guru)) {
+            return response()->json($sql_guru);
+        }
+
+        $sql_siswa = DB::table('siswa as s')
+            ->select('s.*', 'j.nama_jurusan', 'k.nama_kelas')
+            ->join('jurusan as j', 'j.jurusan_id', '=', 's.jurusan_id')
+            ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id')
+            ->where('s.username', $request->username)
+            ->first();
+
+        if (isset($sql_siswa)) {
+            return response()->json($sql_siswa);
+        }
+
+        return response()->json([
+            'status' => false,
+        ]);
+    }
+
+    public function doResetPassword(Request $request)
+    {
+        $role = $request->role;
+        $newPassword = $request->newPassword;
+
+        if ($role == 1) {
+            $adminId = $request->adminId;
+
+            DB::table("admin")
+                ->where('admin_id', $adminId)
+                ->update([
+                    'password' => Hash::make($newPassword),
+                ]);
+
+            return response()->json([
+                'status' => "success",
+            ]);
+        }
+
+        if ($role == 2) {
+            $guruId = $request->guruId;
+
+            DB::table("guru")
+                ->where('guru_id', $guruId)
+                ->update([
+                    'password' => Hash::make($newPassword),
+                ]);
+
+            return response()->json([
+                'status' => "success",
+            ]);
+        }
+
+
+        if ($role == 3) {
+            $siswaId = $request->siswaId;
+
+            DB::table("siswa")
+                ->where('siswa_id', $siswaId)
+                ->update([
+                    'password' => Hash::make($newPassword),
+                ]);
+
+            return response()->json([
+                'status' => "success",
+            ]);
         }
     }
 }

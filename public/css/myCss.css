@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
+:root {
+    /* --primary: #101A32; */
+    --primary: #2b58b1;
+    --yellow: #FFC107;
+    --green: #28A745;
+    --dark-green: #2f7f4b;
+    --red: #DC3545;
+    --sky-blue: #6189F6;
+    --white: #FFFF;
+    --gray: #9C9EA2;
+}
+
+:root {
+    --sm-rounded: 2px;
+}
+
+.header.item-wrapper {
+    display: flex;
+    gap: 10px;
+}
+
+.profile-container {
+    max-width: 300px;
+    width: max-content;
+    height: max-content;
+    position: absolute;
+    top: 50px;
+    right: 20px;
+    background: var(--white);
+    box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.25);
+    border-radius: 6px;
+    padding: 10px 20px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    display: none;
+}
+
+.profile-container.active {
+    display: flex;
+}
+
+.profile-container .box {
+    width: 100%;
+    height: max-content;
+    display: flex;
+    margin: auto;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.profile-container .box p {
+    display: block;
+    margin: 0;
+}
+
+.my-card {
+    width: 100%;
+    height: max-content;
+    position: relative;
+    background: var(--white);
+    padding: 16px;
+}
+
+.my-card .card-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 6px;
+    background: var(--primary);
+    color: var(--white);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    top: 10px;
+    margin-bottom: 16px;
+}
