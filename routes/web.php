@@ -10,7 +10,6 @@ use App\Http\Controllers\MapelController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\UserController;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 
@@ -26,24 +25,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get("/", [AuthController::class, 'index'])->name('login');
-// Login
 Route::post("/login", [AuthController::class, 'login']);
 
 
-// Route::middleware(['isGuest'])->group(function () {
-// });
-
-// Route::middleware([
-//     'auth:guru', 'auth:siswa', 'auth:admin'
-// ])->group(function () {
-//     // Route::middleware(['isAdmin'])->group(function () {
-//     // });
-
-
-// });
-
-
-// is admin
 
 Route::middleware(['checkAuth'])->group(function () {
 
@@ -150,11 +134,6 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::match(['get', 'post'], 'ketuntasan/siswas/edit', [KetuntasanController::class, 'edit']);
     // End is admin
 
-    // Route::middleware('isGuru')->group(function () {
-    // });
-
-    // guru
-
     // ketuntasan role guru
     //param mapel_id,tingkatan.jurusan_id,kelas_id,ketuntasan_id
     Route::match(['get', 'post'], 'guru/ketuntasan/kelas', [KetuntasanController::class, 'guru_kelas']);
@@ -165,7 +144,6 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::match(['get', 'post'], "/guru/wali-kelas/siswa/detail", [GuruController::class, 'waliKelas_detailKetuntasanSiswa']);
 
     // End Guru
-
 
     //Ketuntasan
     Route::get("/ketuntasan", [KetuntasanController::class, 'index']);

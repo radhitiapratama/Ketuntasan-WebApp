@@ -52,7 +52,7 @@ class KelasController extends Controller
 
             $result = $query->offset($request->start)
                 ->limit($request->length)
-                ->orderByRaw("k.created_at DESC")
+                ->orderByRaw("k.created_at ASC")
                 ->get();
 
             $data = [];

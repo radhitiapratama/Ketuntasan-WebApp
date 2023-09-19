@@ -44,11 +44,11 @@
                                 <div class="form-group">
                                     <label for="#">Password</label>
                                     <div class="input-group">
-                                        <input type="password" class="form-control input-pass" name="password" required
-                                            minlength="6">
+                                        <input type="password" class="form-control input-password" name="password" required
+                                            minlength="6" autocomplete="off">
                                         <div class="input-group-prepend">
                                             <div class="input-group-text" id="show-pass">
-                                                <i class="ri-eye-line"></i>
+                                                <i class="ri-eye-off-line"></i>
                                             </div>
                                         </div>
                                     </div>
@@ -85,14 +85,14 @@
     </script>
 
     <script>
-        const showPass = $("#show-pass");
-        const inputPass = $(".input-pass");
-
-        showPass.click(function() {
-            if (inputPass.attr("type") == "text") {
-                inputPass.attr('type', "password");
+        $("#show-pass").click(function() {
+            const inputPassword = $(".input-password");
+            if (inputPassword.attr("type") == "password") {
+                inputPassword.attr("type", 'text');
+                $(this).html(`<i class="ri-eye-line"></i>`);
             } else {
-                inputPass.attr("type", "text");
+                inputPassword.attr("type", "password");
+                $(this).html(`<i class="ri-eye-off-line"></i>`);
             }
         });
     </script>

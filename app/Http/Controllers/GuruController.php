@@ -15,10 +15,11 @@ use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 use App\Imports\GuruMapelImport;
 use App\Imports\waliKelasImport;
+use Psy\Command\WhereamiCommand;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Psy\Command\WhereamiCommand;
 
 class GuruController extends Controller
 {
@@ -305,6 +306,19 @@ class GuruController extends Controller
                         ';
                     }
 
+                    $subData['status'] = '
+                    <div class="text-center">
+                        <span class="badge badge-danger p-2">Nonaktif</span>
+                    </div>
+                    ';
+
+                    if ($row->status == 1) {
+                        $subData['status'] = '
+                        <div class="text-center">
+                            <span class="badge badge-success p-2">Aktif</span>
+                        </div>
+                        ';
+                    }
 
                     $subData['settings'] = '
                     <div class="setting-icons">
@@ -633,15 +647,6 @@ class GuruController extends Controller
             ]);
         }
 
-        // $sql_kelas = Kelas::with([
-        //     'jurusan' => function ($query) {
-        //         $query->select("jurusan_id", 'nama_jurusan')
-        //             ->where("status", 1);
-        //     }
-        // ])
-        //     ->where("status", 1)
-        //     ->get();
-
         $sql_kelas = DB::table("kelas as k")
             ->join('jurusan as j', 'j.jurusan_Id', '=', 'k.jurusan_id')
             ->where("j.status", 1)
@@ -668,16 +673,6 @@ class GuruController extends Controller
             ->where("status", 1)
             ->whereNotIn("guru_id", $sql_guruWali)
             ->get();
-
-        // $sql_kelas = Kelas::with([
-        //     'jurusan' => function ($query) {
-        //         $query->select("jurusan_id", 'nama_jurusan')
-        //             ->where("status", 1);
-        //     }
-        // ])
-        //     ->where("status", 1)
-        //     ->get();
-
 
         $sql_kelas = DB::table("kelas as k")
             ->join('jurusan as j', 'j.jurusan_Id', '=', 'k.jurusan_id')
@@ -1005,10 +1000,15 @@ class GuruController extends Controller
         $start_date = $request->start_date;
         $end_date = $request->end_date;
 
+        $tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
+        $sql_waliKelas = DB::table("wali_kelas")
+            ->where('guru_id', Auth::guard("guru")->user()->guru_id)
+            ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
+            ->first();
+
 
         if ($request->isMethod("GET")) {
             if ($request->ajax()) {
-                $tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
 
                 $columnsSearch = ['s.nama', 'm.nama_mapel'];
                 $table = DB::table("ketuntasan as k");
@@ -1023,14 +1023,15 @@ class GuruController extends Controller
 
                 $query = $table->select('k.*', 'g.nama', 'm.nama_mapel')
                     ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
-                    // ->join('users as u', 'u.user_id', '=', 'km.user_id')
                     ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
                     ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
                     ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
                     ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
-                    // ->where("k.user_id", $user_id)
                     ->where("k.siswa_id", $siswa_id)
                     ->where('k.tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                    ->where('km.tingkatan', $sql_waliKelas->tingkatan)
+                    ->where("km.jurusan_id", $sql_waliKelas->jurusan_id)
+                    ->where('km.kelas_id', $sql_waliKelas->kelas_id)
                     ->where('semester', $request->semester);
 
                 if ($request->tuntas != null) {

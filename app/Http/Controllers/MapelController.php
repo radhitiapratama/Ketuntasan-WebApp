@@ -124,8 +124,8 @@ class MapelController extends Controller
                 'nama_mapel' => "required|unique:mapel,nama_mapel",
             ],
             [
-                'required' => ":attribute wajib di isi",
-                'unique' => ":attribute sudah ada"
+                'required' => "Nama Mapel wajib di isi",
+                'unique' => "Nama Mapel sudah ada"
             ]
         );
 

@@ -43,12 +43,13 @@
                     <table class="table table-bordered" id="tbl-guruMapel" style="width: 100%">
                         <thead>
                             <tr>
-                                <th width="5px">#</th>
-                                <th width="100px" class="text-center">Kode Guru</th>
-                                <th>Nama Guru</th>
-                                <th>Nama Mapel</th>
-                                <th class="text-center">Kode Guru Mapel</th>
-                                <th class="text-center">Aksi</th>
+                                <th width="5px" class=" vertical-align-middle">#</th>
+                                <th width="100px" class="text-center vertical-align-middle">Kode Guru</th>
+                                <th class=" vertical-align-middle">Nama Guru</th>
+                                <th class=" vertical-align-middle">Nama Mapel</th>
+                                <th class="text-center vertical-align-middle">Kode Guru Mapel</th>
+                                <th width="5px" class="text-cente vertical-align-middle">Status</th>
+                                <th class="text-center vertical-align-middle">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -95,6 +96,8 @@
             </div>
         </div>
     </div>
+
+
 
     {{-- Modal Import Guru Mapel --}}
     <div class="modal fade" id="import_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -285,6 +288,9 @@
                     },
                     {
                         data: "kode_guru_mapel"
+                    },
+                    {
+                        data: "status"
                     },
                     {
                         data: "settings"
