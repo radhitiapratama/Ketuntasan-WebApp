@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\GuruMapel;
@@ -15,8 +14,6 @@ use App\Models\TahunAjaran;
 use App\Models\Mapel;
 use App\Models\Siswa;
 use Illuminate\Support\Facades\Auth;
-
-use function PHPSTORM_META\map;
 
 class KetuntasanController extends Controller
 {
@@ -33,10 +30,26 @@ class KetuntasanController extends Controller
 
     public function index(Request $request)
     {
-        // jika role superadmin
+        $start_date = null;
+        $end_date = null;
+
         if (auth()->guard("admin")->check()) {
+            $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
+
+            $sql_batasWaktu = DB::table("batas_waktu")
+                ->where('tahun_ajaran_id', $tahun_ajaran->tahun_ajaran_id)
+                ->where('status', 1)
+                ->first();
+
+            $status_batasWaktu = false;
+
+            if ($sql_batasWaktu) {
+                $status_batasWaktu = true;
+                $start_date = date("d/m/Y", strtotime($sql_batasWaktu->start_date));
+                $end_date = date("d/m/Y", strtotime($sql_batasWaktu->end_date));
+            }
+
             if ($request->ajax()) {
-                $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
                 $table = DB::table("ketuntasan as kt");
 
@@ -110,6 +123,8 @@ class KetuntasanController extends Controller
                                 <input type="hidden" name="tingkatan" value="' . $row->tingkatan . '">
                                 <input type="hidden" name="jurusan_id" value="' . $row->jurusan_id . '">
                                 <input type="hidden" name="kelas_id" value="' . $row->kelas_id . '">
+                                <input type="hidden" name="start_date" value="' . $start_date . '">
+                                <input type="hidden" name="end_date" value="' . $end_date . '">
                                 <button type="submit" class="setting-detail">
                                     <i class="ri-eye-line"></i>
                                 </button>
@@ -129,27 +144,27 @@ class KetuntasanController extends Controller
                 ]);
             }
 
-            $sql_kelas =  Kelas::with([
-                'jurusan' => function ($query) {
-                    $query->select("jurusan_id", 'nama_jurusan');
-                    $query->where("status", 1);
-                }
-            ])
-                ->where("kelas.status", 1)
+            $sql_kelas = DB::table("kelas as k")
+                ->select('k.kelas_id', 'k.nama_kelas', 'j.jurusan_id', 'j.nama_jurusan')
+                ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
+                ->where('k.status', 1)
+                ->where('j.status', 1)
                 ->get();
 
             $dataToView = [
                 'kelases' => $sql_kelas,
                 'tingkatans' => $this->tingkatans,
+                'start_date' => $start_date,
+                'end_date' => $end_date,
+                'status_batasWaktu' => $status_batasWaktu,
             ];
 
             return view('pages.ketuntasan.index', $dataToView);
         }
 
-        // jika role siswa 
         if (Auth::guard("siswa")->check()) {
+            $tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
             if ($request->ajax()) {
-                $tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
 
                 $table = DB::table("ketuntasan as k");
 
@@ -222,10 +237,45 @@ class KetuntasanController extends Controller
                 ]);
             }
 
-            return view("pages.ketuntasan.index");
+            $sql_batasWaktu = DB::table("batas_waktu")
+                ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                ->where('status', 1)
+                ->first();
+
+            $status_batasWaktu = false;
+
+            if ($sql_batasWaktu) {
+                $status_batasWaktu = true;
+                $start_date = date("d/m/Y", strtotime($sql_batasWaktu->start_date));
+                $end_date = date("d/m/Y", strtotime($sql_batasWaktu->end_date));
+            }
+
+
+            $dataToView = [
+                'start_date' => $start_date,
+                'end_date' => $end_date,
+                'status_batasWaktu' => $status_batasWaktu,
+            ];
+
+            return view("pages.ketuntasan.index", $dataToView);
         }
 
         if (Auth::guard("guru")->check()) {
+            $tahun = TahunAjaran::where("user_aktif", 1)->first();
+
+            $sql_batasWaktu = DB::table("batas_waktu")
+                ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                ->where('status', 1)
+                ->first();
+
+            $status_batasWaktu = false;
+
+            if ($sql_batasWaktu) {
+                $status_batasWaktu = true;
+                $start_date = date("d/m/Y", strtotime($sql_batasWaktu->start_date));
+                $end_date = date("d/m/Y", strtotime($sql_batasWaktu->end_date));
+            }
+
             if ($request->ajax()) {
                 $table = GuruMapel::with('mapel');
 
@@ -244,17 +294,30 @@ class KetuntasanController extends Controller
                         $subData['no'] = $i;
                         $subData['mapel'] = $row->mapel->nama_mapel;
 
-                        $subData['settings'] = '
-                        <div class="setting-icons">
-                            <form action="' . url("guru/ketuntasan/kelas") . '" method="post">
-                            ' . csrf_field() . '
-                                <input type="hidden" name="mapel_id" value="' . $row->mapel_id . '">
-                                <button type="submit" class="setting-detail">
+                        if ($status_batasWaktu) {
+                            $subData['settings'] = '
+                            <div class="setting-icons">
+                                <form action="' . url("guru/ketuntasan/kelas") . '" method="post">
+                                ' . csrf_field() . '
+                                    <input type="hidden" name="mapel_id" value="' . $row->mapel_id . '">
+                                    <input type="hidden" name="start_date" value="' . $start_date . '">
+                                    <input type="hidden" name="end_date" value="' . $end_date . '">
+                                    <button type="submit" class="setting-detail">
+                                        <i class="ri-eye-line"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            ';
+                        } else {
+                            $subData['settings'] = '
+                            <div class="setting-icons">
+                                <button type="submit" class="setting-detail" disabled>
                                     <i class="ri-eye-line"></i>
                                 </button>
-                            </form>
-                        </div>
-                        ';
+                            </div>
+                            ';
+                        }
+
 
                         $dataResponse[] = $subData;
                     }
@@ -268,8 +331,13 @@ class KetuntasanController extends Controller
                 ]);
             }
 
+            $dataToView =  [
+                'start_date' => $start_date,
+                'end_date' => $end_date,
+                'status_batasWaktu' => $status_batasWaktu,
+            ];
 
-            return view("pages.ketuntasan.guru.index");
+            return view("pages.ketuntasan.guru.index", $dataToView);
         }
     }
 
@@ -487,12 +555,25 @@ class KetuntasanController extends Controller
         $tingkatan = $request->tingkatan;
         $jurusan_id = $request->jurusan_id;
         $kelas_id = $request->kelas_id;
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
 
         if ($request->isMethod("GET")) {
 
             if ($request->ajax()) {
                 global $tahun;
                 $tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
+
+                $sql_batasWaktu = DB::table("batas_waktu")
+                    ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                    ->where('status', 1)
+                    ->first();
+
+                if ($sql_batasWaktu) {
+                    $start_date = date("d/m/Y", strtotime($sql_batasWaktu->start_date));
+                    $end_date = date("d/m/Y", strtotime($sql_batasWaktu->end_date));
+                }
+
 
                 $columnsSearch = ['username', 'nama'];
 
@@ -569,6 +650,8 @@ class KetuntasanController extends Controller
                                 <input type="hidden" name="jurusan_id" value="' . $jurusan_id . '">
                                 <input type="hidden" name="kelas_id" value="' . $kelas_id . '">
                                 <input type="hidden" name="siswa_id" value="' . $row->siswa_id . '">
+                                <input type="hidden" name="start_date" value="' . $start_date . '">
+                                <input type="hidden" name="end_date" value="' . $end_date . '">
                                 <button type="submit" class="setting-detail">
                                     <i class="ri-eye-line"></i>
                                 </button>
@@ -605,24 +688,28 @@ class KetuntasanController extends Controller
             'tingkatan' => $tingkatan,
             'jurusan_id' => $jurusan_id,
             'kelas_id' => $kelas_id,
+            'start_date' => $start_date,
+            'end_date' => $end_date,
         ];
 
         return view('pages.ketuntasan.siswa', $dataToView);
     }
 
-    // Detail ketuntasan siswa
     public function siswa_show(Request $request)
     {
         $tingkatan = $request->tingkatan;
         $jurusan_id = $request->jurusan_id;
         $kelas_id = $request->kelas_id;
         $siswa_id = $request->siswa_id;
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
+
 
         $tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
         if ($request->isMethod("GET")) {
             if ($request->ajax()) {
-                $columnsSearch = ["m.nama_mapel", "u.nama"];
+                $columnsSearch = ["m.nama_mapel", "s.nama"];
                 $table = DB::table("ketuntasan as k");
 
                 $query = $table->select(
@@ -646,6 +733,10 @@ class KetuntasanController extends Controller
                             $q->orWhere($column, 'like', '%' . $request->input("search.value") . "%");
                         }
                     });
+                }
+
+                if (isset($request->status)) {
+                    $table->where('k.tuntas', $request->status);
                 }
 
                 $result = $query->get();
@@ -736,10 +827,14 @@ class KetuntasanController extends Controller
 
         $status_batasWaktu = "dalam";
 
-        if (date("Y-m-d H:i:s") < $sql_batasWaktu->start_date . " 00:00:00") {
-            $status_batasWaktu = "kurang";
-        } elseif (date("Y-m-d H:i:s") > $sql_batasWaktu->end_date . " 23:59:59") {
-            $status_batasWaktu = "lebih";
+        if ($sql_batasWaktu) {
+            if (date("Y-m-d H:i:s") < $sql_batasWaktu->start_date . " 00:00:00") {
+                $status_batasWaktu = "kurang";
+            } elseif (date("Y-m-d H:i:s") > $sql_batasWaktu->end_date . " 23:59:59") {
+                $status_batasWaktu = "lebih";
+            }
+        } else {
+            $status_batasWaktu  = "tidakAda";
         }
 
         $dataToView = [
@@ -749,6 +844,9 @@ class KetuntasanController extends Controller
             'siswa_id' => $siswa_id,
             'siswa' => $sql_siswa,
             'status_batasWaktu' => $status_batasWaktu,
+            'start_date' => $start_date,
+            'end_date' => $end_date,
+            'tuntases' => $this->tuntases,
         ];
 
         return view("pages.ketuntasan.detail", $dataToView);
@@ -757,6 +855,8 @@ class KetuntasanController extends Controller
     public function guru_kelas(Request $request)
     {
         $mapel_id = $request->mapel_id;
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
 
         if (!isset($mapel_id)) {
             return redirect('ketuntasan');
@@ -768,16 +868,9 @@ class KetuntasanController extends Controller
 
                 $tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
                 $batasWaktu = DB::table("batas_waktu")
-                    ->select('batas_waktu_id')
                     ->where("status", 1)
                     ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
                     ->first();
-
-                $status_batasWaktu = false;
-
-                if (!empty($batasWaktu)) {
-                    $status_batasWaktu = true;
-                }
 
                 $table = DB::table("kelas_mapel as km");
 
@@ -802,6 +895,9 @@ class KetuntasanController extends Controller
                 $dataResponse = [];
 
                 if (!empty($query)) {
+                    $start_date = date("d/m/Y", strtotime($batasWaktu->start_date));
+                    $end_date = date("d/m/Y", strtotime($batasWaktu->end_date));
+
                     $i = 0;
                     foreach ($query as $row) {
                         $i++;
@@ -834,6 +930,8 @@ class KetuntasanController extends Controller
                                     <input type="hidden" name="tingkatan" value="' . $row->tingkatan . '">
                                     <input type="hidden" name="jurusan_id" value="' . $row->jurusan_id . '">
                                     <input type="hidden" name="kelas_id" value="' . $row->kelas_id . '">
+                                    <input type="hidden" name="start_date" value="' . $start_date  . '">
+                                    <input type="hidden" name="end_date" value="' . $end_date . '">
                                     <button type="submit" class="setting-detail">
                                         <i class="ri-eye-line"></i>
                                     </button>
@@ -866,6 +964,8 @@ class KetuntasanController extends Controller
         $dataToView = [
             'mapel' => $sql_mapel,
             'mapel_id' => $mapel_id,
+            'start_date' => $start_date,
+            'end_date' => $end_date,
         ];
 
         return view("pages.ketuntasan.guru.kelas", $dataToView);
@@ -877,6 +977,8 @@ class KetuntasanController extends Controller
         $tingkatan = $request->tingkatan;
         $jurusan_id = $request->jurusan_id;
         $kelas_id = $request->kelas_id;
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
 
         if (!isset($mapel_id) || !isset($tingkatan) || !isset($jurusan_id) || !isset($kelas_id)) {
             return redirect('ketuntasan');
@@ -896,7 +998,10 @@ class KetuntasanController extends Controller
                     ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
                     ->where("gm.guru_id", auth()->guard('guru')->user()->guru_id)
                     ->where("gm.mapel_id", $mapel_id)
-                    ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id);
+                    ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
+                    ->where('s.tingkatan', $tingkatan)
+                    ->where('s.jurusan_id', $jurusan_id)
+                    ->where('s.kelas_id', $kelas_id);
 
                 if ($request->semester != null) {
                     $query->where('k.semester', $request->semester);
@@ -914,7 +1019,7 @@ class KetuntasanController extends Controller
                     });
                 }
 
-                $result = $query->orderBy('semester', 'ASC')->get();
+                $result = $query->orderBy('s.nama', 'ASC')->get();
 
                 $dataResponse = [];
 
@@ -1015,7 +1120,9 @@ class KetuntasanController extends Controller
             'nama_jurusan' => $sql_jurusan->nama_jurusan,
             'nama_kelas' => $sql_kelas->nama_kelas,
             'tuntases' => $this->tuntases,
-            'status' => $status
+            'status' => $status,
+            'start_date' => $start_date,
+            'end_date' => $end_date,
         ];
 
         return view("pages.ketuntasan.guru.siswa", $dataToView);

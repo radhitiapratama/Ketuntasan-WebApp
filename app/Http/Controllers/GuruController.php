@@ -851,6 +851,8 @@ class GuruController extends Controller
 
     public function waliKelas_dataSiswa(Request $request)
     {
+        $start_date = null;
+        $end_date = null;
         global $tahun;
         $tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
 
@@ -867,6 +869,17 @@ class GuruController extends Controller
         if (empty($sql_waliKelas)) {
             return redirect()->back();
         }
+
+        $sql_batasWaktu = DB::table("batas_waktu")
+            ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
+            ->where('status', 1)
+            ->first();
+
+        if ($sql_batasWaktu) {
+            $start_date = date("d/m/Y", strtotime($sql_batasWaktu->start_date));
+            $end_date = date("d/m/Y", strtotime($sql_batasWaktu->end_date));
+        }
+
 
         if ($request->ajax()) {
             //total mapel
@@ -940,17 +953,30 @@ class GuruController extends Controller
                     </div>
                     ';
 
-                    $subData['settings'] = '
-                    <form action="' . url("guru/wali-kelas/siswa/detail") . '" method="post">
-                    ' . csrf_field() . '
-                        <input type="hidden" name="siswa_id" value="' . $row->siswa_id . '">
+                    if ($start_date) {
+                        $subData['settings'] = '
+                        <form action="' . url("guru/wali-kelas/siswa/detail") . '" method="post">
+                        ' . csrf_field() . '
+                            <input type="hidden" name="siswa_id" value="' . $row->siswa_id . '">
+                            <input type="hidden" name="start_date" value="' . $start_date . '">
+                            <input type="hidden" name="end_date" value="' . $end_date . '">
+                            <div class="setting-icons">
+                                <button type="submit" class="setting-detail">
+                                    <i class="ri-eye-line"></i>
+                                </button>
+                            </div>
+                        </form>
+                        ';
+                    } else {
+                        $subData['settings'] = '
                         <div class="setting-icons">
                             <button type="submit" class="setting-detail">
                                 <i class="ri-eye-line"></i>
                             </button>
                         </div>
-                    </form>
-                    ';
+                        ';
+                    }
+
 
                     $data[] = $subData;
                 }
@@ -966,6 +992,8 @@ class GuruController extends Controller
 
         $dataToView = [
             'data' => $sql_waliKelas,
+            'start_date' => $start_date,
+            'end_date' => $end_date,
         ];
 
         return view("pages.ketuntasan.waliKelas.index", $dataToView);
@@ -974,6 +1002,9 @@ class GuruController extends Controller
     public function waliKelas_detailKetuntasanSiswa(Request $request)
     {
         $siswa_id = $request->siswa_id;
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
+
 
         if ($request->isMethod("GET")) {
             if ($request->ajax()) {
@@ -1070,6 +1101,8 @@ class GuruController extends Controller
         $dataToView = [
             'siswa' => $sql_siswa,
             'siswa_id' => $siswa_id,
+            'start_date' => $start_date,
+            'end_date' => $end_date,
         ];
 
         return view("pages.ketuntasan.waliKelas.detail", $dataToView);

@@ -23,13 +23,13 @@
 
     <div class="row my-3">
         <div class="col-md-6 col-12">
-            <div class="custom-alert alert-warning">
+            <div class="alert-box alert-warning">
                 <div class="alert-icon">
                     <i class="ri-error-warning-line"></i>
                 </div>
                 <div class="alert-body">
-                    <h1 class="alert-title">Peringatan !</h1>
-                    <p class="alert-text">Data wali kelas akan hilang jika berganti tahun ajaran </p>
+                    <p class="alert-title">Peringatan !</p>
+                    <p class="alert-text">Data wali kelas akan hilang jika berganti tahun ajaran</p>
                 </div>
             </div>
         </div>
@@ -277,6 +277,7 @@
                 serverSide: true,
                 processing: true,
                 ordering: false,
+                searchDelay: 1500,
                 ajax: {
                     url: "{{ url('wali-kelas') }}",
                     data: function(data) {

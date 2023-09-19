@@ -15,6 +15,8 @@
                     <form action="{{ url('guru/ketuntasan/kelas') }}" method="post">
                         @csrf
                         <input type="hidden" name="mapel_id" value="{{ $mapel_id }}">
+                        <input type="hidden" name="start_date" value="{{ $start_date }}">
+                        <input type="hidden" name="end_date" value="{{ $end_date }}">
                         <button type="submit" class="btn-dark">
                             <i class="ri-arrow-left-line"></i>
                             Kembali
@@ -24,6 +26,20 @@
             </div>
         </div>
     </div>
+
+    <div class="deadline-container" style="margin: 5px 0">
+        <div class="icon">
+            <i class="ri-timer-line"></i>
+        </div>
+        <div class="deadline-body">
+            @if ($start_date)
+                <p>{{ $start_date }} - {{ $end_date }}</p>
+            @else
+                <p>Belum ada batas waktu</p>
+            @endif
+        </div>
+    </div>
+
 
     <div class="card mb-2">
         <div class="card-body">
@@ -116,15 +132,15 @@
                     <table class="table table-bordered" id="tbl-siswaMapel" style="width: 100%">
                         <thead>
                             <tr>
-                                <th width="5px">#</th>
-                                <th width="5px" class="text-center"><input type="checkbox" name="check_all"
-                                        id="check_all"></th>
-                                <th width="30%">Siswa</th>
-                                <th width="5px" class="text-center">Status</th>
-                                <th width="40%" class="text-center">Deskripsi</th>
-                                <th width="20%">Tgl Tuntas</th>
-                                <th width="5px" class="text-center">Semester</th>
-                                <th width="5px" class="text-center">Aksi</th>
+                                <th width="5px" class="vertical-align-middle">#</th>
+                                <th width="5px" class="text-center vertical-align-middle"><input type="checkbox"
+                                        name="check_all" id="check_all"></th>
+                                <th width="30%" class="vertical-align-middle text-center">Siswa</th>
+                                <th width="5px" class="text-center vertical-align-middle">Status</th>
+                                <th width="40%" class="text-center vertical-align-middle">Deskripsi</th>
+                                <th width="20%" class="text-center vertical-align-middle">Tgl Tuntas</th>
+                                <th width="5px" class="text-center vertical-align-middle">Semester</th>
+                                <th width="5px" class="text-center vertical-align-middle">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>

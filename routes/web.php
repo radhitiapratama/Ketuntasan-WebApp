@@ -10,6 +10,7 @@ use App\Http\Controllers\MapelController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\UserController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 
@@ -166,7 +167,6 @@ Route::middleware(['checkAuth'])->group(function () {
     // End Guru
 
 
-
     //Ketuntasan
     Route::get("/ketuntasan", [KetuntasanController::class, 'index']);
     Route::post("ketuntasan/update", [KetuntasanController::class, 'update']);
@@ -176,6 +176,8 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::get('/akun', [AuthController::class, 'akun']);
     Route::get("/akun/change-password", [AuthController::class, 'changePasswordPage']);
     Route::post("/akun/change-password", [AuthController::class, 'changePassword']);
+    Route::get("/akun/change-username", [AuthController::class, 'changeUsernamePage']);
+    Route::post("/akun/change-username", [AuthController::class, 'changeUsername']);
 
     Route::get("/reset-password", [AuthController::class, 'resetPassword']);
     Route::post("/getDataAccountByUsername", [AuthController::class, 'getDataAccountByUsername']);

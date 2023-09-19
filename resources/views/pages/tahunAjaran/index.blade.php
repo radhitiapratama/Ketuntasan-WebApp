@@ -50,6 +50,7 @@
                 serverSide: true,
                 processing: true,
                 ordering: false,
+                searchDelay: 1500,
                 ajax: {
                     url: "{{ url('tahun-ajaran') }}"
                 },

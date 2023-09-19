@@ -10,10 +10,16 @@
     --sky-blue: #6189F6;
     --white: #FFFF;
     --gray: #9C9EA2;
+    --text-gray: rgb(135, 135, 135);
 }
 
 :root {
     --sm-rounded: 2px;
+}
+
+p {
+    margin: 0;
+    padding: 0;
 }
 
 .header.item-wrapper {
@@ -78,4 +84,212 @@
     font-size: 24px;
     top: 10px;
     margin-bottom: 16px;
+}
+
+.alert-box {
+    max-width: 600px;
+    width: 100%;
+    min-height: 100px;
+    background-color: var(--white);
+    display: flex;
+    gap: 15px;
+    border-radius: 6px;
+    padding: 12px;
+    flex-wrap: wrap;
+}
+
+.alert-box .alert-icon {
+    max-width: 90px;
+    width: 90px;
+    height: auto;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding-left: 10px;
+}
+
+.alert-box .alert-icon::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 5px;
+    height: 100%;
+    border-radius: 6px;
+}
+
+.alert-box .alert-icon i {
+    font-size: 32px;
+}
+
+.alert-box p {
+    margin: 0;
+    padding: 0;
+}
+
+.alert-box .alert-body {
+    flex: 3;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: center;
+}
+
+.alert-box .alert-body .alert-title {
+    font-weight: bold;
+    font-size: 18px;
+    color: rgb(0, 0, 0);
+}
+
+.alert-box .alert-body .alert-text {
+    font-size: 14px;
+    color: var(--text-gray);
+
+}
+
+.alert-box.alert-warning .alert-icon::after {
+    background: var(--yellow);
+}
+
+.alert-box.alert-warning .alert-icon i {
+    color: var(--yellow);
+}
+
+.alert-box.alert-success .alert-icon::after {
+    background: var(--green);
+}
+
+.alert-box.alert-success .alert-icon i {
+    color: var(--green);
+}
+
+.alert-box.alert-danger .alert-icon::after {
+    background: var(--red);
+}
+
+.alert-box.alert-danger .alert-icon i {
+    color: var(--red);
+}
+
+.account-card {
+    max-width: 380px;
+    min-width: 200px;
+    width: 100%;
+    min-height: 300px;
+    height: max-content;
+    background: var(--white);
+    position: relative;
+    padding: 15px;
+}
+
+.account-card .account-icon {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 6px;
+    background: var(--primary);
+    top: -40px;
+    left: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    color: var(--white);
+}
+
+.account-card .account-body {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 50px;
+}
+
+.account-body .title {
+    font-weight: bold;
+    font-size: 20px;
+    text-transform: uppercase;
+    position: relative;
+}
+
+.account-body .title::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--primary);
+}
+
+.account-body .part {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.account-body .part .part-text {
+    color: var(--text-gray);
+}
+
+.account-body .part .part-title {
+    font-size: 16px;
+}
+
+.account-body p {
+    margin: 0;
+    padding: 0;
+}
+
+.account-btn-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 20px;
+}
+
+.deadline-container {
+    max-width: 300px;
+    width: 100%;
+    min-height: 50px;
+    height: max-content;
+    background-color: var(--white);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px 15px;
+    border-radius: 2px;
+    flex-wrap: wrap;
+    position: relative;
+    overflow: hidden;
+}
+
+.deadline-container::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--green);
+}
+
+.deadline-container .icon {
+    height: 100%;
+    position: relative;
+    font-size: 20px;
+}
+
+@media(max-width : 480px) {
+    .alert-box {
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .alert-box .alert-icon {
+        max-width: 400px;
+        width: 100%;
+    }
 }

@@ -1,4 +1,4 @@
-    @if (auth()->guard('admin'))
+    @if (auth()->guard('admin')->check())
         @php
             $tahun = DB::table('tahun_ajaran')
                 ->select('tahun_ajaran')
@@ -39,22 +39,47 @@
                 </div>
             </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link" data-toggle="dropdown" href="#">
-                <div class="d-flex" style="gap: 10px">
-                    <i class="ri-user-line"></i>
-                    @if (auth()->guard('admin')->check())
-                        <p>{{ auth()->guard('admin')->user()->nama }}</p>
-                    @endif
-
-                    @if (auth()->guard('guru')->check())
-                        <p>{{ auth()->guard('guru')->user()->nama }}</p>
-                    @endif
-
-                    @if (auth()->guard('siswa')->check())
-                        <p>{{ auth()->guard('siswa')->user()->nama }}</p>
-                    @endif
-                </div>
-            </a>
+        <li class="nav-item mr-3">
+            <div class="nav-link user-profile" data-toggle="dropdown">
+                <i class="ri-user-4-line"></i>
+            </div>
         </li>
     </ul>
+    <div class="profile-container">
+        <div iv class="box">
+            <i class="ri-user-3-line"></i>
+            @if (Auth::guard('admin')->check())
+                <p>{{ Auth::guard('admin')->user()->nama }}</p>
+            @endif
+
+            @if (Auth::guard('guru')->check())
+                <p>{{ Auth::guard('guru')->user()->nama }}</p>
+            @endif
+
+            @if (Auth::guard('siswa')->check())
+                <p>{{ Auth::guard('siswa')->user()->nama }}</p>
+            @endif
+        </div>
+    </div>
+
+    <script>
+        const userProfile = document.querySelector(".user-profile");
+        userProfile.addEventListener("click", function(e) {
+            e.preventDefault();
+            const profileContainerEl = document.querySelector(".profile-container");
+            const active = document.querySelector(".profile-container.active");
+            if (active) {
+                profileContainerEl.classList.remove("active");
+            } else {
+                profileContainerEl.classList.add("active");
+            }
+        });
+
+        // $(".user-profile").mouseover(function() {
+        //     $(".profile-container").css("display", 'flex');
+        // });
+
+        // $(".user-profile").mouseleave(function() {
+        //     $(".profile-container").css("display", 'none');
+        // });
+    </script>

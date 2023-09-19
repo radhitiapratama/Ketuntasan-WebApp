@@ -15,6 +15,18 @@
             </div>
         </div>
     </div>
+    <div class="deadline-container" style="margin: 5px 0">
+        <div class="icon">
+            <i class="ri-timer-line"></i>
+        </div>
+        <div class="deadline-body">
+            @if ($start_date)
+                <p>{{ $start_date }} - {{ $end_date }}</p>
+            @else
+                <p>Belum ada batas waktu</p>
+            @endif
+        </div>
+    </div>
     <div class="card mb-1">
         <div class="card-body">
             <div class="row">
@@ -78,6 +90,7 @@
                 serverSide: true,
                 processing: true,
                 ordering: false,
+                searchDelay: 1500,
                 ajax: {
                     url: "{{ url('ketuntasan/siswas') }}",
                     data: function(data) {

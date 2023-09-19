@@ -196,6 +196,7 @@
                 serverSide: true,
                 processing: true,
                 ordering: false,
+                searchDelay: 1500,
                 ajax: {
                     url: "{{ url('kelas') }}",
                     data: function(data) {

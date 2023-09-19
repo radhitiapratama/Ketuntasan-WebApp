@@ -11,6 +11,18 @@
             </div>
         </div>
     </div>
+    <div class="deadline-container" style="margin: 5px 0">
+        <div class="icon">
+            <i class="ri-timer-line"></i>
+        </div>
+        <div class="deadline-body">
+            @if ($status_batasWaktu)
+                <p>{{ $start_date }} - {{ $end_date }}</p>
+            @else
+                <p>Belum ada batas waktu</p>
+            @endif
+        </div>
+    </div>
     <div class="card">
         <div class="card-body">
             <div class="row">

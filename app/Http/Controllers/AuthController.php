@@ -6,6 +6,7 @@ use PDO;
 use App\Models\Guru;
 use App\Models\Admin;
 use App\Models\Siswa;
+use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -79,6 +80,8 @@ class AuthController extends Controller
         }
 
         if (Auth::guard("guru")->check()) {
+            $tahun = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
+
             $sql_user = Guru::where("guru_id", auth()->guard("guru")->user()->guru_id)->first();
 
             $sql_mapel = DB::table("guru_mapel as gm")
@@ -87,9 +90,21 @@ class AuthController extends Controller
                 ->where("gm.status", 1)
                 ->get();
 
+            $sql_kelas = DB::table("kelas_mapel as km")
+                ->select('k.nama_kelas', 'j.nama_jurusan', 'km.tingkatan')
+                ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+                ->join('jurusan as j', 'j.jurusan_id', '=', 'km.jurusan_id')
+                ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
+                ->where('gm.guru_id', Auth::guard("guru")->user()->guru_id)
+                ->where('km.status', 1)
+                ->where("km.tahun_ajaran_id", $tahun->tahun_ajaran_id)
+                ->groupBy('km.tingkatan', 'km.kelas_id')
+                ->get();
+
             $dataToView =  [
                 'user' => $sql_user,
-                'mapels' => $sql_mapel
+                'mapels' => $sql_mapel,
+                'kelases' => $sql_kelas,
             ];
 
             return view("pages.akun.index", $dataToView);
@@ -224,6 +239,74 @@ class AuthController extends Controller
 
             return response()->json([
                 'status' => "success",
+            ]);
+        }
+    }
+
+    public function changeUsernamePage()
+    {
+        return view("pages.akun.change-username");
+    }
+
+    public function changeUsername(Request $request)
+    {
+        $adminId = $request->adminId;
+        $guruId = $request->guruId;
+        $siswaId = $request->siswaId;
+        $newUsername = $request->newUsername;
+
+        if (isset($adminId)) {
+            $sql_checkAdmin = Admin::where("username", $newUsername)->first();
+            if ($sql_checkAdmin) {
+                return response()->json([
+                    'status' => false,
+                ]);
+            }
+
+            Admin::where("admin_id", $adminId)
+                ->update([
+                    'username' => $newUsername,
+                ]);
+
+            return response()->json([
+                'status' => true,
+            ]);
+        }
+
+
+        if (isset($guruId)) {
+            $sql_checkGuru = Guru::where("username", $newUsername)->first();
+            if ($sql_checkGuru) {
+                return response()->json([
+                    'status' => false,
+                ]);
+            }
+
+            Guru::where("guru_id", $guruId)
+                ->update([
+                    'username' => $newUsername,
+                ]);
+
+            return response()->json([
+                'status' => true,
+            ]);
+        }
+
+        if (isset($siswaId)) {
+            $sql_checkSiswa = Siswa::where("username", $newUsername)->first();
+            if ($sql_checkSiswa) {
+                return response()->json([
+                    'status' => false
+                ]);
+            }
+
+            Siswa::where("siswa_id", $siswaId)
+                ->update([
+                    'username' => $newUsername,
+                ]);
+
+            return response()->json([
+                'status' => true,
             ]);
         }
     }

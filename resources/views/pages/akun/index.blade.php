@@ -13,30 +13,34 @@
                 </div>
             </div>
         </div>
-        <div class="row" style="margin-top: 80px ">
+        <div class="row" style="margin-top: 60px ">
             <div class="col-md-6 col-12">
-                <div class="profile-card">
-                    <div class="profile-icon">
+                <div class="account-card">
+                    <div class="account-icon">
                         <i class="ri-user-line"></i>
                     </div>
-                    <div class="profile-body">
-                        <h3 class="title">Informasi Akun</h3>
-                        <div class="info-group">
-                            <p class="info-key">USERNAME</p>
-                            <p class="info-val">{{ $user->username }}</p>
+                    <div class="account-body">
+                        <div class="part">
+                            <p class="title">Informasi Akun</p>
                         </div>
-                        <div class="info-group">
-                            <p class="info-key">NAMA</p>
-                            <p class="info-val">{{ $user->nama }}</p>
+                        <div class="part" style="margin-top: 20px">
+                            <p class="part-title">USERNAME</p>
+                            <p class="part-text">{{ Auth::guard('admin')->user()->username }}</p>
                         </div>
-                        <div class="info-group">
-                            <p class="info-key">ROLE</p>
-                            <p class="info-val">Super admin</p>
+                        <div class="part">
+                            <p class="part-title">NAMA</p>
+                            <p class="part-text">{{ Auth::guard('admin')->user()->nama }}</p>
                         </div>
-                        <a href="{{ url('akun/change-password') }}" class="btn-change-pass">
-                            <i class="ri-key-2-line"></i>
-                            Ganti Password
-                        </a>
+                        <div class="account-btn-wrapper">
+                            <a href="{{ url('/akun/change-username') }}" class="btn-dark w-100">
+                                <i class="ri-user-line"></i>
+                                Ganti Username
+                            </a>
+                            <a href="{{ url('akun/change-password') }}" class="btn-dark w-100">
+                                <i class="ri-key-line"></i>
+                                Ganti Password
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -56,15 +60,17 @@
         </div>
         <div class="row" style="margin-top: 80px ">
             <div class="col-md-6 col-12">
-                <div class="profile-card">
-                    <div class="profile-icon">
+                <div class="account-card">
+                    <div class="account-icon">
                         <i class="ri-user-line"></i>
                     </div>
-                    <div class="profile-body">
-                        <h3 class="title">Informasi Akun</h3>
-                        <div class="info-group">
-                            <p class="info-key">TINGKATAN</p>
-                            <p class="info-val">
+                    <div class="account-body">
+                        <div class="part">
+                            <p class="title">Informasi Akun</p>
+                        </div>
+                        <div class="part" style="margin-top: 20px">
+                            <p class="part-title">Tingkatan</p>
+                            <p class="part-text">
                                 @if ($user->tingkatan == 1)
                                     X
                                 @elseif($user->tingkatan == 2)
@@ -74,26 +80,28 @@
                                 @endif
                             </p>
                         </div>
-                        <div class="info-group">
-                            <p class="info-key">KELAS</p>
-                            <p class="info-val">{{ $user->nama_jurusan }} | {{ $user->nama_kelas }}</p>
+                        <div class="part">
+                            <p class="part-title">Kelas</p>
+                            <p class="part-text">{{ $user->nama_jurusan }} | {{ $user->nama_kelas }}</p>
                         </div>
-                        <div class="info-group">
-                            <p class="info-key">USERNAME</p>
-                            <p class="info-val">{{ $user->username }}</p>
+                        <div class="part">
+                            <p class="part-title">USERNAME</p>
+                            <p class="part-text">{{ $user->username }}</p>
                         </div>
-                        <div class="info-group">
-                            <p class="info-key">NAMA</p>
-                            <p class="info-val">{{ $user->nama }}</p>
+                        <div class="part">
+                            <p class="part-title">NAMA</p>
+                            <p class="part-text">{{ $user->nama }}</p>
                         </div>
-                        <div class="info-group">
-                            <p class="info-key">ROLE</p>
-                            <p class="info-val">Siswa</p>
+                        <div class="account-btn-wrapper" style="margin-top: 20px">
+                            <a href="{{ url('/akun/change-username') }}" class="btn-dark w-100">
+                                <i class="ri-user-line"></i>
+                                Ganti Username
+                            </a>
+                            <a href="{{ url('akun/change-password') }}" class="btn-dark w-100">
+                                <i class="ri-key-line"></i>
+                                Ganti Password
+                            </a>
                         </div>
-                        <a href="{{ url('akun/change-password') }}" class="btn-change-pass">
-                            <i class="ri-key-2-line"></i>
-                            Ganti Password
-                        </a>
                     </div>
                 </div>
             </div>
@@ -113,40 +121,80 @@
         </div>
         <div class="row" style="margin-top: 80px ">
             <div class="col-12 d-flex gap-20 flex-wrap">
-                <div class="profile-card mb-5">
-                    <div class="profile-icon">
+                <div class="account-card" style="margin-bottom: 60px">
+                    <div class="account-icon">
                         <i class="ri-user-line"></i>
                     </div>
-                    <div class="profile-body">
-                        <h3 class="title">Informasi Akun</h3>
-                        <div class="info-group">
-                            <p class="info-key">USERNAME</p>
-                            <p class="info-val">{{ $user->username }}</p>
+                    <div class="account-body">
+                        <div class="part">
+                            <p class="title">Informasi Akun</p>
                         </div>
-                        <div class="info-group">
-                            <p class="info-key">NAMA</p>
-                            <p class="info-val">{{ $user->nama }}</p>
+                        <div class="part" style="margin-top: 20px">
+                            <p class="part-title">USERNAME</p>
+                            <p class="part-text">{{ $user->username }}</p>
                         </div>
-                        <div class="info-group">
-                            <p class="info-key">ROLE</p>
-                            <p class="info-val">Guru</p>
+                        <div class="part">
+                            <p class="part-title">NAMA</p>
+                            <p class="part-text">{{ $user->nama }}</p>
                         </div>
-                        <a href="{{ url('akun/change-password') }}" class="btn-change-pass">
-                            <i class="ri-key-2-line"></i>
-                            Ganti Password
-                        </a>
+                        <div class="part">
+                            <p class="part-title">KODE GURU</p>
+                            <p class="part-text">{{ $user->kode_guru }}</p>
+                        </div>
+                        <div class="account-btn-wrapper" style="margin-top: 20px">
+                            <a href="{{ url('/akun/change-username') }}" class="btn-dark w-100">
+                                <i class="ri-user-line"></i>
+                                Ganti Username
+                            </a>
+                            <a href="{{ url('akun/change-password') }}" class="btn-dark w-100">
+                                <i class="ri-key-line"></i>
+                                Ganti Password
+                            </a>
+                        </div>
                     </div>
                 </div>
 
-                <div class="mapel-card">
-                    <div class="mapel-icon">
-                        <i class="ri-book-2-line"></i>
+                <div class="account-card" style="margin-bottom: 60px">
+                    <div class="account-icon">
+                        <i class="ri-bank-line"></i>
                     </div>
-                    <div class="mapel-body">
-                        <h3 class="title">Mapel yang di ajar</h3>
-                        @foreach ($mapels as $mapel)
-                            <p class="mapel-item"> - {{ $mapel->nama_mapel }}</p>
+                    <div class="account-body">
+                        <div class="part" style="margin-bottom: 20px">
+                            <p class="title">Kelas yang di ajar</p>
+                        </div>
+                        @foreach ($kelases as $kelas)
+                            <div class="part">
+                                <p class="part-text">-
+                                    @if ($kelas->tingkatan == 1)
+                                        X
+                                    @endif
+                                    @if ($kelas->tingkatan == 2)
+                                        XI
+                                    @endif
+                                    @if ($kelas->tingkatan == 3)
+                                        XII
+                                    @endif
+                                    {{ $kelas->nama_jurusan }} | {{ $kelas->nama_kelas }}
+                                </p>
+                            </div>
                         @endforeach
+                    </div>
+                </div>
+
+                <div class="account-card">
+                    <div class="account-icon">
+                        <i class="ri-book-line"></i>
+                    </div>
+                    <div class="account-body">
+                        <div class="part" style="margin-bottom: 20px">
+                            <p class="title">Mapel yang di ajar</p>
+                        </div>
+                        @foreach ($mapels as $mapel)
+                            <div class="part">
+                                <p class="part-text">- {{ $mapel->nama_mapel }}</p>
+                            </div>
+                        @endforeach
+
                     </div>
                 </div>
             </div>

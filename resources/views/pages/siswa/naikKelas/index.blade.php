@@ -17,6 +17,23 @@
             </div>
         </div>
     </div>
+    <div class="row my-3">
+        <div class="col-12">
+            <div class="alert-box alert-warning">
+                <div class="alert-icon">
+                    <i class="ri-error-warning-line"></i>
+                </div>
+                <div class="alert-body">
+                    <p class="alert-title">Peringatan !</p>
+                    <p class="alert-text">
+                        Untuk menaikkan siswa ke tingkatan berikutnya,wajib di mulai dari tingkatan XII supaya data siswa
+                        yang
+                        belum di naikkan tidak tercampur dengan data siswa yang sudah di naikkan ke tingkatan selanjutnya
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <form action="/siswa/do-naik-kelas" method="post" id="form">
         @csrf
@@ -110,6 +127,7 @@
                 serverSide: true,
                 processing: true,
                 ordering: false,
+                searchDelay: 1500,
                 ajax: {
                     url: "{{ url('siswa-naik-kelas') }}",
                     data: function(data) {

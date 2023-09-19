@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>AdminLTE 3 | Dashboard</title>
+    <title>Ketuntasan | Dashboard</title>
 
     <link rel="shortcut icon" href="{{ asset('imgs/paper.png') }}" type="image/x-icon">
     <!-- Google Font: Source Sans Pro -->
@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="{{ asset('/css/main.css') }}">
     {{-- Remix Icon --}}
     <link rel="stylesheet" href="{{ asset('plugins/remixIcon/fonts/remixicon.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/myCss.css') }}">
 
     <!-- jQuery -->
     <script src="{{ asset('/') }}plugins/jquery/jquery.min.js"></script>

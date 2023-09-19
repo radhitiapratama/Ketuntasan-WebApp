@@ -21,14 +21,6 @@
         </div>
     </div>
 
-    {{-- @if ($errors->any())
-        @foreach ($errors->all() as $error)
-            <div class="alert alert-danger mt-3" role="alert">
-                {{ $error }}
-            </div>
-        @endforeach
-    @endif --}}
-
     <div class="card mb-1">
         <div class="card-body">
             <div class="row">
@@ -173,6 +165,7 @@
                 serverSide: true,
                 processing: true,
                 ordering: false,
+                searchDelay: 1500,
                 ajax: {
                     url: "/mapel",
                     data: function(data) {

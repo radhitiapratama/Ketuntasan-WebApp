@@ -46,6 +46,7 @@
             $("#tbl-superadmin").DataTable({
                 serverSide: true,
                 processing: true,
+                searchDelay: 1500,
                 ordering: false,
                 ajax: {
                     url: "{{ url('superadmin') }}"

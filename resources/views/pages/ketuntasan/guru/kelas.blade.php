@@ -16,6 +16,15 @@
         </div>
     </div>
 
+    <div class="deadline-container" style="margin: 5px 0">
+        <div class="icon">
+            <i class="ri-timer-line"></i>
+        </div>
+        <div class="deadline-body">
+            <p>{{ $start_date }} - {{ $end_date }}</p>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-header">
             <div class="row">
@@ -59,6 +68,7 @@
                 ordering: false,
                 paging: false,
                 info: false,
+                searchDelay: 1500,
                 ajax: {
                     url: "{{ url('guru/ketuntasan/kelas') }}",
                     data: function(data) {

@@ -10,6 +10,7 @@
     {{-- Remix Icon --}}
     <link rel="stylesheet" href="{{ asset('plugins/remixIcon/fonts/remixicon.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
+    <link rel="shortcut icon" href="{{ asset('imgs/paper.png') }}" type="image/x-icon">
 </head>
 
 <body>

@@ -21,6 +21,18 @@
                 </div>
             </div>
         </div>
+        <div class="deadline-container" style="margin: 5px 0">
+            <div class="icon">
+                <i class="ri-timer-line"></i>
+            </div>
+            <div class="deadline-body">
+                @if ($status_batasWaktu)
+                    <p>{{ $start_date }} - {{ $end_date }}</p>
+                @else
+                    <p>Belum ada batas waktu</p>
+                @endif
+            </div>
+        </div>
         <div class="card">
             <div class="card-header">
                 <div class="row">
@@ -41,8 +53,8 @@
                             <select name="kelas_id" id="kelas_id" class="form-control select2">
                                 <option value="">Pilih...</option>
                                 @foreach ($kelases as $kelas)
-                                    <option value="{{ $kelas->jurusan->jurusan_id }}|{{ $kelas->kelas_id }}">
-                                        {{ $kelas->jurusan->nama_jurusan }} | {{ $kelas->nama_kelas }}</option>
+                                    <option value="{{ $kelas->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                        {{ $kelas->nama_jurusan }} | {{ $kelas->nama_kelas }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -152,6 +164,18 @@
                 </div>
             </div>
         </div>
+        <div class="deadline-container" style="margin: 5px 0">
+            <div class="icon">
+                <i class="ri-timer-line"></i>
+            </div>
+            <div class="deadline-body">
+                @if ($status_batasWaktu)
+                    <p>{{ $start_date }} - {{ $end_date }}</p>
+                @else
+                    <p>Belum ada batas waktu</p>
+                @endif
+            </div>
+        </div>
         <div class="card">
             <div class="card-header">
                 <div class="row">
@@ -186,7 +210,7 @@
                                     <th width="5px">#</th>
                                     <th width="20%">Mapel</th>
                                     <th width="20%">Guru</th>
-                                    <th class="text-center" width="5px">Tuntas</th>
+                                    <th class="text-center" width="5px">Status</th>
                                     <th width="20%">Deskripsi</th>
                                     <th width="20%" class="text-center">Tgl Tuntas</th>
                                     <th class="text-center" width="5px">Semester</th>

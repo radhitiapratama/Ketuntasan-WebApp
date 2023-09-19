@@ -1,6 +1,6 @@
 <!-- Brand Logo -->
 <a href="#" class="brand-link">
-    <img src="{{ asset('/') }}dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
+    <img src="{{ asset('/imgs/paper.png') }}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3"
         style="opacity: .8; margin-right: 20px">
     <span class="brand-text font-weight-light">Ketuntasan</span>
 </a>
@@ -13,7 +13,7 @@
             <img src="{{ asset('/') }}dist/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
         </div>
         <div class="info ">
-            <a href="#" class="d-block">{{ Str::limit(auth()->user()->nama, 15) }}</a>
+            <a href="#" class="d-block">{{ Str::limit(auth()-> user()->nama, 15) }}</a>
         </div>
     </div> --}}
 
@@ -162,6 +162,16 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ url('reset-password') }}"
+                        class="nav-link {{ Request::is('reset-password', 'reset-password/*') ? 'active' : '' }}">
+                        <i class="nav-icon ri-key-line"></i>
+                        {{-- <i class="nav-icon ri-calendar-2-line"></i> --}}
+                        <p>
+                            Reset Password
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ url('akun') }}" class="nav-link {{ Request::is('akun', 'akun/*') ? 'active' : '' }}">
                         <i class="nav-icon ri-settings-3-line"></i>
                         <p>
@@ -245,7 +255,7 @@
                 @if (!empty($sql_wali))
                     <li class="nav-item">
                         <a href="{{ url('guru/wali-kelas/') }}"
-                            class="nav-link {{ Request::is('guru/wali-kelas/', 'guru/wali-kelas/*') ? 'active' : '' }}">
+                            class="nav-link {{ Request::is('guru/wali-kelas', 'guru/wali-kelas/*') ? 'active' : '' }}">
                             <i class="nav-icon nav-icon ri-bank-line"></i>
                             <p>
                                 Kelas

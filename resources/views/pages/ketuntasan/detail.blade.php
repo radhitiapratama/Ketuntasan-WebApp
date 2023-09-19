@@ -17,6 +17,8 @@
                         <input type="hidden" name="tingkatan" value="{{ $tingkatan }}">
                         <input type="hidden" name="jurusan_id" value="{{ $jurusan_id }}">
                         <input type="hidden" name="kelas_id" value="{{ $kelas_id }}">
+                        <input type="hidden" name="start_date" value="{{ $start_date }}">
+                        <input type="hidden" name="end_date" value="{{ $end_date }}">
                         <button type="submit" class="btn-dark">
                             <i class="ri-arrow-left-line"></i>
                             Kembali
@@ -27,11 +29,25 @@
         </div>
     </div>
 
+    <div class="deadline-container" style="margin: 5px 0">
+        <div class="icon">
+            <i class="ri-timer-line"></i>
+        </div>
+        <div class="deadline-body">
+            @if ($start_date)
+                <p>{{ $start_date }} - {{ $end_date }}</p>
+            @else
+                <p>Belum ada batas waktu</p>
+            @endif
+        </div>
+    </div>
+
     <div class="card mb-1">
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6 col-12">
                     <div class="form-group">
+                        <label for="#">Nama Siswa</label>
                         <input type="text" class="form-control" disabled value="{{ $siswa->nama }}">
                     </div>
                 </div>
@@ -54,6 +70,17 @@
                         </select>
                     </div>
                 </div>
+                <div class="col-md-3 col-12">
+                    <div class="form-group">
+                        <label for="#">Status</label>
+                        <select name="status" id="status" class="form-control select2">
+                            <option value="">Pilih...</option>
+                            @foreach ($tuntases as $key => $value)
+                                <option value="{{ $key }}">{{ $value }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="card-header">
@@ -72,6 +99,11 @@
                     <button type="button" class="btn-dark">
                         <i class="ri-close-circle-line"></i>
                         Lebih dari batas waktu
+                    </button>
+                @else
+                    <button type="button" class="btn-dark">
+                        <i class="ri-close-circle-line"></i>
+                        Batas waktu belum di tambahkan
                     </button>
                 @endif
             </div>
@@ -167,6 +199,7 @@
                 processing: true,
                 ordering: false,
                 paging: false,
+                searchDelay: 1500,
                 info: false,
                 ajax: {
                     url: "{{ url('ketuntasan/siswas/show') }}",
@@ -175,7 +208,8 @@
                         data.tingkatan = {{ $tingkatan }};
                         data.jurusan_id = {{ $jurusan_id }};
                         data.kelas_id = {{ $kelas_id }};
-                        data.siswa_id = {{ $siswa_id }}
+                        data.siswa_id = {{ $siswa_id }};
+                        data.status = $("#status").val();
                     }
                 },
                 drawCallback: function(res) {
@@ -226,8 +260,14 @@
         loadDatatable();
 
         $("#semester").select2(configSelect2);
+        $("#status").select2(configSelect2);
 
         $("#semester").change(function() {
+            clearDatatable();
+            loadDatatable();
+        });
+
+        $("#status").change(function() {
             clearDatatable();
             loadDatatable();
         });
