@@ -19,7 +19,7 @@
 1. Tambah data mapel yg di ajar oleh guru
 1. Tambah / Import data jurusan
 1. Tambah data Kelas
-1. Tambah data mapel yg di ampu oleh kelas
+1. Tambah data mapel yg di miliki oleh kelas
 1. Tambah kan wali kelas
 1. Tambah kan data siswa
 1. Tambah Batas Waktu
@@ -27,8 +27,16 @@
 
 ### Alur Superadmin ketika tahun ajaran baru
 1. Tambahkan Wali kelas
-1. Tambahkan mapel yg di ampu oleh kelas
+1. Tambahkan mapel yg di dimiliki oleh kelas
 1. Naikkan siswa ke tingkatan berikutnya
 1. Tambahkan Batas waktu ketuntasan
 1. Tambahkan ketuntasan siswa
 
+<hr>
+
+## Info
+1. Apa bila data ketuntasan siswa sudah di buat lalu data tingkatan / kelas siswa tersebut salah maka,ubah tingkatan / kelas menjadi yang benar,setelah itu tambahkan data ketuntasan sesuai tingkatan / kelas siswa tersebut
+
+2. Untuk menaikkan siswa ketingkatan selanjutnya pada tahun ajaran baru,data siswa yg wajib di tingkatkan terlebih dahulu adalah tingkatan tertinggi (XII),supaya data siswa yg sudah di tingkatkan tidak tercampur dengan data siswa yang belum di tingkatkan
+
+3. Jika data ketuntasan siswa sudah di buat lalu ada mapel dari kelas siswa tersebut yang ingin di hapus, maka cukup nonaktifkan <b> Data Kelas mapelnya saja </b>
