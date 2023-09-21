@@ -24,13 +24,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get("/", [AuthController::class, 'index'])->name('login');
-Route::post("/login", [AuthController::class, 'login']);
+Route::middleware(['isGuest'])->group(function () {
+    Route::get("/", [AuthController::class, 'index'])->name('login');
+    Route::post("/login", [AuthController::class, 'login']);
+});
 
 
 
 Route::middleware(['checkAuth'])->group(function () {
-
     // Superadmin
     Route::get("superadmin", [UserController::class, 'superadmin']);
     Route::get("superadmin/add", [UserController::class, 'superadmin_add']);
@@ -128,13 +129,18 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::get("/ketuntasan/add", [KetuntasanController::class, 'add']);
     Route::post("/ketuntasan/store", [KetuntasanController::class, 'store']);
 
+    // Ketuntasan Admin
+
     // param tingkatan,jurusan_id,kelas_id,user_id,ketuntasan_id;
     Route::match(['get', 'post'], "ketuntasan/siswas", [KetuntasanController::class, 'siswa']);
     Route::match(['get', 'post'], "ketuntasan/siswas/show", [KetuntasanController::class, 'siswa_show']);
     Route::match(['get', 'post'], 'ketuntasan/siswas/edit', [KetuntasanController::class, 'edit']);
-    // End is admin
 
-    // ketuntasan role guru
+    // End Ketuntasan Admin
+
+
+    // Ketuntasan Guru
+
     //param mapel_id,tingkatan.jurusan_id,kelas_id,ketuntasan_id
     Route::match(['get', 'post'], 'guru/ketuntasan/kelas', [KetuntasanController::class, 'guru_kelas']);
     Route::match(['get', 'post'], 'guru/ketuntasan/kelas/siswa', [KetuntasanController::class, 'guru_siswa']);
@@ -143,7 +149,7 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::get("/guru/wali-kelas", [GuruController::class, 'waliKelas_dataSiswa']);
     Route::match(['get', 'post'], "/guru/wali-kelas/siswa/detail", [GuruController::class, 'waliKelas_detailKetuntasanSiswa']);
 
-    // End Guru
+    // End Ketuntasan Guru
 
     //Ketuntasan
     Route::get("/ketuntasan", [KetuntasanController::class, 'index']);

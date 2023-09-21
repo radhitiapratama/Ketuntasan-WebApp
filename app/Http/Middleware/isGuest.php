@@ -17,15 +17,18 @@ class isGuest
      */
     public function handle(Request $request, Closure $next)
     {
-        if (!empty(auth()->user())) {
-            if (auth()->user()->role == 1) {
-                return redirect("/tahun-ajaran");
-            }
-
-            if (auth()->user()->role != 1) {
-                return redirect('/ketuntasan');
-            }
+        if (Auth::guard("admin")->check()) {
+            return redirect("/tahun-ajaran");
         }
+
+        if (Auth::guard("guru")->check()) {
+            return redirect("/ketuntasan");
+        }
+
+        if (Auth::guard("siswa")->check()) {
+            return redirect("/ketuntasan");
+        }
+
 
         return $next($request);
     }
