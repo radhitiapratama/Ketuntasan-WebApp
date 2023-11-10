@@ -4,7 +4,6 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\Api\BatasWaktuController;
 use App\Http\Controllers\API\KetuntasanController;
 use Illuminate\Support\Facades\Route;
-use Psy\CodeCleaner\FunctionReturnInWriteContextPass;
 
 /*
 |--------------------------------------------------------------------------
