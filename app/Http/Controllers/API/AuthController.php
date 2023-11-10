@@ -9,8 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
+use App\Models\Utils;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+
 
 class AuthController extends Controller
 {
@@ -100,6 +103,7 @@ class AuthController extends Controller
 
     public function checkLogin($user_data, $request_password, $token)
     {
+        //jika user tidak di temukan
         if (!$user_data || !Hash::check($request_password, $user_data->password)) {
             return response()->json([
                 'status' => false,
@@ -117,77 +121,25 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout(Request $request)
+    public function logout()
     {
-        $request->user()->tokens()->delete();
-        $request->user()->currentAccessToken()->delete();
+        request()->user()->tokens()->delete();
+        request()->user()->currentAccessToken()->delete();
         return response()->json([
             "status" => true,
-            'message' => "success logout",
+            'message' => "Berhasil Logout",
         ]);
     }
 
-    // public function account(Request $request)
-    // {
-    //     $validator = Validator::make(
-    //         $request->all(),
-    //         [
-    //             'user_id' => "required",
-    //         ],
-    //         [
-    //             'user_id.required' => "User ID wajib di isi"
-    //         ]
-    //     );
-
-    //     if ($validator->fails()) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => "failed",
-    //             'errors' => $validator->errors(),
-    //         ]);
-    //     }
-
-    //     $user_id = $request->user_id;
-
-    //     $user = User::where("user_id", $user_id)->first();
-
-    //     if ($user->role == 2) {
-    //         $sql_mapel = DB::table('guru_mapel as gm')
-    //             ->select('m.nama_mapel')
-    //             ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
-    //             ->where("gm.user_id", $user->user_id)
-    //             ->where("gm.status", 1)
-    //             ->get();
-
-    //         return response()->json([
-    //             'status' => true,
-    //             'message' => "success",
-    //             'data' => [
-    //                 'user' => $user,
-    //                 'mapels' => $sql_mapel,
-    //             ]
-    //         ]);
-    //     }
-
-    //     if ($user->role == 3) {
-    //         return response()->json([
-    //             'status' => true,
-    //             'message' => "success",
-    //             'data' => $user
-    //         ]);
-    //     }
-    // }
-
-    public function account(Request $request)
+    public function account()
     {
-        $siswa_id = $request->query("siswa");
-        $guru_id = $request->query("guru");
 
-        if (isset($siswa_id)) {
+        // Jika yg login siswa
+        if (Auth::user()->siswa_id) {
             $sql_siswa = DB::table('siswa as s')
                 ->join('jurusan as j', 'j.jurusan_id', '=', 's.jurusan_id')
                 ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id')
-                ->where('s.siswa_id', $siswa_id)
+                ->where('s.siswa_id', Auth::user()->siswa_id)
                 ->select('s.*', 'j.nama_jurusan', 'k.nama_kelas')
                 ->first();
 
@@ -198,28 +150,66 @@ class AuthController extends Controller
                 ]);
             }
 
-            return response()->json([
-                'status' => "success",
-                'data' => $sql_siswa,
-            ]);
-        }
-
-        if (isset($guru_id)) {
-            $sql_guru = DB::table("guru")
-                ->where('guru_id', $guru_id)
-                ->first();
-
-            $sql_mapel = DB::table("guru_mapel as gm")
-                ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
-                ->where('gm.guru_id', $guru_id)
-                ->where('gm.status', 1)
-                ->get();
+            $responseSiswa = [
+                'tingkatan' => Utils::checkTingkatan($sql_siswa->tingkatan),
+                'kelas' => $sql_siswa->nama_jurusan . " | " . $sql_siswa->nama_kelas,
+                'username' => $sql_siswa->username,
+                'nama' => $sql_siswa->nama,
+            ];
 
             return response()->json([
                 'status' => "success",
                 'data' => [
-                    'detail' => $sql_guru,
-                    'mapels' => $sql_mapel,
+                    'detail_siswa' => $responseSiswa,
+                ]
+            ]);
+        }
+
+
+        // Jika yg login guru
+        if (Auth::user()->guru_id) {
+            $sql_guru = DB::table("guru")
+                ->where('guru_id', Auth::user()->guru_id)
+                ->first();
+
+            $sql_mapel = DB::table("guru_mapel as gm")
+                ->select('m.nama_mapel', 'gm.status', 'gm.kode_guru_mapel', 'g.kode_guru')
+                ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+                ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+                ->where('gm.guru_id', Auth::user()->guru_id)
+                ->where('gm.status', 1)
+                ->get();
+
+            $responseMapels = [];
+
+            if (!empty($sql_mapel)) {
+                foreach ($sql_mapel as $row) {
+                    if ($row->kode_guru_mapel) {
+                        $kodeGuruMapel = $row->kode_guru . "," . $row->kode_guru_mapel;
+                    } else {
+                        $kodeGuruMapel = $row->kode_guru;
+                    }
+
+                    $detailMapel = [
+                        'nama_mapel' => $row->nama_mapel,
+                        'kode_guru_mapel' => $kodeGuruMapel,
+                    ];
+
+                    $responseMapels[] = $detailMapel;
+                }
+            }
+
+
+            return response()->json([
+                'status' => "success",
+                'data' => [
+                    'detail' => [
+                        'username' => $sql_guru->username,
+                        'nama' => $sql_guru->nama,
+                        'kode_guru' => $sql_guru->kode_guru,
+                        'status' => $sql_guru->status,
+                    ],
+                    'mapels' => $responseMapels,
                 ],
             ]);
         }
@@ -227,61 +217,103 @@ class AuthController extends Controller
 
     public function changePassword(Request $request)
     {
-        $siswa_id = $request->siswa;
-        $guru_id = $request->guru;
         $password = $request->password;
 
-        if (isset($siswa_id)) {
+        if (!isset($password)) {
+            return response()->json([
+                'status' => false,
+                'message' => "Password wajib di isi",
+            ]);
+        }
+
+        if (Auth::user()->siswa_id) {
             DB::table("siswa")
-                ->where("siswa_id", $siswa_id)
+                ->where("siswa_id", Auth::user()->siswa_id)
                 ->update([
                     'password' => Hash::make($password),
                 ]);
 
             return response()->json([
-                'status' => "success",
+                'status' => true,
+                'message' => "Password anda berhasil di perbarui",
             ]);
         }
 
-        if (isset($guru_id)) {
+        if (Auth::user()->guru_id) {
             DB::table("guru")
-                ->where("guru_id", $guru_id)
+                ->where("guru_id", Auth::user()->guru_id)
                 ->update([
                     'password' => Hash::make($password),
                 ]);
 
             return response()->json([
-                'status' => "success",
+                'status' => true,
+                'message' => "Password anda berhasil di perbarui",
             ]);
         }
+
+        return response()->json([
+            'status' => false,
+            'message' => "Gagal mengubah password",
+        ]);
     }
 
+    public function changeUsername(Request $request)
+    {
+        $newUsername = $request->newUsername;
 
-    // public function changePassword(Request $request)
-    // {
-    //     $validator = Validator::make($request->all(), [
-    //         'user_id' => "required",
-    //     ], [
-    //         'user_id.required' => "User ID wajib di isi",
-    //     ]);
+        if (!isset($newUsername)) {
+            return response()->json([
+                'status' => false,
+                'message' => "Username wajib di isi",
+            ]);
+        }
 
-    //     if ($validator->fails()) {
-    //         return response()->json([
-    //             'status' => false,
-    //             'message' => "falled",
-    //             'errors' => $validator->errors()
-    //         ]);
-    //     }
+        if (Auth::user()->siswa_id) {
+            $sql_checkUsername = DB::table("siswa")->where("username", $newUsername)->first();
 
-    //     DB::table('users')
-    //         ->where("user_id", $request->user_id)
-    //         ->update([
-    //             'password' => Hash::make($request->password)
-    //         ]);
+            if ($sql_checkUsername) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Username sudah di gunakan",
+                ]);
+            }
 
-    //     return response()->json([
-    //         'status' => true,
-    //         'message' => "success password successfully changed",
-    //     ]);
-    // }
+            DB::table("siswa")->where("siswa_id", Auth::user()->siswa_id)
+                ->update([
+                    'username' => $newUsername,
+                ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => "Username anda berhasil di perbarui",
+            ]);
+        }
+
+        if (Auth::user()->guru_id) {
+            $sql_checkUsername = DB::table("guru")->where("username", $newUsername)->first();
+
+            if ($sql_checkUsername) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Username sudah di gunakan",
+                ]);
+            }
+
+            DB::table("guru")->where("guru_id", Auth::user()->guru_id)
+                ->update([
+                    'username' => $newUsername,
+                ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => "Username anda berhasil di perbarui",
+            ]);
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => "Gagal mengubah username",
+        ]);
+    }
 }

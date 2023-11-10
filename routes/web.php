@@ -29,8 +29,6 @@ Route::middleware(['isGuest'])->group(function () {
     Route::post("/login", [AuthController::class, 'login']);
 });
 
-
-
 Route::middleware(['checkAuth'])->group(function () {
     // Superadmin
     Route::get("superadmin", [UserController::class, 'superadmin']);
