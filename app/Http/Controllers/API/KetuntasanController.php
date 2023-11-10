@@ -347,17 +347,16 @@ class KetuntasanController extends Controller
     {
         $ketuntasan_id = $request->ketuntasan_id;
 
-        foreach ($ketuntasan_id as $row) {
-            DB::table("ketuntasan")
-                ->where('ketuntasan_id', $row)
-                ->update([
-                    'tuntas' => 1,
-                    'desc' => $request->desc ? $request->desc : null,
-                ]);
-        }
+        DB::table("ketuntasan")
+            ->whereIn("ketuntasan_id", $ketuntasan_id)
+            ->update([
+                'tuntas' => 1,
+                'desc' => $request->desc ? $request->desc : null,
+            ]);
 
         return response()->json([
-            'status' => "success",
+            'status' => true,
+            'message' => "Berhasil di tuntaskan"
         ]);
     }
 }
