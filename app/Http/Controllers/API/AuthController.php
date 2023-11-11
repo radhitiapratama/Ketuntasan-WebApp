@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Models\Siswa;
+use App\Models\TahunAjaran;
 use App\Models\Utils;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -17,6 +18,13 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    protected $tahun;
+
+    public function __construct()
+    {
+        $this->tahun = TahunAjaran::where("user_aktif", 1)->first();
+    }
+
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -74,12 +82,6 @@ class AuthController extends Controller
             );
         }
 
-        $sql_admin = Admin::where("username", $request->username)->first();
-
-        if ($sql_admin) {
-            $token = $sql_admin->createToken("api-token")->plainTextToken;
-            return $this->checkLogin($sql_admin, $request->password, $token);
-        }
 
         $sql_guru = Guru::where("username", $request->username)->first();
 
@@ -111,11 +113,55 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user_data->siswa_id) {
+            $userResponse = [
+                'siswa_id' => $user_data->siswa_id,
+                'username' => $user_data->username,
+                'nama' => $user_data->nama,
+                'tingkatan' => $user_data->tingkatan,
+                'jurusan_id' => $user_data->jurusan_id,
+                'kelas_id' => $user_data->kelas_id,
+                'role' => $user_data->role,
+            ];
+        }
+
+        if ($user_data->guru_id) {
+            $sql_checkWaliKelas =  DB::table('wali_kelas')
+                ->where("tahun_ajaran_id", $this->tahun->tahun_ajaran_id)
+                ->where("guru_id", $user_data->guru_id)
+                ->first();
+
+            $isWaliKelas = 0;
+            $tingkatan = null;
+            $jurusan = null;
+            $kelas = null;
+
+
+            if ($sql_checkWaliKelas) {
+                $isWaliKelas = 1;
+                $tingkatan = $sql_checkWaliKelas->tingkatan;
+                $jurusan = $sql_checkWaliKelas->jurusan_id;
+                $kelas = $sql_checkWaliKelas->kelas_id;
+            }
+
+            $userResponse = [
+                'guru_id' => $user_data->guru_id,
+                'username' => $user_data->username,
+                'nama' => $user_data->nama,
+                'kode_guru' => $user_data->kode_guru,
+                'is_waliKelas' => $isWaliKelas,
+                'waliKelas_tingkatan' => $tingkatan,
+                'waliKelas_jurusan' => $jurusan,
+                'waliKelas_kelas' => $kelas,
+                'role' => $user_data->role,
+            ];
+        }
+
         return response()->json([
             'status' => true,
             'message' => "login success",
             'data' => [
-                'user' => $user_data,
+                'user' => $userResponse,
                 'token' => $token,
             ]
         ]);
