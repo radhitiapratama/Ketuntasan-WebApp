@@ -20,8 +20,8 @@ class BatasWaktuController extends Controller
         return response()->json([
             'status' => true,
             'data' => [
-                'tglMulai' => $sql->start_date,
-                'tglSelesai' => $sql->end_date,
+                'tglMulai' => date("d-m-Y", strtotime($sql->start_date)),
+                'tglSelesai' => date("d-m-Y", strtotime($sql->end_date)),
             ],
         ]);
     }
