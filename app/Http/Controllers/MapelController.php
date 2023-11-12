@@ -188,7 +188,7 @@ class MapelController extends Controller
         if ($sql_mapel->nama_mapel != $request->nama_mapel) {
             $sql_check = Mapel::select("mapel_id")->where("nama_mapel", $request->nama_mapel)->first();
             if ($sql_check) {
-                return redirect()->back()->with("duplicateMapel", "duplicateMapel");
+                return redirect()->back()->with("duplicateMapel", "duplicateMapel")->withInput();
             }
             $dataUpdate['nama_mapel'] = $request->nama_mapel;
         }
