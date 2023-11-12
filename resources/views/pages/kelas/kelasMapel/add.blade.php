@@ -285,6 +285,7 @@
                     $("select[name='tingkatan']").val("").trigger("change.select2");
                     $("select[name='kelas']").val("").trigger("change.select2");
                     $(".kode-guru-mapel-wrapper").html(template_mapel);
+                    $("#kode_guru_mapel_1").select2(configSelect2);
                 }
             });
         });
