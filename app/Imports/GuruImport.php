@@ -87,7 +87,7 @@ class GuruImport implements ToCollection, WithStartRow, WithCalculatedFormulas
         foreach ($rows as $row) {
             $kode_guru = str_replace($charsReplace, "", $row[2]);
 
-            if (in_array($kode_guru, $arr_username)) {
+            if (in_array($row[0], $arr_username)) {
                 session()->flash("username_not_unique", "Gagal ! Username " . $row[0] . " sudah di gunakan");
                 DB::rollBack();
                 return;
