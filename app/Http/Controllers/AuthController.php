@@ -255,9 +255,18 @@ class AuthController extends Controller
         $siswaId = $request->siswaId;
         $newUsername = $request->newUsername;
 
+        $sql_usernameAdmin = Admin::select("username")->get()->toArray();
+        $sql_usernameGuru = Guru::select("username")->get()->toArray();
+        $sql_usernameSiswa = Siswa::select("username")->get()->toArray();
+
+        $arr_admin = array_column($sql_usernameAdmin, "username");
+        $arr_guru = array_column($sql_usernameGuru, "username");
+        $arr_siswa = array_column($sql_usernameSiswa, "username");
+        $arr_resultUsername = array_merge($arr_admin, $arr_guru, $arr_siswa);
+
+
         if (isset($adminId)) {
-            $sql_checkAdmin = Admin::where("username", $newUsername)->first();
-            if ($sql_checkAdmin) {
+            if (in_array($newUsername, $arr_resultUsername)) {
                 return response()->json([
                     'status' => false,
                 ]);
@@ -275,8 +284,7 @@ class AuthController extends Controller
 
 
         if (isset($guruId)) {
-            $sql_checkGuru = Guru::where("username", $newUsername)->first();
-            if ($sql_checkGuru) {
+            if (in_array($newUsername, $arr_resultUsername)) {
                 return response()->json([
                     'status' => false,
                 ]);
@@ -293,10 +301,9 @@ class AuthController extends Controller
         }
 
         if (isset($siswaId)) {
-            $sql_checkSiswa = Siswa::where("username", $newUsername)->first();
-            if ($sql_checkSiswa) {
+            if (in_array($newUsername, $arr_resultUsername)) {
                 return response()->json([
-                    'status' => false
+                    'status' => false,
                 ]);
             }
 

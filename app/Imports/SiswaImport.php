@@ -241,8 +241,8 @@ class SiswaImport implements ToCollection, WithStartRow
     public function checkIfUsernameExist($row_username)
     {
         $this->username = $this->makeUsername($row_username);
-        $checkUser =  in_array($this->username, $this->siswa_username_DB);
-        if (!empty($checkUser)) {
+        $checkUser = in_array($this->username, $this->siswa_username_DB);
+        if ($checkUser) {
             $this->checkIfUsernameExist($row_username);
             return;
         }
