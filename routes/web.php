@@ -187,6 +187,10 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::post('ketuntasan/tuntaskanByGuru', [KetuntasanController::class, 'byGuruTuntaskan']);
     Route::post("/byGuru/updateKetuntasan", [KetuntasanController::class, 'byGuruUpdate']);
 
+    Route::get("/ketuntasan/by-ruang", [KetuntasanController::class, 'byRuang']);
+    Route::get("/ketuntasan/by-ruang/siswa/{siswa_id}", [KetuntasanController::class, 'byRuangKetuntasan']);
+    Route::get("//ketuntasan/by-ruang/siswa/{siswa_id}/edit/{ketuntasan_id}", [KetuntasanController::class, 'byRuangEdit']);
+
     Route::get("keterlambatan", [KeterlambatanController::class, 'index']);
 
     Route::get("/keterlambatan/add", [KeterlambatanController::class, 'add']);

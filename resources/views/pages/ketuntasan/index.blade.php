@@ -60,11 +60,17 @@
                         </div>
                     </div>
                 </div>
-                <div class="row mb-3">
-                    <div class="col-12 d-flex">
+                <div class="row mb-3 d-flex" style="gap: 20px">
+                    <div class="form-group">
                         <a href="/ketuntasan/by-guru" class="btn-dark">
                             <i class="ri-user-2-line"></i>
                             Pilih Berdasarkan Guru
+                        </a>
+                    </div>
+                    <div class="form-group">
+                        <a href="/ketuntasan/by-ruang" class="btn-dark">
+                            <i class="ri-user-2-line"></i>
+                            Pilih Berdasarkan Ruang & sesi
                         </a>
                     </div>
                 </div>
@@ -363,11 +369,17 @@
                         </div>
                     </div>
                 </div>
-                <div class="row mb-3">
-                    <div class="col-12 d-flex">
+                <div class="row mb-3 d-flex" style="gap: 20px">
+                    <div class="form-group">
                         <a href="/ketuntasan/by-guru" class="btn-dark">
                             <i class="ri-user-2-line"></i>
                             Pilih Berdasarkan Guru
+                        </a>
+                    </div>
+                    <div class="form-group">
+                        <a href="/ketuntasan/by-ruang" class="btn-dark">
+                            <i class="ri-user-2-line"></i>
+                            Pilih Berdasarkan Ruang & sesi
                         </a>
                     </div>
                 </div>
