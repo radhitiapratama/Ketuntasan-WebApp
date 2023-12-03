@@ -58,9 +58,9 @@
                     <div class="form-group">
                         <label for="#">Tuntas</label>
                         <select name="tuntas" id="tuntas" class="form-control">
-                            <option value="">Pilih...</option>
                             @foreach ($tuntases as $key => $value)
-                                <option value="{{ $key }}">{{ $value }}</option>
+                                <option value="{{ $key }}" @selected($key == 0)>{{ $value }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
