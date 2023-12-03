@@ -499,3 +499,20 @@ label {
     background-color: var(--white);
     cursor: pointer;
 }
+
+.vertical-middle {
+    vertical-align: middle !important;
+}
+
+.btn-pdf {
+    width: max-content;
+    height: max-content;
+    padding: 10px 10px;
+    border: none;
+    border-radius: 2px;
+    background: var(--red);
+    color: var(--white);
+    font-size: 12px;
+    gap: 12px;
+    display: flex;
+}

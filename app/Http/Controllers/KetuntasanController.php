@@ -13,7 +13,11 @@ use App\Models\Jurusan;
 use App\Models\TahunAjaran;
 use App\Models\Mapel;
 use App\Models\Siswa;
+use App\Models\Utils;
+use Barryvdh\DomPDF\Facade\Pdf;
+use GuzzleHttp\RedirectMiddleware;
 use Illuminate\Support\Facades\Auth;
+use Psy\CodeCleaner\FunctionReturnInWriteContextPass;
 
 class KetuntasanController extends Controller
 {
@@ -33,7 +37,7 @@ class KetuntasanController extends Controller
         $start_date = null;
         $end_date = null;
 
-        if (auth()->guard("admin")->check()) {
+        if (auth()->guard("admin")->check() || auth()->guard("operator")->check()) {
             $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
             $sql_batasWaktu = DB::table("batas_waktu")
@@ -444,6 +448,15 @@ class KetuntasanController extends Controller
                     continue;
                 }
 
+                if (auth()->guard("operator")->check()) {
+                    $created_by = auth()->guard("operator")->user()->user_id;
+                }
+
+                if (auth()->guard("admin")->check()) {
+                    $created_by = auth()->guard("admin")->user()->user_id;
+                }
+
+
                 $data_ketuntasan[] = [
                     'siswa_id' => $siswa->siswa_id,
                     'kelas_mapel_id' => $mapel->kelas_mapel_id,
@@ -453,7 +466,7 @@ class KetuntasanController extends Controller
                     'semester' => $semester,
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
-                    'created_by' => auth()->guard("admin")->user()->user_id
+                    'created_by' => $created_by
                 ];
             }
         }
@@ -533,13 +546,14 @@ class KetuntasanController extends Controller
         $dataUpdate = [];
 
         $dataUpdate['desc'] = $request->deskripsi ? $request->deskripsi : null;
+        $dataUpdate['tgl_tuntas'] = Carbon::now();
+
         if ($request->tuntas == 0) {
             $dataUpdate['tgl_tuntas'] = null;
             $dataUpdate['desc'] = null;
         }
 
         $dataUpdate['tuntas'] = $request->tuntas;
-        $dataUpdate['tgl_tuntas'] = Carbon::now();
 
         DB::table("ketuntasan")
             ->where('ketuntasan_id', $request->ketuntasan_id)
@@ -1276,5 +1290,351 @@ class KetuntasanController extends Controller
 
             return response()->json($dataResponse);
         }
+    }
+
+    public function byGuru(Request $request)
+    {
+        if ($request->ajax()) {
+            $columnsSearch = ['nama', 'username'];
+            $table = DB::table("guru");
+
+            if ($request->input("search.value")) {
+                $table->where(function ($q) use ($columnsSearch, $request) {
+                    foreach ($columnsSearch as $column) {
+                        $q->orWhere($column, 'like', '%' . $request->input("search.value") . "%");
+                    }
+                });
+            }
+
+            $query = $table->where('status', 1);
+
+            $count = $query->count();
+
+            $result = $query->offset($request->start)
+                ->limit($request->length)
+                ->orderBy('guru_id', 'ASC')
+                ->orderBy('nama', 'ASC')
+                ->get();
+
+            $data = [];
+
+            if (!empty($result)) {
+                $i = $request->start;
+                foreach ($result as $row) {
+                    $i++;
+                    $subData = [];
+                    $subData['no'] = $i;
+                    $subData['username'] = $row->username;
+                    $subData['nama'] = $row->nama;
+
+                    $subData['aksi'] = '
+                    <div class="text-center">
+                        <a href="/ketuntasan/by-guru/' . $row->guru_id . '" class="badge badge-success p-2">
+                            <i class="ri-eye-line"></i>
+                        </a>
+                    </div>
+                    ';
+
+                    $data[] = $subData;
+                }
+            }
+
+            return response()->json([
+                'draw' => $request->draw,
+                'recordsFiltered' => $count,
+                'recordsTotal' => $count,
+                'data' => $data,
+            ]);
+        }
+
+        $sql_guru = DB::table("guru")
+            ->where('status', 1)
+            ->get();
+
+        $dataToView = [
+            'gurus' => $sql_guru,
+        ];
+
+        return view("pages.ketuntasan.byGuru.index", $dataToView);
+    }
+
+    public function byGuruMapel($guru_id)
+    {
+        if (!isset($guru_id)) {
+            return redirect("ketuntasan/by-guru");
+        }
+
+        $sql_guru = DB::table("guru")
+            ->where('guru_id', $guru_id)
+            ->first();
+
+        $sql_guru_kelas_mapel = DB::table("guru as g")
+            ->join('guru_mapel as gm', 'gm.guru_id', '=', 'g.guru_id')
+            ->join('kelas_mapel as km', 'km.guru_mapel_id', '=', 'gm.guru_mapel_id')
+            ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+            ->join('kelas as k', 'k.kelas_id', '=', 'km.kelas_id')
+            ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
+            ->where("g.guru_id", $guru_id)
+            ->where('gm.status', 1)
+            ->get();
+
+        $dataToView = [
+            'guruKelasMapels' => $sql_guru_kelas_mapel,
+            'guru_id' => $guru_id,
+            'data_guru' => $sql_guru,
+        ];
+
+        return view("pages.ketuntasan.byGuru.guru_mapel", $dataToView);
+    }
+
+    public function byGuruKetuntasan(Request $request, $guru_id, $mapel_id, $tingkatan, $kelas_id)
+    {
+        if ($request->ajax()) {
+            $columnsSearch = ['s.nama'];
+
+            $table = DB::table("ketuntasan as k");
+
+            if ($request->input("search.value")) {
+                $table->where(function ($q) use ($columnsSearch, $request) {
+                    foreach ($columnsSearch as $column) {
+                        $q->orWhere($column, 'like', '%' . $request->input("search.value") . "%");
+                    }
+                });
+            }
+
+            $query = $table->select('k.*', 's.nama', 's.tingkatan')
+                ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
+                ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
+                ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+                ->where('gm.mapel_id', $mapel_id)
+                ->where('gm.guru_id', $guru_id)
+                ->where('s.tingkatan', $tingkatan)
+                ->where('km.status', 1)
+                ->where('km.kelas_id', $kelas_id);
+
+            if ($request->tuntas != null) {
+                $query->where('k.tuntas', $request->tuntas);
+            }
+
+            if ($request->semester != null) {
+                $query->where('k.semester', $request->semester);
+            }
+
+            $count = $query->count();
+
+            $result = $query->get();
+
+            $data = [];
+
+            if (!empty($result)) {
+                $i = $request->start;
+                foreach ($result as $row) {
+                    $i++;
+                    $subData = [];
+                    $subData['no'] = $i;
+
+
+                    $subData['nama'] = $row->nama;
+
+                    if ($row->tuntas == 0) {
+                        $subData['tgl_tuntas'] = '-';
+                        $subData['tuntas'] = '
+                        <div class="text-center">
+                            <span class="badge badge-danger p-2">
+                                Belum Tuntas
+                            </span> 
+                        </div>
+                        ';
+                        $subData['check_box'] = '
+                        <input type="checkbox" class="ketuntasan_id" name="ketuntasan_id[]"
+                        value="' . $row->ketuntasan_id . '">
+                        ';
+                    }
+
+                    if ($row->tuntas == 1) {
+                        $subData['tgl_tuntas'] = $row->tgl_tuntas;
+                        $subData['tuntas'] = '
+                        <div class="text-center">
+                            <span class="badge badge-success p-2">
+                                Tuntas
+                            </span> 
+                        </div>
+                        ';
+                        $subData['check_box'] = "";
+                    }
+
+                    if ($row->desc) {
+                        $subData['desc'] = $row->desc;
+                    } else {
+                        $subData['desc'] = "-";
+                    }
+
+                    $subData['semester'] =  '
+                    <div class="text-center">
+                    ' . $row->semester . '
+                    </div>
+                    ';
+
+                    $subData['aksi'] = '
+                    <div class="text-center">
+                        <a href="/ketuntasan/by-guru/' . $guru_id . '/' . $mapel_id . '/' . $tingkatan . '/' . $kelas_id . '/edit/' . $row->ketuntasan_id . '"
+                        class="setting-edit">
+                            <i class="ri-pencil-line"></i>
+                        </a>
+                    </div>
+                    ';
+
+                    $data[] = $subData;
+                }
+            }
+
+            return response()->json([
+                'draw' => $request->draw,
+                'recordsFiltered' => $count,
+                'recordsTotal' => $count,
+                'data' => $data,
+            ]);
+        }
+
+        $sql_guru = DB::table('guru')
+            ->where('guru_id', $guru_id)
+            ->first();
+
+        $sql_mapel = DB::table("mapel")
+            ->where('mapel_id', $mapel_id)
+            ->first();
+
+        $sql_kelas = DB::table("kelas as k")
+            ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
+            ->where('k.kelas_id', $kelas_id)
+            ->first();
+
+        $dataToView = [
+            'guru_id' => $guru_id,
+            'mapel_id' => $mapel_id,
+            'kelas_id' => $kelas_id,
+            'tingkatan' => $tingkatan,
+            'data_guru' => $sql_guru,
+            'data_mapel' => $sql_mapel,
+            'data_kelas' => $sql_kelas,
+            'tuntases' => Utils::$tuntases,
+            'semesters' => Utils::$semesters,
+        ];
+
+        return view("pages.ketuntasan.byGuru.ketuntasan", $dataToView);
+    }
+
+    public function byGuruTuntaskan(Request $request)
+    {
+        $sql_batasWaktu = DB::table("batas_waktu")
+            ->where('status', 1)
+            ->first();
+
+        $now = date("Y-m-d");
+
+        if ($now >= $sql_batasWaktu->start_date && $now <= $sql_batasWaktu->end_date) {
+            $guru_id = $request->guru_id;
+            $mapel_id = $request->mapel_id;
+            $kelas_id = $request->kelas_id;
+
+            $ketuntasan_id = $request->ketuntasan_id;
+
+            if (isset($ketuntasan_id)) {
+                for ($i = 0; $i < count($ketuntasan_id); $i++) {
+                    DB::table("ketuntasan")
+                        ->where('ketuntasan_id', $ketuntasan_id[$i])
+                        ->update([
+                            'tgl_tuntas' => Carbon::now(),
+                            'tuntas' => 1,
+                        ]);
+                }
+
+                return redirect()->back()->with("success", 'success');
+            }
+
+
+            return redirect()->back()->with("no_ketuntasan", 'no_ketuntasan');
+        }
+
+        return redirect()->back()->with("failed_batas_waktu", "failed_batas_waktu");
+    }
+
+    public function byGuruKetuntasanEdit($guru_id, $mapel_id, $tingkatan, $kelas_id, $ketuntasan_id)
+    {
+        $sql = DB::table("ketuntasan as k")
+            ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
+            ->where('k.ketuntasan_id', $ketuntasan_id)
+            ->first();
+
+
+        $dataToView = [
+            'guru_id' => $guru_id,
+            'mapel_id' => $mapel_id,
+            'kelas_id' => $kelas_id,
+            'tingkatan' => $tingkatan,
+            'data' => $sql,
+            'tuntases' => $this->tuntases,
+        ];
+
+        return view("pages.ketuntasan.byGuru.edit", $dataToView);
+    }
+
+    public function byGuruUpdate(Request $request)
+    {
+        $ketuntasan_id = $request->ketuntasan_id;
+        $status = $request->status;
+        $desc = $request->deskripsi;
+
+        $dataUpdate = [];
+
+        if ($status == 0) {
+            $dataUpdate['tgl_tuntas'] = null;
+        } else {
+            $dataUpdate['tgl_tuntas'] = Carbon::now();
+        }
+
+        $dataUpdate['desc'] = $desc;
+        $dataUpdate['tuntas'] =  $status;
+
+        DB::table("ketuntasan")
+            ->where("ketuntasan_id", $ketuntasan_id)
+            ->update($dataUpdate);
+
+        return redirect()->back()->with("success", "success");
+    }
+
+    public function cetakByGuru(Request $request)
+    {
+        $query = DB::table("ketuntasan as k")
+            ->select('k.*', 's.nama', 's.tingkatan')
+            ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
+            ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
+            ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+            ->where('gm.mapel_id', $request->mapel_id_cetak)
+            ->where('s.tingkatan', $request->tingkatan_cetak)
+            ->where('km.kelas_id', $request->kelas_id_cetak);
+
+        if ($request->status_cetak != null) {
+            $query->where('k.tuntas', $request->status_cetak);
+        }
+
+        if ($request->semester_cetak != null) {
+            $query->where('k.semester', $request->semester_cetak);
+        }
+
+        $result = $query->get();
+
+        $dataToView = [
+            'ketuntasans' => $result,
+            'nama_guru' => $request->nama_guru_cetak,
+            'nama_mapel' => $request->nama_mapel_cetak,
+            'nama_kelas' => $request->nama_kelas_cetak,
+        ];
+
+        $fileName = "Ketuntasan_" . $request->nama_guru . "_" . $request->nama_mapel . "_" . $request->nama_kelas;
+
+        $pdf = Pdf::loadView("pages.ketuntasan.byGuru.cetak-pdf", $dataToView);
+        $pdf->setPaper("A4", "potrait");
+        return $pdf->stream($fileName . ".pdf");
     }
 }

@@ -59,6 +59,10 @@
             @if (Auth::guard('siswa')->check())
                 <p>{{ Auth::guard('siswa')->user()->nama }}</p>
             @endif
+
+            @if (Auth::guard('operator')->check())
+                <p>{{ Auth::guard('operator')->user()->nama }}</p>
+            @endif
         </div>
     </div>
 

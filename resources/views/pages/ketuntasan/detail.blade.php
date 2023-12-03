@@ -85,26 +85,29 @@
         </div>
         <div class="card-header">
             <div class="form-group mt-3">
-                @if ($status_batasWaktu == 'dalam')
-                    <button type="button" class="btn-dark btn-modal-tuntaskan">
-                        <i class="ri-check-line"></i>
-                        Tuntaskan
-                    </button>
-                @elseif($status_batasWaktu == 'kurang')
-                    <button type="button" class="btn-dark">
-                        <i class="ri-close-circle-line"></i>
-                        Kurang dari batas waktu
-                    </button>
-                @elseif($status_batasWaktu == 'lebih')
-                    <button type="button" class="btn-dark">
-                        <i class="ri-close-circle-line"></i>
-                        Lebih dari batas waktu
-                    </button>
-                @else
-                    <button type="button" class="btn-dark">
-                        <i class="ri-close-circle-line"></i>
-                        Batas waktu belum di tambahkan
-                    </button>
+                @if (auth()->guard('admin')->check() ||
+                        auth()->guard('operator')->user()->level == 1)
+                    @if ($status_batasWaktu == 'dalam')
+                        <button type="button" class="btn-dark btn-modal-tuntaskan">
+                            <i class="ri-check-line"></i>
+                            Tuntaskan
+                        </button>
+                    @elseif($status_batasWaktu == 'kurang')
+                        <button type="button" class="btn-dark">
+                            <i class="ri-close-circle-line"></i>
+                            Kurang dari batas waktu
+                        </button>
+                    @elseif($status_batasWaktu == 'lebih')
+                        <button type="button" class="btn-dark">
+                            <i class="ri-close-circle-line"></i>
+                            Lebih dari batas waktu
+                        </button>
+                    @else
+                        <button type="button" class="btn-dark">
+                            <i class="ri-close-circle-line"></i>
+                            Batas waktu belum di tambahkan
+                        </button>
+                    @endif
                 @endif
             </div>
         </div>
@@ -115,15 +118,21 @@
                         <thead>
                             <tr style="border-bottom: none !important">
                                 <th width="5px">#</th>
-                                <th width="5px" class="text-center"><input type="checkbox" name="check_all"
-                                        id="check_all"></th>
+                                @if (auth()->guard('admin')->check() ||
+                                        auth()->guard('operator')->user()->level == 1)
+                                    <th width="5px" class="text-center"><input type="checkbox" name="check_all"
+                                            id="check_all"></th>
+                                @endif
                                 <th width="20%">Mapel</th>
                                 <th width="20%">Guru</th>
                                 <th width="5px" class="text-center">Status</th>
                                 <th width="20%" class="text-center">Deskripsi</th>
                                 <th width="20%" class="text-center">Tgl Tuntas</th>
                                 <th width="5px" class="text-center">Semester</th>
-                                <th width="5px" class="text-center">Aksi</th>
+                                @if (auth()->guard('admin')->check() ||
+                                        auth()->guard('operator')->user()->level == 1)
+                                    <th width="5px" class="text-center">Aksi</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -218,10 +227,12 @@
                 columns: [{
                         data: "no"
                     },
-                    {
-                        data: "checkbox"
-                    },
-                    {
+                    @if (auth()->guard('admin')->check() ||
+                            auth()->guard('operator')->user()->level == 1)
+                        {
+                            data: "checkbox"
+                        },
+                    @endif {
                         data: "mapel"
                     },
                     {
@@ -239,9 +250,12 @@
                     {
                         data: "semester"
                     },
-                    {
-                        data: "settings"
-                    },
+                    @if (auth()->guard('admin')->check() ||
+                            auth()->guard('operator')->user()->level == 1)
+                        {
+                            data: "settings"
+                        },
+                    @endif
                 ]
             });
         }

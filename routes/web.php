@@ -5,10 +5,13 @@ use App\Http\Controllers\BatasWaktuController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\KelasController;
+use App\Http\Controllers\KeterlambatanController;
 use App\Http\Controllers\KetuntasanController;
 use App\Http\Controllers\MapelController;
+use App\Http\Controllers\OperatorController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\TahunAjaranController;
+use App\Http\Controllers\UjianController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -173,4 +176,40 @@ Route::middleware(['checkAuth'])->group(function () {
 
     //logout
     Route::get('/logout', [AuthController::class, 'logout']);
+
+    Route::match(['get', 'post'], "/ketuntasan/by-guru", [KetuntasanController::class, 'byGuru']);
+
+    Route::get("/ketuntasan/by-guru/{guru_id}", [KetuntasanController::class, 'byGuruMapel']);
+    Route::get("/ketuntasan/by-guru/{guru_id}/{mapel_id}/{tingkatan}/{kelas_id}", [KetuntasanController::class, 'byGuruKetuntasan']);
+    Route::get("/ketuntasan/by-guru/{guru_id}/{mapel_id}/{tingkatan}/{kelas_id}/edit/{ketuntasan_id}", [KetuntasanController::class, 'byGuruKetuntasanEdit']);
+    Route::post("ketuntasan/by-guru/cetak", [KetuntasanController::class, 'cetakByGuru']);
+
+    Route::post('ketuntasan/tuntaskanByGuru', [KetuntasanController::class, 'byGuruTuntaskan']);
+    Route::post("/byGuru/updateKetuntasan", [KetuntasanController::class, 'byGuruUpdate']);
+
+    Route::get("keterlambatan", [KeterlambatanController::class, 'index']);
+
+    Route::get("/keterlambatan/add", [KeterlambatanController::class, 'add']);
+    Route::post("/keterlambatan/store", [KeterlambatanController::class, 'store']);
+
+    Route::get("/keterlambatan/edit/{id_terlambat}", [KeterlambatanController::class, 'edit']);
+    Route::post("/keterlambatan/update", [KeterlambatanController::class, 'update']);
+
+    Route::post("/keterlambatan/cetak", [KeterlambatanController::class, 'cetak']);
+    Route::get("/keterlambatan/add/by-qr", [KeterlambatanController::class, 'addByQr']);
+
+
+    Route::get("/operator", [OperatorController::class, 'index']);
+    Route::get("/operator/add", [OperatorController::class, 'add']);
+    Route::post("/operator/store", [OperatorController::class, 'store']);
+    Route::get("/operator/edit/{id_operator}", [OperatorController::class, 'edit']);
+    Route::post("/operator/update", [OperatorController::class, 'update']);
+
+    Route::match(["get", "post"], "/ujian", [UjianController::class, 'index']);
+    Route::get("/ujian/add", [UjianController::class, 'add']);
+    Route::post("/ujian/store", [UjianController::class, 'store']);
+    Route::get("/ujian/edit/{id}", [UjianController::class, 'edit']);
+    Route::post("/ujian/update", [UjianController::class, 'update']);
+    Route::post("/ujian/cetak-qr", [UjianController::class, 'cetakQr']);
+    Route::post("/ujian/check-siswa", [UjianController::class, 'checkSiswa']);
 });

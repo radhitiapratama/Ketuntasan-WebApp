@@ -37,6 +37,13 @@
                                 <p>Superadmin</p>
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a href="{{ url('operator') }}"
+                                class="nav-link {{ Request::is('operator', 'operator/*') ? 'active' : '' }}">
+                                <i class="ri-git-commit-line"></i>
+                                <p>Operator</p>
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li
@@ -153,6 +160,23 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ url('keterlambatan') }}"
+                        class="nav-link {{ Request::is('keterlambatan', 'keterlambatan/*') ? 'active' : '' }}">
+                        <i class="nav-icon ri-honour-line"></i>
+                        <p>
+                            Keterlambatan
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url('ujian') }}" class="nav-link {{ Request::is('ujian', 'ujian/*') ? 'active' : '' }}">
+                        <i class="nav-icon ri-pass-valid-line"></i>
+                        <p>
+                            Ujian
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ url('tahun-ajaran') }}"
                         class="nav-link {{ Request::is('tahun-ajaran', 'tahun-ajaran/*') ? 'active' : '' }}">
                         <i class="nav-icon ri-calendar-2-line"></i>
@@ -191,7 +215,8 @@
         @endauth
 
         @auth('siswa')
-            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+                data-accordion="false">
                 <li class="nav-item">
                     <a href="{{ url('ketuntasan') }}"
                         class="nav-link {{ Request::is('ketuntasan', 'ketuntasan/*') ? 'active' : '' }}">
@@ -226,7 +251,7 @@
                     ->select('tahun_ajaran_id')
                     ->where('user_aktif', 1)
                     ->first();
-                
+
                 $sql_wali = DB::table('wali_kelas')
                     ->select('tingkatan', 'jurusan_id', 'kelas_id')
                     ->where(
@@ -271,6 +296,55 @@
                         </p>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ url('logout') }}" class="nav-link">
+                        <i class="nav-icon ri-logout-box-line"></i>
+                        <p>
+                            Logout
+                        </p>
+                    </a>
+                </li>
+            </ul>
+        @endauth
+
+        @auth('operator')
+            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu"
+                data-accordion="false">
+                <li class="nav-item">
+                    <a href="{{ url('ketuntasan') }}"
+                        class="nav-link {{ Request::is('ketuntasan', 'ketuntasan/*') ? 'active' : '' }}">
+                        <i class="nav-icon ri-article-line"></i>
+                        <p>
+                            Ketuntasan
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url('keterlambatan') }}"
+                        class="nav-link {{ Request::is('keterlambatan', 'keterlambatan/*') ? 'active' : '' }}">
+                        <i class="nav-icon ri-honour-line"></i>
+                        <p>
+                            Keterlambatan
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url('ujian') }}"
+                        class="nav-link {{ Request::is('ujian', 'ujian/*') ? 'active' : '' }}">
+                        <i class="nav-icon ri-pass-valid-line"></i>
+                        <p>
+                            Ujian
+                        </p>
+                    </a>
+                </li>
+                {{-- <li class="nav-item">
+                    <a href="{{ url('akun') }}" class="nav-link {{ Request::is('akun', 'akun/*') ? 'active' : '' }}">
+                        <i class="nav-icon ri-settings-3-line"></i>
+                        <p>
+                            Akun
+                        </p>
+                    </a>
+                </li> --}}
                 <li class="nav-item">
                     <a href="{{ url('logout') }}" class="nav-link">
                         <i class="nav-icon ri-logout-box-line"></i>

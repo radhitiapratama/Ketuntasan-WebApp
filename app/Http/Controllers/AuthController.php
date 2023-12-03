@@ -42,6 +42,11 @@ class AuthController extends Controller
             return redirect()->intended("/ketuntasan");
         }
 
+        if (Auth::guard("operator")->attempt($validated)) {
+            $request->session()->regenerate();
+            return redirect()->intended("/keterlambatan");
+        }
+
         return redirect()->back()->with("loginFailed", "loginFailed")->withInput();
     }
 

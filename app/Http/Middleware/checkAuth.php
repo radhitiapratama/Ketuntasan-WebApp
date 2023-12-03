@@ -17,7 +17,7 @@ class checkAuth
     public function handle(Request $request, Closure $next)
     {
         if (
-            auth()->guard("admin")->check() || auth()->guard("guru")->check() || auth()->guard("siswa")->check()
+            auth()->guard("admin")->check() || auth()->guard("guru")->check() || auth()->guard("siswa")->check() || auth()->guard("operator")->check()
         ) {
             return $next($request);
         }
