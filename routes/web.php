@@ -6,6 +6,7 @@ use App\Http\Controllers\GuruController;
 use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\KeterlambatanController;
+use App\Http\Controllers\KetidakhadiranController;
 use App\Http\Controllers\KetuntasanController;
 use App\Http\Controllers\MapelController;
 use App\Http\Controllers\OperatorController;
@@ -189,18 +190,16 @@ Route::middleware(['checkAuth'])->group(function () {
 
     Route::get("/ketuntasan/by-ruang", [KetuntasanController::class, 'byRuang']);
     Route::get("/ketuntasan/by-ruang/siswa/{siswa_id}", [KetuntasanController::class, 'byRuangKetuntasan']);
-    Route::get("//ketuntasan/by-ruang/siswa/{siswa_id}/edit/{ketuntasan_id}", [KetuntasanController::class, 'byRuangEdit']);
+    Route::get("/ketuntasan/by-ruang/siswa/{siswa_id}/edit/{ketuntasan_id}", [KetuntasanController::class, 'byRuangEdit']);
 
     Route::get("keterlambatan", [KeterlambatanController::class, 'index']);
-
     Route::get("/keterlambatan/add", [KeterlambatanController::class, 'add']);
     Route::post("/keterlambatan/store", [KeterlambatanController::class, 'store']);
-
     Route::get("/keterlambatan/edit/{id_terlambat}", [KeterlambatanController::class, 'edit']);
     Route::post("/keterlambatan/update", [KeterlambatanController::class, 'update']);
-
     Route::post("/keterlambatan/cetak", [KeterlambatanController::class, 'cetak']);
     Route::get("/keterlambatan/add/by-qr", [KeterlambatanController::class, 'addByQr']);
+    Route::post('/keterlambatan/delete', [KeterlambatanController::class, 'delete']);
 
 
     Route::get("/operator", [OperatorController::class, 'index']);
@@ -216,4 +215,14 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::post("/ujian/update", [UjianController::class, 'update']);
     Route::post("/ujian/cetak-qr", [UjianController::class, 'cetakQr']);
     Route::post("/ujian/check-siswa", [UjianController::class, 'checkSiswa']);
+
+    Route::match(['get', 'post'], "/ketidakhadiran", [KetidakhadiranController::class, 'index']);
+    Route::get("/ketidakhadiran/add/by-qr");
+    Route::get("/ketidakhadiran/add", [KetidakhadiranController::class, 'add']);
+    Route::post("/ketidakhadiran/store", [KetidakhadiranController::class, 'store']);
+    Route::get("/ketidakhadiran/edit/{id}", [KetidakhadiranController::class, 'edit']);
+    Route::post("/ketidakhadiran/update", [KetidakhadiranController::class, 'update']);
+    Route::get("/ketidakhadiran/add/by-qr", [KetidakhadiranController::class, 'addByQr']);
+    Route::post("/ketidakhadiran/cetak", [KetidakhadiranController::class, 'cetak']);
+    Route::post('/ketidakhadiran/delete', [KetidakhadiranController::class, 'delete']);
 });

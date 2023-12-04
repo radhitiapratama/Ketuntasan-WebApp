@@ -7,10 +7,11 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use PhpOffice\PhpSpreadsheet\Calculation\Database\DVar;
-use Svg\Tag\Rect;
+use Illuminate\Support\Facades\Validator;
+use Psy\CodeCleaner\FunctionReturnInWriteContextPass;
+use Symfony\Component\CssSelector\Node\FunctionNode;
 
-class KeterlambatanController extends Controller
+class KetidakhadiranController extends Controller
 {
     public function index(Request $request)
     {
@@ -20,7 +21,7 @@ class KeterlambatanController extends Controller
         if ($request->ajax()) {
             $columnsSearch = ['s.nama', 'u.ruang', 'u.sesi', 'ks.nama_kelas'];
 
-            $table = DB::table("keterlambatan as k");
+            $table = DB::table("ketidakhadiran as k");
 
             if ($request->input("search.value")) {
                 $table->where(function ($q) use ($columnsSearch, $request) {
@@ -51,8 +52,8 @@ class KeterlambatanController extends Controller
                 $query->where('u.sesi', $request->sesi);
             }
 
-            if ($request->tidak_lanjut != null) {
-                $query->where('k.tidak_lanjut', $request->tidak_lanjut);
+            if ($request->alasan != null) {
+                $query->where('k.alasan', $request->alasan);
             }
 
             $count = $query->count();
@@ -60,7 +61,6 @@ class KeterlambatanController extends Controller
             $result = $query->offset($request->start)
                 ->limit($request->length)
                 ->orderBy('k.id', 'DESC')
-                ->orderBy('k.tidak_lanjut', 'ASC')
                 ->get();
 
             $data = [];
@@ -85,31 +85,41 @@ class KeterlambatanController extends Controller
                     </div>
                     ';
 
-                    if ($row->tidak_lanjut == 1) {
-                        $tidak_lanjut = '
-                        <div class="text-center">
+                    if ($row->alasan == 1) {
+                        $subData['alasan'] = '
+                       <div class="text-center">
                             <span class="badge badge-success p-2">
-                                Diperbolehkan Masuk
+                                Izin
                             </span>
-                        </div>';
+                        </div>
+                       ';
                     }
 
-                    if ($row->tidak_lanjut == 2) {
-                        $tidak_lanjut = '
-                        <div class="text-center">
+                    if ($row->alasan == 2) {
+                        $subData['alasan'] = '
+                       <div class="text-center">
                             <span class="badge badge-warning p-2">
-                                Ikut di sesi berikutnya
+                                Sakit
                             </span>
-                        </div>';
+                        </div>
+                       ';
                     }
 
-                    $subData['alasan'] = $row->alasan_terlambat;
-                    $subData['tidak_lanjut'] = $tidak_lanjut;
+                    if ($row->alasan == 3) {
+                        $subData['alasan'] = '
+                       <div class="text-center">
+                            <span class="badge badge-danger p-2">
+                                Tanpa Keterangan
+                            </span>
+                        </div>
+                       ';
+                    }
+
                     $subData['waktu'] = date("d-m-Y H:m:s", strtotime($row->created_at));
 
                     $subData['aksi'] = '
                     <div class="text-center d-flex" style="gap:20px;">
-                        <a href="/keterlambatan/edit/' . $row->id . '" class="setting-edit m-auto">
+                        <a href="/ketidakhadiran/edit/' . $row->id . '" class="setting-edit m-auto">
                             <i class="ri-pencil-line"></i>
                         </a>
                         <button class="setting-delete m-auto btn-delete"data-id="' . $row->id . '">
@@ -133,11 +143,10 @@ class KeterlambatanController extends Controller
         $dataToView = [
             'ruangs' => Utils::$ruangs,
             'sesis' => Utils::$sesis,
-            'tidak_lanjuts' => Utils::$tidak_lanjuts,
+            'alasans' => Utils::$alasansTidakHadir,
         ];
 
-
-        return view("pages.keterlambatan.index", $dataToView);
+        return view("pages.ketidakhadiran.index", $dataToView);
     }
 
     public function add()
@@ -150,48 +159,56 @@ class KeterlambatanController extends Controller
 
         $dataToView = [
             'siswas' => $sql_siswa,
-            'sesis' => Utils::$sesis,
-            'ruangs' => Utils::$ruangs,
-            'tidak_lanjuts' => Utils::$tidak_lanjuts
+            'alasans' => Utils::$alasansTidakHadir,
         ];
 
-        return view("pages.keterlambatan.add", $dataToView);
+        return view("pages.ketidakhadiran.add", $dataToView);
     }
 
     public function store(Request $request)
     {
-        $sql_ujian = DB::table('ujian')
+        $validator = Validator::make($request->all(), [
+            'siswa' => "required",
+            'alasan' => "required"
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back();
+        }
+
+        $sql_ujian = DB::table("ujian")
             ->where('siswa_id', $request->siswa)
             ->first();
 
         if (!$sql_ujian) {
-            return redirect()->back()->withInput()->with("siswa_notfound", "Data siswa belum terdaftar di data ujian");
+            return redirect()->back();
         }
 
-        DB::table("keterlambatan")
+        DB::table("ketidakhadiran")
             ->insert([
                 'ujian_id' => $sql_ujian->id,
-                'alasan_terlambat' => $request->alasan,
-                'tidak_lanjut' => $request->tidak_lanjut,
+                'alasan' => $request->alasan,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ]);
 
-        return redirect()->back()->with("success", "Data Siswa terlambat berhasil di tambahkan");
+
+        return redirect()->back()->with("success", "Data berhasil di tambahkan");
     }
 
-    public function edit($id_terlambat)
+    public function edit($id)
     {
-        if (!isset($id_terlambat)) {
+        if (!isset($id)) {
             return redirect()->back();
         }
 
-        $sql_terlambat = DB::table('keterlambatan as k')
+        $sql_tidakhadir = DB::table('ketidakhadiran as k')
             ->select('s.nama', 's.siswa_id', 'k.*', 'u.ruang', 'u.sesi')
             ->join('ujian as u', 'u.id', '=', 'k.ujian_id')
             ->join('siswa as s', 's.siswa_id', '=', 'u.siswa_id')
             ->join('kelas as ks', 'ks.kelas_id', '=', 's.kelas_id')
-            ->where('k.id', $id_terlambat)
+            ->where('k.id', $id)
+            ->where('k.status', 1)
             ->first();
 
         $sql_siswa = DB::table("siswa")
@@ -199,39 +216,42 @@ class KeterlambatanController extends Controller
             ->get();
 
         $dataToView = [
-            'data_terlambat' => $sql_terlambat,
+            'data_tidakhadir' => $sql_tidakhadir,
             'siswas' => $sql_siswa,
-            'sesis' => Utils::$sesis,
-            'ruangs' => Utils::$ruangs,
-            'tidak_lanjuts' => Utils::$tidak_lanjuts
+            'alasans' => Utils::$alasansTidakHadir,
         ];
-
-        return view("pages.keterlambatan.edit", $dataToView);
+        return view("pages.ketidakhadiran.edit", $dataToView);
     }
 
     public function update(Request $request)
     {
-        // dd($request->all());
         $sql_ujian = DB::table("ujian")
             ->where('siswa_id', $request->siswa)
             ->first();
 
-        DB::table("keterlambatan")
+        DB::table("ketidakhadiran")
             ->where('id', $request->id)
             ->update([
                 'ujian_id' => $sql_ujian->id,
-                'alasan_terlambat' => $request->alasan,
-                'tidak_lanjut' => $request->tidak_lanjut,
+                'alasan' => $request->alasan,
             ]);
 
         return redirect()->back()->with("success", "Data berhasil di update");
+    }
+
+    public function addByQr()
+    {
+        $dataToView = [
+            'alasans' => Utils::$alasansTidakHadir,
+        ];
+        return view("pages.ketidakhadiran.add-by-barcode", $dataToView);
     }
 
     public function cetak(Request $request)
     {
         // dd($request->all());
 
-        $fileName = "Data Siswa Terlambat " . $request->tgl_start . " - " . $request->tgl_end;
+        $fileName = "Data Siswa Tidak Hadir " . $request->tgl_start . " - " . $request->tgl_end;
 
         $today_start = date("Y-m-d") . " 00:00:00";
         $today_end = date("Y-m-d") . " 23:59:59";
@@ -241,7 +261,7 @@ class KeterlambatanController extends Controller
             $today_end = $request->tgl_end . " 23:59:59";
         }
 
-        $sql_keterlambatan = DB::table("keterlambatan as k")
+        $sql_tidakhadir = DB::table("ketidakhadiran as k")
             ->select('s.nama', 's.tingkatan', 'ks.nama_kelas', 'u.*', 'k.*')
             ->join('ujian as u', 'u.id', '=', 'k.ujian_id')
             ->join('siswa as s', 's.siswa_id', '=', 'u.siswa_id')
@@ -251,45 +271,37 @@ class KeterlambatanController extends Controller
             ->where('k.created_at', '<=', $today_end);
 
         if ($request->ruang != null) {
-            $sql_keterlambatan->where('u.ruang', $request->ruang);
+            $sql_tidakhadir->where('u.ruang', $request->ruang);
         }
 
         if ($request->sesi != null) {
-            $sql_keterlambatan->where('u.sesi', $request->sesi);
+            $sql_tidakhadir->where('u.sesi', $request->sesi);
         }
 
-        if ($request->tidak_lanjut != null) {
-            $sql_keterlambatan->where('k.tidak_lanjut', $request->tidak_lanjut);
+        if ($request->alasan != null) {
+            $sql_tidakhadir->where('k.alasan', $request->alasan);
         }
 
-        $result = $sql_keterlambatan->orderBy('k.created_at', 'ASC')->get();
+        $result = $sql_tidakhadir->orderBy('k.created_at', 'ASC')->get();
 
         $dataToView = [
             'tgl_start' => date("d-m-Y", strtotime($today_start)),
             'tgl_end' => date("d-m-Y", strtotime($today_end)),
             'ruang' => $request->ruang,
             'sesi' => $request->sesi,
-            'keterlambatans' => $result,
+            'ketidakhadirans' => $result,
         ];
 
 
-        $pdf = Pdf::loadView("pages.keterlambatan.cetak-pdf", $dataToView);
+        $pdf = Pdf::loadView("pages.ketidakhadiran.cetak-pdf", $dataToView);
         $pdf->setPaper("A4", "potrait");
         return $pdf->stream($fileName . ".pdf");
-    }
-
-    public function addByQr()
-    {
-        $dataToView = [
-            'tidak_lanjuts' => Utils::$tidak_lanjuts,
-        ];
-        return view("pages.keterlambatan.add-by-barcode", $dataToView);
     }
 
     public function delete(Request $request)
     {
         $id = $request->id;
-        DB::table("keterlambatan")
+        DB::table("ketidakhadiran")
             ->where('id', $id)
             ->update([
                 'status' => 0,

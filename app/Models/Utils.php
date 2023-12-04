@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\DB;
+
 class Utils
 {
     public static $sesis = [
@@ -30,6 +32,12 @@ class Utils
         1, 2
     ];
 
+    public static $alasansTidakHadir = [
+        '1' => "Izin",
+        '2' => "Sakit",
+        '3' => "Tanpa Keterangan"
+    ];
+
     public static function checkTingkatan($tingkatan)
     {
         if ($tingkatan == 1) {
@@ -52,5 +60,29 @@ class Utils
         if ($string == 2) {
             return "Ikut di sesi berikutnya";
         }
+    }
+
+    public static function checkAlasanTidakHadir($string)
+    {
+        if ($string == 1) {
+            return "Izin";
+        }
+
+        if ($string == 2) {
+            return "Izin";
+        }
+
+        if ($string == 3) {
+            return "Tanpa Keterangan";
+        }
+    }
+
+    public static function getTahunAjaranUser()
+    {
+        $sql = DB::table("tahun_ajaran")
+            ->where('user_aktif', 1)
+            ->first();
+
+        return $sql->tahun_ajaran_id;
     }
 }

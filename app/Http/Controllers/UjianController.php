@@ -149,6 +149,7 @@ class UjianController extends Controller
         $siswa_id = $request->siswa_id;
 
         $sql_siswa = DB::table("ujian as u")
+            ->select('u.*', 's.nama')
             ->join('siswa as s', 's.siswa_id', '=', 'u.siswa_id')
             ->where('u.siswa_id', $siswa_id)
             ->first();

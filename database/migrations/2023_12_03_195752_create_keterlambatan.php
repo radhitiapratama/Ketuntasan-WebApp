@@ -13,12 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        if (!Schema::hasTable('ujian')) {
-            Schema::create('ujian', function (Blueprint $table) {
+        if (!Schema::hasTable('keterlambatan')) {
+            Schema::create('keterlambatan', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId("siswa_id")->references("siswa_id")->on("siswa");
-                $table->integer("ruang");
-                $table->integer("sesi");
+                $table->foreignId("ujian_id")->references("id")->on("ujian");
+                $table->text("alasan_terlambat");
+                $table->integer("tidak_lanjut");
+                $table->integer("status")->default(1);
                 $table->timestamps();
             });
         }
@@ -31,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('ujian');
+        Schema::dropIfExists('keterlambatan');
     }
 };

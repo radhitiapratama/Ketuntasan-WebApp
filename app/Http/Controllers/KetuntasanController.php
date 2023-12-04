@@ -18,6 +18,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use GuzzleHttp\RedirectMiddleware;
 use Illuminate\Support\Facades\Auth;
 use Psy\CodeCleaner\FunctionReturnInWriteContextPass;
+use Psy\Command\WhereamiCommand;
 
 class KetuntasanController extends Controller
 {
@@ -1640,6 +1641,8 @@ class KetuntasanController extends Controller
 
     public function byRuang(Request $request)
     {
+        $tahun_ajaran_id = Utils::getTahunAjaranUser();
+
         if ($request->ajax()) {
             $columnsSearch = ['s.nama'];
             $table = DB::table("ujian as u");
@@ -1653,6 +1656,9 @@ class KetuntasanController extends Controller
             }
 
             $query = $table->join("siswa as s", 's.siswa_id', '=', 'u.siswa_id')
+                ->join('ketuntasan as k', 'k.siswa_id', '=', 's.siswa_id')
+                ->where('k.tuntas', '=', 0)
+                ->where('k.tahun_ajaran_id', $tahun_ajaran_id)
                 ->where('u.ruang', $request->ruang)
                 ->where('u.sesi', $request->sesi);
 
@@ -1661,6 +1667,7 @@ class KetuntasanController extends Controller
             $result = $query->offset($request->start)
                 ->limit($request->length)
                 ->orderBy('s.nama', 'ASC')
+                ->distinct()
                 ->get();
 
             $data = [];

@@ -220,8 +220,21 @@ table.dataTable thead th {
     border: none;
 }
 
+.setting-delete {
+    width: 32px !important;
+    height: 32px !important;
+    background: var(--red);
+    color: var(--white);
+    border-radius: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+}
+
 .setting-edit:hover,
-.setting-detail:hover {
+.setting-detail:hover,
+.setting-delete:hover {
     color: var(--white);
     opacity: .8;
 }

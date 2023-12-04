@@ -169,6 +169,15 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ url('ketidakhadiran') }}"
+                        class="nav-link {{ Request::is('ketidakhadiran', 'ketidakhadiran/*') ? 'active' : '' }}">
+                        <i class="nav-icon ri-user-forbid-line"></i>
+                        <p>
+                            Ketidakhadiran
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ url('ujian') }}" class="nav-link {{ Request::is('ujian', 'ujian/*') ? 'active' : '' }}">
                         <i class="nav-icon ri-pass-valid-line"></i>
                         <p>
@@ -325,6 +334,15 @@
                         <i class="nav-icon ri-honour-line"></i>
                         <p>
                             Keterlambatan
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url('ketidakhadiran') }}"
+                        class="nav-link {{ Request::is('ketidakhadiran', 'ketidakhadiran/*') ? 'active' : '' }}">
+                        <i class="nav-icon ri-user-forbid-line"></i>
+                        <p>
+                            Ketidakhadiran
                         </p>
                     </a>
                 </li>

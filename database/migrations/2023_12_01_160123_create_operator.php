@@ -13,16 +13,18 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('operator', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId("user_id")->references("user_id")->on("users");
-            $table->string("username");
-            $table->string("nama");
-            $table->string("password");
-            $table->integer("status")->default(1);
-            $table->integer("level");
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('operator')) {
+            Schema::create('operator', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId("user_id")->references("user_id")->on("users");
+                $table->string("username");
+                $table->string("nama");
+                $table->string("password");
+                $table->integer("status")->default(1);
+                $table->integer("level");
+                $table->timestamps();
+            });
+        }
     }
 
     /**

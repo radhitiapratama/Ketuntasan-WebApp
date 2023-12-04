@@ -11,7 +11,7 @@
  Target Server Version : 80030
  File Encoding         : 65001
 
- Date: 03/12/2023 19:47:48
+ Date: 04/12/2023 20:04:51
 */
 
 SET NAMES utf8mb4;
@@ -81,7 +81,7 @@ CREATE TABLE `failed_jobs`  (
   `failed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `failed_jobs_uuid_unique`(`uuid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of failed_jobs
@@ -517,7 +517,7 @@ CREATE TABLE `kelas_mapel`  (
   CONSTRAINT `kelas_mapel_jurusan_id_foreign` FOREIGN KEY (`jurusan_id`) REFERENCES `jurusan` (`jurusan_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `kelas_mapel_kelas_id_foreign` FOREIGN KEY (`kelas_id`) REFERENCES `kelas` (`kelas_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `kelas_mapel_tahun_ajaran_id_foreign` FOREIGN KEY (`tahun_ajaran_id`) REFERENCES `tahun_ajaran` (`tahun_ajaran_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 555 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 561 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of kelas_mapel
@@ -1094,13 +1094,42 @@ CREATE TABLE `keterlambatan`  (
   `tidak_lanjut` int NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `status` int NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `keterlambatan_ujian_id_foreign`(`ujian_id`) USING BTREE,
   CONSTRAINT `keterlambatan_ujian_id_foreign` FOREIGN KEY (`ujian_id`) REFERENCES `ujian` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of keterlambatan
+-- ----------------------------
+INSERT INTO `keterlambatan` VALUES (1, 1500, 'Kartu rusak', 2, '2023-12-04 07:30:08', '2023-12-04 07:30:08', 1);
+INSERT INTO `keterlambatan` VALUES (2, 1645, 'Kehabisan bensin', 2, '2023-12-04 08:06:59', '2023-12-04 08:06:59', 1);
+INSERT INTO `keterlambatan` VALUES (3, 1261, 'kartu hilang', 2, '2023-12-04 08:15:43', '2023-12-04 08:15:43', 1);
+INSERT INTO `keterlambatan` VALUES (4, 1131, 'kartu hilang', 2, '2023-12-04 08:15:59', '2023-12-04 08:15:59', 1);
+INSERT INTO `keterlambatan` VALUES (5, 478, 'ketiduran', 2, '2023-12-04 09:24:49', '2023-12-04 09:24:49', 1);
+INSERT INTO `keterlambatan` VALUES (6, 526, 'ketiduran', 2, '2023-12-04 09:28:46', '2023-12-04 09:28:46', 1);
+INSERT INTO `keterlambatan` VALUES (7, 178, 'Kesiangan', 2, '2023-12-04 09:33:51', '2023-12-04 09:33:51', 1);
+INSERT INTO `keterlambatan` VALUES (8, 954, 'Prakerja', 2, '2023-12-04 12:46:39', '2023-12-04 12:46:39', 1);
+
+-- ----------------------------
+-- Table structure for ketidakhadiran
+-- ----------------------------
+DROP TABLE IF EXISTS `ketidakhadiran`;
+CREATE TABLE `ketidakhadiran`  (
+  `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
+  `ujian_id` bigint UNSIGNED NOT NULL,
+  `alasan` int NOT NULL,
+  `status` int NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `ketidakhadiran_ujian_id_foreign`(`ujian_id`) USING BTREE,
+  CONSTRAINT `ketidakhadiran_ujian_id_foreign` FOREIGN KEY (`ujian_id`) REFERENCES `ujian` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of ketidakhadiran
 -- ----------------------------
 
 -- ----------------------------
@@ -1127,12 +1156,12 @@ CREATE TABLE `ketuntasan`  (
   CONSTRAINT `ketuntasan_kelas_mapel_id_foreign` FOREIGN KEY (`kelas_mapel_id`) REFERENCES `kelas_mapel` (`kelas_mapel_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `ketuntasan_siswa_id_foreign` FOREIGN KEY (`siswa_id`) REFERENCES `siswa` (`siswa_id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `ketuntasan_tahun_ajaran_id_foreign` FOREIGN KEY (`tahun_ajaran_id`) REFERENCES `tahun_ajaran` (`tahun_ajaran_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 477 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 17518 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of ketuntasan
 -- ----------------------------
-INSERT INTO `ketuntasan` VALUES (477, 233, 1, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:34:32', '2023-12-03 19:34:32', 1, NULL);
+INSERT INTO `ketuntasan` VALUES (477, 233, 1, NULL, '2023-12-04 06:42:16', 1, 1, 1, '2023-12-03 19:34:32', '2023-12-03 19:34:32', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (478, 233, 2, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:34:32', '2023-12-03 19:34:32', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (479, 233, 3, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:34:32', '2023-12-03 19:34:32', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (480, 233, 4, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:34:32', '2023-12-03 19:34:32', 1, NULL);
@@ -2177,7 +2206,7 @@ INSERT INTO `ketuntasan` VALUES (1518, 1, 34, NULL, '2023-12-03 19:46:25', 1, 1,
 INSERT INTO `ketuntasan` VALUES (1519, 1, 35, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:34:41', '2023-12-03 19:34:41', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (1520, 1, 36, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:34:41', '2023-12-03 19:34:41', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (1521, 1, 37, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:34:41', '2023-12-03 19:34:41', 1, NULL);
-INSERT INTO `ketuntasan` VALUES (1522, 1, 38, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:34:41', '2023-12-03 19:34:41', 1, NULL);
+INSERT INTO `ketuntasan` VALUES (1522, 1, 38, '-', NULL, 0, 1, 1, '2023-12-03 19:34:41', '2023-12-03 19:34:41', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (1523, 1, 39, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:34:41', '2023-12-03 19:34:41', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (1524, 1, 40, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:34:41', '2023-12-03 19:34:41', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (1525, 1, 41, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:34:41', '2023-12-03 19:34:41', 1, NULL);
@@ -8558,7 +8587,7 @@ INSERT INTO `ketuntasan` VALUES (7899, 434, 216, NULL, '2023-12-03 19:46:25', 1,
 INSERT INTO `ketuntasan` VALUES (7900, 434, 217, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:36:46', '2023-12-03 19:36:46', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (7901, 434, 218, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:36:46', '2023-12-03 19:36:46', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (7902, 434, 219, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:36:46', '2023-12-03 19:36:46', 1, NULL);
-INSERT INTO `ketuntasan` VALUES (7903, 435, 204, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:36:46', '2023-12-03 19:36:46', 1, NULL);
+INSERT INTO `ketuntasan` VALUES (7903, 435, 204, 'Laporan p abror', NULL, 0, 1, 1, '2023-12-03 19:36:46', '2023-12-03 19:36:46', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (7904, 435, 205, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:36:46', '2023-12-03 19:36:46', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (7905, 435, 206, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:36:46', '2023-12-03 19:36:46', 1, NULL);
 INSERT INTO `ketuntasan` VALUES (7906, 435, 207, NULL, '2023-12-03 19:46:25', 1, 1, 1, '2023-12-03 19:36:46', '2023-12-03 19:36:46', 1, NULL);
@@ -18319,6 +18348,11 @@ INSERT INTO `migrations` VALUES (15, '2023_08_02_120432_create_batas_waktu', 1);
 INSERT INTO `migrations` VALUES (16, '2023_08_30_082452_create_admin', 1);
 INSERT INTO `migrations` VALUES (17, '2023_12_01_140808_create_keterlambatan', 2);
 INSERT INTO `migrations` VALUES (18, '2023_12_03_072830_create_keterlambatan', 3);
+INSERT INTO `migrations` VALUES (19, '2023_11_30_072716_create_ujian', 4);
+INSERT INTO `migrations` VALUES (20, '2023_12_01_160123_create_operator', 4);
+INSERT INTO `migrations` VALUES (21, '2023_12_03_195752_create_keterlambatan', 4);
+INSERT INTO `migrations` VALUES (22, '2023_12_04_170524_create_ketidakhadiran', 4);
+INSERT INTO `migrations` VALUES (23, '2023_12_04_200345_add_status_to_keterlambatan', 5);
 
 -- ----------------------------
 -- Table structure for operator
@@ -18379,7 +18413,7 @@ CREATE TABLE `personal_access_tokens`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `personal_access_tokens_token_unique`(`token`) USING BTREE,
   INDEX `personal_access_tokens_tokenable_type_tokenable_id_index`(`tokenable_type`, `tokenable_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of personal_access_tokens

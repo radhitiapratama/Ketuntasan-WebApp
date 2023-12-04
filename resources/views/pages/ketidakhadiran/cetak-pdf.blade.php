@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Data Keterlambatan</title>
+    <title>Data Ketidakhadiran</title>
     <style>
         * {
             margin: 0;
@@ -47,7 +47,7 @@
 </head>
 
 <body>
-    <h1 class="title">Data Keterlambatan Siswa</h1>
+    <h1 class="title">Data Ketidakhadiran Siswa</h1>
     <p class="info">Tanggal : {{ $tgl_start }} - {{ $tgl_end }}</p>
     <p class="info">Ruang : {{ $ruang ? $ruang : '-' }} </p>
     <p class="info">Sesi : {{ $sesi ? $sesi : '-' }} </p>
@@ -60,18 +60,17 @@
                 <th>Kelas</th>
                 <th width="5">Ruang</th>
                 <th width="5">Sesi</th>
-                <th>Alasan Terlambat</th>
-                <th>Tidak Lanjut</th>
+                <th>Alasan</th>
                 <th>Waktu</th>
             </tr>
         </thead>
         <tbody>
-            @if (count($keterlambatans) > 0)
-                @foreach ($keterlambatans as $row)
+            @if (count($ketidakhadirans) > 0)
+                @foreach ($ketidakhadirans as $row)
                     <?php
                     
                     $tingkatan = \App\Models\Utils::checkTingkatan($row->tingkatan);
-                    $tidak_lanjut = \App\Models\Utils::checkTidakLanjut($row->tidak_lanjut);
+                    $alasan = \App\Models\Utils::checkAlasanTidakHadir($row->alasan);
                     ?>
 
                     <tr>
@@ -80,14 +79,13 @@
                         <td>{{ $tingkatan }} {{ $row->nama_kelas }}</td>
                         <td class="text-center">{{ $row->ruang }}</td>
                         <td class="text-center">{{ $row->sesi }}</td>
-                        <td>{{ $row->alasan_terlambat }}</td>
-                        <td>{{ $tidak_lanjut }}</td>
+                        <td>{{ $alasan }}</td>
                         <td>{{ date('d-m-Y H:m:s', strtotime($row->created_at)) }}</td>
                     </tr>
                 @endforeach
             @else
                 <tr>
-                    <td colspan="7" class="text-center">Tidak ada data Siswa terlambat</td>
+                    <td colspan="7" class="text-center">Tidak ada data Siswa tidak hadir</td>
                 </tr>
             @endif
 
