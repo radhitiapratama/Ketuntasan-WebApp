@@ -260,6 +260,7 @@ class AuthController extends Controller
         $siswaId = $request->siswaId;
         $newUsername = $request->newUsername;
 
+        // ambil semua data username dari table admin,guru,siswa
         $sql_usernameAdmin = Admin::select("username")->get()->toArray();
         $sql_usernameGuru = Guru::select("username")->get()->toArray();
         $sql_usernameSiswa = Siswa::select("username")->get()->toArray();

@@ -878,13 +878,19 @@ class GuruController extends Controller
 
         if ($request->ajax()) {
             //total mapel
-            $sql_total_mapel = DB::table("kelas_mapel")
-                ->select("kelas_mapel_id")
-                ->where("tingkatan", $sql_waliKelas->tingkatan)
-                ->where('jurusan_id', $sql_waliKelas->jurusan_id)
-                ->where('kelas_id', $sql_waliKelas->kelas_id)
-                ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
-                ->where("status", 1)
+            $sql_total_mapel = DB::table('kelas_mapel as km')
+                ->select('km.kelas_mapel_id')
+                ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+                ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+                ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+                ->where('km.tingkatan',  $sql_waliKelas->tingkatan)
+                ->where('km.jurusan_id', $sql_waliKelas->jurusan_id)
+                ->where('km.kelas_id', $sql_waliKelas->kelas_id)
+                ->where('km.tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                ->where('km.status', 1)
+                ->where('gm.status', 1)
+                ->where('g.status', 1)
+                ->where('m.status', 1)
                 ->count();
 
             $columnsSearch = ['username', 'nama'];
@@ -892,17 +898,30 @@ class GuruController extends Controller
             $sql_mapelTuntas = Siswa::with([
                 'ketuntasan' => function ($q) {
                     $q->join("kelas_mapel", 'kelas_mapel.kelas_mapel_id', '=', 'ketuntasan.kelas_mapel_id')
-                        ->where("kelas_mapel.status", 1)
-                        ->where("ketuntasan.tuntas", 1)
+                        ->join('guru_mapel', 'guru_mapel.guru_mapel_id', '=', 'kelas_mapel.guru_mapel_id')
+                        ->join('guru', 'guru.guru_id', '=', 'guru_mapel.guru_id')
+                        ->join('mapel', 'mapel.mapel_id', '=', 'guru_mapel.mapel_id')
                         ->where("ketuntasan.tahun_ajaran_id", $GLOBALS['tahun']->tahun_ajaran_id)
                         ->where("ketuntasan.semester", 1)
+                        ->where("ketuntasan.tuntas", 1)
+                        ->where('kelas_mapel.status', 1)
+                        ->where('guru_mapel.status', 1)
+                        ->where('guru.status', 1)
+                        ->where('mapel.status', 1)
                         ->get();
                 },
                 'ketuntasan2' => function ($q) {
                     $q->join("kelas_mapel", 'kelas_mapel.kelas_mapel_id', '=', 'ketuntasan.kelas_mapel_id')
+                        ->join('guru_mapel', 'guru_mapel.guru_mapel_id', '=', 'kelas_mapel.guru_mapel_id')
+                        ->join('guru', 'guru.guru_id', '=', 'guru_mapel.guru_id')
+                        ->join('mapel', 'mapel.mapel_id', '=', 'guru_mapel.mapel_id')
                         ->where("ketuntasan.tuntas", 1)
                         ->where("ketuntasan.tahun_ajaran_id", $GLOBALS['tahun']->tahun_ajaran_id)
                         ->where("ketuntasan.semester", 2)
+                        ->where('kelas_mapel.status', 1)
+                        ->where('guru_mapel.status', 1)
+                        ->where('guru.status', 1)
+                        ->where('mapel.status', 1)
                         ->get();
                 }
             ])
@@ -1032,7 +1051,11 @@ class GuruController extends Controller
                     ->where('km.tingkatan', $sql_waliKelas->tingkatan)
                     ->where("km.jurusan_id", $sql_waliKelas->jurusan_id)
                     ->where('km.kelas_id', $sql_waliKelas->kelas_id)
-                    ->where('semester', $request->semester);
+                    ->where('semester', $request->semester)
+                    ->where('km.status', 1)
+                    ->where('gm.status', 1)
+                    ->where("g.status", 1)
+                    ->where('m.status', 1);
 
                 if ($request->tuntas != null) {
                     $query->where('k.tuntas', $request->tuntas);

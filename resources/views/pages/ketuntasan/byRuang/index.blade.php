@@ -25,6 +25,22 @@
         </div>
     </div>
 
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert-box alert-success">
+                <div class="alert-icon">
+                    <i class="ri-error-warning-line"></i>
+                </div>
+                <div class="alert-body">
+                    <p class="alert-title">Informasi !</p>
+                    <p class="alert-text">
+                        Silahkan Pilih ruang dan sesi untuk melihat siswa yang mapelnya belum tuntas !
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         {{-- <div class="card-header">
             <div class="row">
@@ -76,9 +92,9 @@
             </div>
         </div>
         <div class="card-header">
-            <form action="/ketuntasan/by-guru/cetak" method="post" target="_blank">
+            {{-- <form action="/ketuntasan/by-guru/cetak" method="post" target="_blank">
                 @csrf
-                {{-- <input type="hidden" name="guru_id_cetak" value="{{ $guru_id }}">
+                <input type="hidden" name="guru_id_cetak" value="{{ $guru_id }}">
                 <input type="hidden" name="mapel_id_cetak" value="{{ $mapel_id }}">
                 <input type="hidden" name="kelas_id_cetak" value="{{ $kelas_id }}">
                 <input type="hidden" name="tingkatan_cetak" value="{{ $tingkatan }}">
@@ -88,8 +104,8 @@
                 <input type="hidden" name="nama_mapel_cetak" value="{{ $data_mapel->nama_mapel }}">
                 <input type="hidden" name="nama_kelas_cetak"
                     value="{{ checkTingkatan($tingkatan) }} {{ $data_kelas->nama_jurusan }} | {{ $data_kelas->nama_kelas }} ">
-                <button type="submit" class="btn-pdf">Cetak PDF <i class="ri-file-pdf-line"></i></button> --}}
-            </form>
+                <button type="submit" class="btn-pdf">Cetak PDF <i class="ri-file-pdf-line"></i></button>
+            </form> --}}
         </div>
         <div class="card-body table-responsive">
             <table width="100%" id="tbl-ketuntasans" class="table table-bordered">

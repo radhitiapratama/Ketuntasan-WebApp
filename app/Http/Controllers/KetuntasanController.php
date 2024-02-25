@@ -15,6 +15,7 @@ use App\Models\Mapel;
 use App\Models\Siswa;
 use App\Models\Utils;
 use Barryvdh\DomPDF\Facade\Pdf;
+use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\RedirectMiddleware;
 use Illuminate\Support\Facades\Auth;
 use Psy\CodeCleaner\FunctionReturnInWriteContextPass;
@@ -33,12 +34,26 @@ class KetuntasanController extends Controller
         '0' => "Belum Tuntas",
     ];
 
+    private $tahun_ajaran_admin = null;
+    private $tahun_ajaran_user = null;
+
+    public function __construct()
+    {
+        if (Auth::guard("admin")->check() || Auth::guard("operator")->check()) {
+            $this->tahun_ajaran_admin = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
+        }
+
+        if (Auth::guard("siswa")->check() || Auth::guard("guru")->check()) {
+            $this->tahun_ajaran_user  = TahunAjaran::select("tahun_ajaran_id")->where("user_aktif", 1)->first();
+        }
+    }
+
     public function index(Request $request)
     {
         $start_date = null;
         $end_date = null;
 
-        if (auth()->guard("admin")->check() || auth()->guard("operator")->check()) {
+        if (Auth::guard("admin")->check() || Auth::guard("operator")->check()) {
             $tahun_ajaran = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
 
             $sql_batasWaktu = DB::table("batas_waktu")
@@ -69,6 +84,8 @@ class KetuntasanController extends Controller
                     ->join('jurusan as j', 'j.jurusan_id', '=', 's.jurusan_id')
                     ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id')
                     ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'kt.kelas_mapel_id')
+                    ->where("j.status", 1)
+                    ->where('k.status', 1)
                     ->where("kt.tahun_ajaran_id", $tahun_ajaran->tahun_ajaran_id);
 
 
@@ -88,6 +105,7 @@ class KetuntasanController extends Controller
                 $records = count($query->groupBy("s.tingkatan", 's.kelas_id')->get());
 
                 $result = $query->groupBy("s.tingkatan", 's.kelas_id')
+                    ->orderBy("k.nama_kelas", "ASC")
                     ->offset($request->start)
                     ->limit($request->length)
                     ->get();
@@ -181,12 +199,16 @@ class KetuntasanController extends Controller
                     ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
                     ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
                     ->join('guru as g', 'g.guru_id', 'gm.guru_id')
-                    ->where('k.siswa_id', auth()->guard("siswa")->user()->siswa_id)
-                    ->where('km.status', 1)
+                    ->where('k.siswa_id', Auth::guard("siswa")->user()->siswa_id)
                     ->where('km.tingkatan', Auth::guard("siswa")->user()->tingkatan)
                     ->where('km.jurusan_id', Auth::guard("siswa")->user()->jurusan_id)
                     ->where('km.kelas_id', Auth::guard("siswa")->user()->kelas_id)
-                    ->where('k.tahun_ajaran_id', $tahun->tahun_ajaran_id);
+                    ->where('k.tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                    ->where('km.status', 1)
+                    ->where('gm.status', 1)
+                    ->where("g.status", 1)
+                    ->where("m.status", 1);
+
 
                 if ($request->tuntas != null) {
                     $query->where('k.tuntas', $request->tuntas);
@@ -286,11 +308,14 @@ class KetuntasanController extends Controller
             }
 
             if ($request->ajax()) {
-                $table = GuruMapel::with('mapel');
+                $table = DB::table("guru_mapel as gm");
 
                 $query = $table
-                    ->where('guru_id', auth()->guard("guru")->user()->guru_id)
-                    ->where('status', 1);
+                    ->select('gm.*', 'm.nama_mapel')
+                    ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+                    ->where('gm.guru_id', Auth::guard("guru")->user()->guru_id)
+                    ->where("m.status", 1)
+                    ->where('gm.status', 1);
 
                 $result = $query->get();
 
@@ -301,7 +326,7 @@ class KetuntasanController extends Controller
                     foreach ($result as $row) {
                         $i++;
                         $subData['no'] = $i;
-                        $subData['mapel'] = $row->mapel->nama_mapel;
+                        $subData['mapel'] = $row->nama_mapel;
 
                         if ($status_batasWaktu) {
                             $subData['settings'] = '
@@ -599,29 +624,49 @@ class KetuntasanController extends Controller
                 $columnsSearch = ['username', 'nama'];
 
                 //total mapel
-                $sql_total_mapel = DB::table('kelas_mapel')
-                    ->select('kelas_mapel_id')
-                    ->where('tingkatan', $tingkatan)
-                    ->where('jurusan_id', $jurusan_id)
-                    ->where('kelas_id', $kelas_id)
-                    ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
-                    ->where('status', 1)
+                $sql_total_mapel = DB::table('kelas_mapel as km')
+                    ->select('km.kelas_mapel_id')
+                    ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+                    ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+                    ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
+                    ->where('km.tingkatan', $tingkatan)
+                    ->where('km.jurusan_id', $jurusan_id)
+                    ->where('km.kelas_id', $kelas_id)
+                    ->where('km.tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                    ->where('km.status', 1)
+                    ->where('gm.status', 1)
+                    ->where('g.status', 1)
+                    ->where('m.status', 1)
                     ->count();
+
 
                 $sql_mapelTuntas = Siswa::with([
                     'ketuntasan' => function ($q) {
                         $q->join("kelas_mapel", 'kelas_mapel.kelas_mapel_id', '=', 'ketuntasan.kelas_mapel_id')
-                            ->where("kelas_mapel.status", 1)
-                            ->where("ketuntasan.tuntas", 1)
+                            ->join('guru_mapel', 'guru_mapel.guru_mapel_id', '=', 'kelas_mapel.guru_mapel_id')
+                            ->join('guru', 'guru.guru_id', '=', 'guru_mapel.guru_id')
+                            ->join('mapel', 'mapel.mapel_id', '=', 'guru_mapel.mapel_id')
                             ->where("ketuntasan.tahun_ajaran_id", $GLOBALS['tahun']->tahun_ajaran_id)
                             ->where("ketuntasan.semester", 1)
+                            ->where("ketuntasan.tuntas", 1)
+                            ->where('kelas_mapel.status', 1)
+                            ->where('guru_mapel.status', 1)
+                            ->where('guru.status', 1)
+                            ->where('mapel.status', 1)
                             ->get();
                     },
                     'ketuntasan2' => function ($q) {
                         $q->join("kelas_mapel", 'kelas_mapel.kelas_mapel_id', '=', 'ketuntasan.kelas_mapel_id')
+                            ->join('guru_mapel', 'guru_mapel.guru_mapel_id', '=', 'kelas_mapel.guru_mapel_id')
+                            ->join('guru', 'guru.guru_id', '=', 'guru_mapel.guru_id')
+                            ->join('mapel', 'mapel.mapel_id', '=', 'guru_mapel.mapel_id')
                             ->where("ketuntasan.tuntas", 1)
                             ->where("ketuntasan.tahun_ajaran_id", $GLOBALS['tahun']->tahun_ajaran_id)
                             ->where("ketuntasan.semester", 2)
+                            ->where('kelas_mapel.status', 1)
+                            ->where('guru_mapel.status', 1)
+                            ->where('guru.status', 1)
+                            ->where('mapel.status', 1)
                             ->get();
                     }
                 ])
@@ -723,6 +768,11 @@ class KetuntasanController extends Controller
         $kelas_id = $request->kelas_id;
         $siswa_id = $request->siswa_id;
 
+        // jika tidak ada request yang di minta kembali ke halaman yang sebelumnya
+        if (!isset($tingkatan) || !isset($jurusan_id) || !isset($kelas_id) || !isset($siswa_id)) {
+            return redirect()->back();
+        }
+
         $start_date = null;
         $end_date = null;
 
@@ -755,11 +805,15 @@ class KetuntasanController extends Controller
                     ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
                     ->where("k.siswa_id", $siswa_id)
                     ->where('k.semester', $request->semester)
-                    ->where("km.status", 1)
                     ->where('km.tingkatan', $tingkatan)
                     ->where('km.jurusan_id', $jurusan_id)
                     ->where('km.kelas_id', $kelas_id)
-                    ->where('k.tahun_ajaran_id', $tahun->tahun_ajaran_id);
+                    ->where('k.tahun_ajaran_id', $tahun->tahun_ajaran_id)
+                    ->where("km.status", 1)
+                    ->where("gm.status", 1)
+                    ->where("m.status", 1)
+                    ->where("g.status", 1);
+
 
                 if ($request->input("search.value")) {
                     $table->where(function ($q) use ($columnsSearch, $request) {
@@ -845,20 +899,11 @@ class KetuntasanController extends Controller
             return redirect('ketuntasan');
         }
 
-        if (!isset($tingkatan) || !isset($jurusan_id) || !isset($kelas_id) || !isset($siswa_id)) {
-            return redirect()->back();
-        }
 
         // detail data siswa
         $sql_siswa = DB::table("siswa")
             ->select('nama')
             ->where("siswa_id", $siswa_id)
-            ->first();
-
-        $sql_batasWaktu = DB::table("batas_waktu")
-            ->select('start_date', 'end_date')
-            ->where("status", 1)
-            ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
             ->first();
 
         $status_batasWaktu = "dalam";
@@ -1045,7 +1090,7 @@ class KetuntasanController extends Controller
                     ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
                     ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
                     ->join('siswa as s', 's.siswa_id', '=', 'k.siswa_id')
-                    ->where("gm.guru_id", auth()->guard('guru')->user()->guru_id)
+                    ->where("gm.guru_id", Auth::guard('guru')->user()->guru_id)
                     ->where("gm.mapel_id", $mapel_id)
                     ->where("k.tahun_ajaran_id", $tahun->tahun_ajaran_id)
                     ->where('s.tingkatan', $tingkatan)
@@ -1377,6 +1422,8 @@ class KetuntasanController extends Controller
             ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
             ->where("g.guru_id", $guru_id)
             ->where('gm.status', 1)
+            ->where("km.status", 1)
+            ->where("m.status", 1)
             ->get();
 
         $dataToView = [
@@ -1657,17 +1704,25 @@ class KetuntasanController extends Controller
 
             $query = $table->join("siswa as s", 's.siswa_id', '=', 'u.siswa_id')
                 ->join('ketuntasan as k', 'k.siswa_id', '=', 's.siswa_id')
+                ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
+                ->join('guru_mapel as gm', 'gm.guru_mapel_id', '=', 'km.guru_mapel_id')
+                ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
+                ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
                 ->where('k.tuntas', '=', 0)
                 ->where('k.tahun_ajaran_id', $tahun_ajaran_id)
                 ->where('u.ruang', $request->ruang)
-                ->where('u.sesi', $request->sesi);
+                ->where('u.sesi', $request->sesi)
+                ->where('km.status', 1)
+                ->where('gm.status', 1)
+                ->where('g.status', 1)
+                ->where('m.status', 1);
 
             $count = $query->count();
 
             $result = $query->offset($request->start)
                 ->limit($request->length)
                 ->orderBy('s.nama', 'ASC')
-                ->distinct()
+                ->groupBy("u.siswa_id")
                 ->get();
 
             $data = [];
@@ -1732,7 +1787,10 @@ class KetuntasanController extends Controller
                 ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
                 ->join('mapel as m', 'm.mapel_id', '=', 'gm.mapel_id')
                 ->where('k.siswa_id', $siswa_id)
-                ->where('km.status', 1);
+                ->where('km.status', 1)
+                ->where('gm.status', 1)
+                ->where('g.status', 1)
+                ->where('m.status', 1);
 
             if ($request->tuntas != null) {
                 $query->where('k.tuntas', $request->tuntas);
