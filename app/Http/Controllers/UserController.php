@@ -6,6 +6,7 @@ use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\Utils;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -16,7 +17,7 @@ class UserController extends Controller
         '0' => "Nonaktif",
     ];
 
-    public function superadmin(Request $request)
+    public function index(Request $request)
     {
         if ($request->ajax()) {
             $columnsSearch = ['a.username', 'a.nama'];
@@ -32,7 +33,6 @@ class UserController extends Controller
 
             $query = $table->select('u.user_id', 'a.username', 'a.nama', 'a.status')
                 ->join('admin as a', 'a.user_id', '=', 'u.user_id');
-
 
             $records = $query->count();
 
@@ -84,16 +84,15 @@ class UserController extends Controller
         return view("pages.user.superadmin.index");
     }
 
-    public function superadmin_add()
+    public function add()
     {
         return view("pages.user.superadmin.add");
     }
 
-
-    public function superadmin_store(Request $request)
+    public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username' => "required|unique:admin,username",
+            'username' => "required",
             'nama' => "required",
             'password' => "required|min:6",
         ], [
@@ -105,6 +104,10 @@ class UserController extends Controller
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        if (!Utils::validateUsername($request->username)) {
+            return redirect()->back()->with("duplicate_username", "duplicate_username")->withInput();
         }
 
         $user = User::create([

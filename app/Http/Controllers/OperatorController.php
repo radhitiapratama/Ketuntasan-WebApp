@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\View\ViewFinderInterface;
 
 class OperatorController extends Controller
@@ -37,30 +38,23 @@ class OperatorController extends Controller
 
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'username' => "required",
+            "nama" => "required",
+            "level" => "required"
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator->errors());
+        }
+
         $username = $request->username;
 
-        $sql_admin  = DB::table("admin")
-            ->where('username', $username)
-            ->first();
-
-        if ($sql_admin) {
-            return redirect()->back("duplicate", "Username sudah di gunakan")->withInput();
-        }
-
-        $sql_guru = DB::table("guru")
-            ->where('username', $username)
-            ->first();
-
-        if ($sql_guru) {
-            return redirect()->back("duplicate", "Username sudah di gunakan")->withInput();
-        }
-
-        $sql_siswa = DB::table("siswa")
-            ->where('username', $username)
-            ->first();
-
-        if ($sql_siswa) {
-            return redirect()->back("duplicate", "Username sudah di gunakan")->withInput();
+        if (!Utils::validateUsername([
+            'type' => "insert",
+            'username' => $request->username
+        ])) {
+            return redirect()->back()->withInput()->with("duplicate", "Username sudah di gunakan!");
         }
 
         $user_id = DB::table("users")
@@ -109,30 +103,25 @@ class OperatorController extends Controller
 
     public function update(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'username' => "required",
+            "nama" => "required",
+            "level" => "required"
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator->errors());
+        }
+
         $username = $request->username;
 
-        $sql_admin  = DB::table("admin")
-            ->where('username', $username)
-            ->first();
-
-        if ($sql_admin) {
-            return redirect()->back("duplicate", "Username sudah di gunakan")->withInput();
-        }
-
-        $sql_guru = DB::table("guru")
-            ->where('username', $username)
-            ->first();
-
-        if ($sql_guru) {
-            return redirect()->back("duplicate", "Username sudah di gunakan")->withInput();
-        }
-
-        $sql_siswa = DB::table("siswa")
-            ->where('username', $username)
-            ->first();
-
-        if ($sql_siswa) {
-            return redirect()->back("duplicate", "Username sudah di gunakan")->withInput();
+        if (!Utils::validateUsername([
+            'type' => "update",
+            'table' => "operator",
+            'id' => $request->id,
+            'username' => $request->username
+        ])) {
+            return redirect()->back()->withInput()->with("duplicate", "Username sudah di gunakan!");
         }
 
         DB::table("operator")
