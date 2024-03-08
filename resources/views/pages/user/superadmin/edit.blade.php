@@ -12,7 +12,7 @@
             <div class="row">
                 <div
                     class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
-                    <h1 class="page-title">Tambah Superadmin</h1>
+                    <h1 class="page-title">Edit Superadmin</h1>
                     <a href="/superadmin" class="btn-dark">
                         <i class="ri-arrow-left-line"></i>
                         Kembali

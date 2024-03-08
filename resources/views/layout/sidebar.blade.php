@@ -21,8 +21,9 @@
     <nav class="mt-2">
         @auth('admin')
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                <li class="nav-item  {{ Request::is('superadmin', 'superadmin/*') ? 'menu-open' : '' }} ">
-                    <a href="#" class="nav-link {{ Request::is('superadmin', 'superadmin/*') ? 'active' : '' }} ">
+                <li
+                    class="nav-item  {{ Request::is('superadmin', 'superadmin/*', 'operator', 'operator/*') ? 'menu-open' : '' }} ">
+                    <a href="#" class="nav-link">
                         <i class="nav-icon ri-user-line"></i>
                         <p>
                             Data User
@@ -256,19 +257,11 @@
 
         @auth('guru')
             @php
-                $tahun = DB::table('tahun_ajaran')
-                    ->select('tahun_ajaran_id')
-                    ->where('user_aktif', 1)
-                    ->first();
+                $tahun = DB::table('tahun_ajaran')->select('tahun_ajaran_id')->where('user_aktif', 1)->first();
 
                 $sql_wali = DB::table('wali_kelas')
                     ->select('tingkatan', 'jurusan_id', 'kelas_id')
-                    ->where(
-                        'guru_id',
-                        auth()
-                            ->guard('guru')
-                            ->user()->guru_id,
-                    )
+                    ->where('guru_id', auth()->guard('guru')->user()->guru_id)
                     ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
                     ->where('status', 1)
                     ->first();

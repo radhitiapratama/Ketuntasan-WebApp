@@ -95,9 +95,9 @@
             })
         @endif
 
-        @if (session()->has('duplicateUsername'))
+        @if (session()->has('duplicate_username'))
             Swal.fire({
-                title: "Usename sudah di gunakan",
+                title: "{{ session('duplicate_username') }}",
                 icon: "error",
                 iconColor: 'white',
                 customClass: {
@@ -111,9 +111,9 @@
             })
         @endif
 
-        @if (session()->has('duplicateKodeGuru'))
+        @if (session()->has('duplicate_teacher_code'))
             Swal.fire({
-                title: "Kode Guru sudah di gunakan!",
+                title: "{{ session('duplicate_teacher_code') }}",
                 icon: "error",
                 iconColor: 'white',
                 customClass: {

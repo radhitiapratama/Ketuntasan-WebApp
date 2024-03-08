@@ -15,6 +15,8 @@ use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 use App\Imports\GuruMapelImport;
 use App\Imports\waliKelasImport;
+use App\Models\Utils;
+use Dflydev\DotAccessData\Util;
 use Psy\Command\WhereamiCommand;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -122,23 +124,35 @@ class GuruController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            "username" => "required|unique:guru,username",
+            "username" => "required",
             'nama_guru' => "required",
             'password' => "required|min:6",
-            'kode_guru' => "required|unique:guru,kode_guru|numeric"
+            'kode_guru' => "required|numeric"
         ], [
             'username.required' => "Username wajib di isi",
-            'username.unique' => "Username sudah di gunakan",
             'nama_guru.required' => "Nama Guru wajib di isi",
             'password.required' => "Password wajib di isi",
             'password.min' => "Password minimal 6 huruf",
             'kode_guru.required' => "Kode Guru wajib di isi",
-            'kode_guru.unique' => "Kode Guru sudah di gunakan",
             'kode_guru.numeric' => "Kode Guru wajib angka"
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        if (!Utils::validateUsername([
+            'type' => 'insert',
+            'username' => $request->username,
+        ])) {
+            return redirect()->back()->withInput()->with("duplicate_username", "Username sudah digunakan!");
+        }
+
+        if (!Utils::validateTeacherCode([
+            'type' => "insert",
+            'teacher_code' => $request->kode_guru,
+        ])) {
+            return redirect()->back()->withInput()->with("duplicate_teacher_code", "Kode Guru sudah digunakan!");
         }
 
         $user = User::create([
@@ -180,7 +194,6 @@ class GuruController extends Controller
             'statuses' => $this->statuses,
         ];
 
-
         return view("pages.guru.edit", $dataToView);
     }
 
@@ -203,28 +216,32 @@ class GuruController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
+        if (!Utils::validateUsername([
+            'type' => "update",
+            'table' => 'guru',
+            'id' => $request->guru_id,
+            "username" => $request->username
+        ])) {
+            return redirect()->back()->withInput()->with("duplicate_username", "Username sudah digunakan!");
+        }
+
+        if (!Utils::validateTeacherCode([
+            'type' => 'update',
+            'teacher_code' => $request->kode_guru,
+            'id' => $request->guru_id
+        ])) {
+            return redirect()->back()->withInput()->with("duplicate_teacher_code", "Kode Guru sudah digunakan!");
+        }
+
         $dataToUpdate = [];
 
         $sql_guru = Guru::where("guru_id", $request->guru_id)->first();
 
         if ($request->kode_guru != $sql_guru->kode_guru) {
-            $check = Guru::where("kode_guru", $request->kode_guru)->first();
-            if ($check) {
-                return redirect()->back()->with("duplicateKodeGuru", "duplicateKodeGuru")->withInput();
-            }
             $dataToUpdate['kode_guru'] = $request->kode_guru;
         }
 
         if ($request->username != $sql_guru->username) {
-            $check = Guru::where("username", $request->username)
-                ->first();
-
-            //jika sudah ada username redirect back
-            if ($check) {
-                return redirect()->back()->with("duplicateUsername", "duplicateUsername")->withInput();
-            }
-
-            // update field username
             $dataToUpdate['username'] = $request->username;
         }
 
@@ -379,11 +396,14 @@ class GuruController extends Controller
 
         $arr_guruMapel = array_column($sql_guruMapel, "mapel_id");
 
+        // Looping Mapel
         for ($i = 0; $i < count($mapel_id); $i++) {
+            // Skip jika mapel_id sudah di miliki oleh Guru
             if (in_array($mapel_id[$i], $arr_guruMapel)) {
                 continue;
             }
 
+            // Ambil jumlah mapel yang dimiliki guru
             $sql_count = DB::table("guru_mapel")
                 ->where("guru_id", $request->guru_id)
                 ->count();
@@ -486,22 +506,6 @@ class GuruController extends Controller
         $dataUpdate = [];
 
         $sql_guruMapel = DB::table("guru_mapel")->where("guru_mapel_id", $request->guru_mapel_id)->first();
-
-        // if ($sql_guruMapel->kode_guru_mapel != $request->kode_guru_mapel) {
-        //     // check apakah ada kode guru mapel yg sama
-        //     $sql_checkDuplicate_KodeGuruMapel = DB::table("guru_mapel")
-        //         ->select("guru_mapel_id")
-        //         ->where("guru_id", $request->guru_id)
-        //         ->where("kode_guru_mapel", $request->kode_guru_mapel)
-        //         ->first();
-
-        //     if ($sql_checkDuplicate_KodeGuruMapel) {
-        //         DB::rollBack();
-        //         return redirect()->back()->withInput()->with("duplicateKodeGuruMapel", "Gagal ! Kode Guru mapel sudah di gunakan");
-        //     }
-
-        //     $dataUpdate['kode_guru_mapel'] = $request->kode_guru_mapel;
-        // }
 
         if ($sql_guruMapel->mapel_id != $request->mapel_id) {
             // check apakah ada mapel duplicate

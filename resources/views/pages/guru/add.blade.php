@@ -81,6 +81,38 @@
     <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 
     <script>
+        @if (session()->has('duplicate_username'))
+            Swal.fire({
+                title: "{{ session('duplicate_username') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('duplicate_teacher_code'))
+            Swal.fire({
+                title: "{{ session('duplicate_teacher_code') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
         @if (session()->has('successStore'))
             Swal.fire({
                 title: "Guru berhasil di tambahkan",

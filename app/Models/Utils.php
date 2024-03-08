@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Support\Facades\DB;
+use App\Models\Admin;
+use PhpOffice\PhpSpreadsheet\Calculation\Engine\Operands\Operand;
+use Symfony\Component\CssSelector\Node\FunctionNode;
 
 class Utils
 {
@@ -84,5 +87,76 @@ class Utils
             ->first();
 
         return $sql->tahun_ajaran_id;
+    }
+
+    // @param array: array = type|table?|id?|username
+    public static function validateUsername(array $array)
+    {
+        if ($array['type'] == "insert") {
+            $admin_users = Admin::where("status", 1)->pluck("username")->toArray();
+            $operator_users = Operator::where("status", 1)->pluck("username")->toArray();
+            $guru_users = Guru::where("status", 1)->pluck("username")->toArray();
+            $siswa_users = Siswa::where("status", 1)->pluck("username")->toArray();
+            $array_users = array_merge($admin_users, $operator_users, $guru_users, $siswa_users);
+            if (in_array($array['username'], $array_users)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        if ($array['type'] == "update") {
+            $admin_users = Admin::where("status", 1)->when($array['table'] == "admin", function ($query) use ($array) {
+                $query->where("admin_id", '!=', $array['id']);
+            })->pluck("username")->toArray();
+
+            $operator_users = Operator::where("status", 1)->when($array['table'] == "operator", function ($query) use ($array) {
+                $query->where("id", '!=', $array['id']);
+            })->pluck("username")->toArray();
+
+            $guru_users = Guru::where("status", 1)->when($array['table'] == "guru", function ($query) use ($array) {
+                $query->where("guru_id", '!=', $array['id']);
+            })->pluck("username")->toArray();
+
+            $siswa_users = Siswa::where("status", 1)->when($array['table'] == "siswa", function ($query) use ($array) {
+                $query->where("siswa_id", '!=', $array['id']);
+            })->pluck("username")->toArray();
+
+            $array_users = array_merge($admin_users, $operator_users, $guru_users, $siswa_users);
+
+            if (in_array($array['username'], $array_users)) {
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public static function validateTeacherCode(array $array)
+    {
+        if ($array['type'] == "insert") {
+            $teacher = Guru::where("status", 1)
+                ->where("kode_guru", $array['teacher_code'])
+                ->first();
+
+            if ($teacher != null) {
+                return false;
+            }
+
+            return true;
+        }
+
+        if ($array['type'] == "update") {
+            $teacher = Guru::where("status", 1)
+                ->where("kode_guru", $array['teacher_code'])
+                ->where("guru_id", '!=', $array['id'])
+                ->first();
+
+            if ($teacher != null) {
+                return false;
+            }
+
+            return true;
+        }
     }
 }

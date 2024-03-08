@@ -25,9 +25,9 @@ Route::middleware(['checkAuth'])->group(function () {
 
     // Superadmin
     Route::group(['prefix' => "superadmin"], function () {
-        Route::get("/", [UserController::class, 'superadmin']);
-        Route::get("add", [UserController::class, 'superadmin_add']);
-        Route::post("store", [UserController::class, 'superadmin_store']);
+        Route::get("/", [UserController::class, 'index']);
+        Route::get("add", [UserController::class, 'add']);
+        Route::post("store", [UserController::class, 'store']);
     });
 
 

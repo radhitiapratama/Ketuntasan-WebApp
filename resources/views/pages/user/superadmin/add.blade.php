@@ -82,6 +82,22 @@
                 timerProgressBar: true
             })
         @endif
+
+        @if (session()->has('duplicate_username'))
+            Swal.fire({
+                title: "Username sudah di gunakan!",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            })
+        @endif
     </script>
 
     <script>

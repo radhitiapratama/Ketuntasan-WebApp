@@ -4,14 +4,20 @@
     <script src="{{ asset('plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
 
-    <div class="card mb-3">
-        <div class="card-body d-flex justify-content-end">
-            <a href="/operator/add" class="btn-dark">
-                Tambah
-            </a>
+    <div class="card mb-1">
+        <div class="card-body">
+            <div class="row">
+                <div
+                    class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
+                    <h1 class="page-title">Data Operator</h1>
+                    <a href="{{ url('operator/add') }}" class="btn-dark">
+                        <i class="ri-add-circle-fill"></i>
+                        Tambah
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-
     <div class="card">
         <div class="card-body table-responsive">
             <table class="table table-bordered" id="tbl-operator">
