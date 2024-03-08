@@ -16,38 +16,32 @@ use App\Http\Controllers\UjianController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
-
 Route::middleware(['isGuest'])->group(function () {
     Route::get("/", [AuthController::class, 'index'])->name('login');
     Route::post("/login", [AuthController::class, 'login']);
 });
 
 Route::middleware(['checkAuth'])->group(function () {
+
     // Superadmin
-    Route::get("superadmin", [UserController::class, 'superadmin']);
-    Route::get("superadmin/add", [UserController::class, 'superadmin_add']);
-    Route::post("superadmin/store", [UserController::class, 'superadmin_store']);
+    Route::group(['prefix' => "superadmin"], function () {
+        Route::get("/", [UserController::class, 'superadmin']);
+        Route::get("add", [UserController::class, 'superadmin_add']);
+        Route::post("store", [UserController::class, 'superadmin_store']);
+    });
+
 
     // Guru
-    Route::get("/guru", [GuruController::class, 'index']);
-    Route::get("/guru/add", [GuruController::class, 'add']);
-    Route::post("/guru/store", [GuruController::class, 'store']);
-    Route::get("/guru/edit/{guru_id}", [GuruController::class, 'edit']);
-    Route::post("/guru/update", [GuruController::class, 'update']);
-    Route::post("/guru/import", [GuruController::class, 'importGuru']);
+    Route::group(['prefix' => "guru"], function () {
+        Route::get("/", [GuruController::class, 'index']);
+        Route::get("add", [GuruController::class, 'add']);
+        Route::post("store", [GuruController::class, 'store']);
+        Route::get("edit/{guru_id}", [GuruController::class, 'edit']);
+        Route::post("update", [GuruController::class, 'update']);
+        Route::post("import", [GuruController::class, 'importGuru']);
+    });
 
-    // Guru Mapel   
+    // Guru Mapel
     Route::get("/guru-mapel", [GuruController::class, 'guruMapel']);
     Route::get("/guru-mapel/add", [GuruController::class, 'guruMapel_add']);
     Route::post("/guru-mapel/store", [GuruController::class, 'guruMapel_store']);
@@ -57,71 +51,86 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::post("/guru-mapel/import", [GuruController::class, 'importGuruMapel']);
 
     // Wali Kelas
-    Route::get("/wali-kelas", [GuruController::class, 'waliKelas']);
-    Route::get("/wali-kelas/add", [GuruController::class, 'waliKelas_add']);
-    Route::post("/wali-kelas/store", [GuruController::class, 'waliKelas_store']);
-    Route::get("wali-kelas/edit/{wali_kelas_id}", [GuruController::class, 'waliKelas_edit']);
-    Route::post("wali-kelas/update", [GuruController::class, 'waliKelas_update']);
-    Route::post("wali-kelas/import", [GuruController::class, 'waliKelas_import']);
+    Route::group(['prefix' => "wali-kelas"], function () {
+        Route::get("/", [GuruController::class, 'waliKelas']);
+        Route::get("add", [GuruController::class, 'waliKelas_add']);
+        Route::post("store", [GuruController::class, 'waliKelas_store']);
+        Route::get("edit/{wali_kelas_id}", [GuruController::class, 'waliKelas_edit']);
+        Route::post("update", [GuruController::class, 'waliKelas_update']);
+        Route::post("import", [GuruController::class, 'waliKelas_import']);
+    });
 
     // Jurusan
-    Route::get("/jurusan", [JurusanController::class, 'index']);
-    Route::get("/jurusan/add", [JurusanController::class, 'add']);
-    Route::post("/jurusan/store", [JurusanController::class, 'store']);
-    Route::get("/jurusan/edit/{jurusan_id}", [JurusanController::class, 'edit']);
-    Route::post("/jurusan/update", [JurusanController::class, 'update']);
-    Route::post("/jurusan/import", [JurusanController::class, 'importJurusan']);
+    Route::group(['prefix' => "jurusan"], function () {
+        Route::get("/", [JurusanController::class, 'index']);
+        Route::get("add", [JurusanController::class, 'add']);
+        Route::post("store", [JurusanController::class, 'store']);
+        Route::get("edit/{jurusan_id}", [JurusanController::class, 'edit']);
+        Route::post("update", [JurusanController::class, 'update']);
+        Route::post("import", [JurusanController::class, 'importJurusan']);
+    });
 
     // Mapel
-    Route::get("/mapel", [MapelController::class, 'index']);
-    Route::get("/mapel/add", [MapelController::class, 'add']);
-    Route::get("/mapel/edit/{mapel_id}", [MapelController::class, 'edit']);
-    Route::post("/mapel/store", [MapelController::class, 'store']);
-    Route::post("/mapel/update", [MapelController::class, 'update']);
-    Route::post("/mapel/import", [MapelController::class, 'import']);
+    Route::group(['prefix' => "mapel"], function () {
+        Route::get("/", [MapelController::class, 'index']);
+        Route::get("add", [MapelController::class, 'add']);
+        Route::get("edit/{mapel_id}", [MapelController::class, 'edit']);
+        Route::post("store", [MapelController::class, 'store']);
+        Route::post("update", [MapelController::class, 'update']);
+        Route::post("import", [MapelController::class, 'import']);
+    });
 
     // Kelas
-    Route::get("/kelas", [KelasController::class, 'index']);
-    Route::get("/kelas/add", [KelasController::class, 'add']);
-    Route::get("/kelas/edit/{kelas_id}", [KelasController::class, 'edit']);
-    Route::post("/kelas/store", [KelasController::class, 'store']);
-    Route::post("/kelas/update", [KelasController::class, 'update']);
-    Route::post("/kelas/import", [KelasController::class, 'import']);
-
+    Route::group(['prefix' => "kelas"], function () {
+        Route::get("/", [KelasController::class, 'index']);
+        Route::get("add", [KelasController::class, 'add']);
+        Route::get("edit/{kelas_id}", [KelasController::class, 'edit']);
+        Route::post("store", [KelasController::class, 'store']);
+        Route::post("update", [KelasController::class, 'update']);
+        Route::post("import", [KelasController::class, 'import']);
+    });
 
     // Kelas mapel
-    Route::get("/kelas-mapel", [KelasController::class, 'kelasMapel']);
-    Route::get("/kelas-mapel/add", [KelasController::class, 'kelasMapel_add']);
-    Route::post("/kelas-mapel/store", [KelasController::class, 'kelasMapel_store']);
-    Route::get("/kelas-mapel/show/{tingkatan_id}/{jurusan_id}/{kelas_id}", [KelasController::class, 'kelasMapel_show']);
-    Route::get("/kelas-mapel/edit/{tingkatan_id}/{jurusan_id}/{kelas_id}", [KelasController::class, 'kelasMapel_edit']);
-    Route::post("/kelas-mapel/getDataGuruByMapel", [KelasController::class, 'kelasMapel_getDataGuruByMapel']);
-    Route::post("/kelas-mapel/update", [KelasController::class, 'kelasMapel_update']);
-    Route::post("/kelas-mapel/import", [KelasController::class, 'kelasMapel_import']);
-
+    Route::group(['prefix' => "kelas-mapel"], function () {
+        Route::get("/", [KelasController::class, 'kelasMapel']);
+        Route::get("add", [KelasController::class, 'kelasMapel_add']);
+        Route::post("store", [KelasController::class, 'kelasMapel_store']);
+        Route::get("show/{tingkatan_id}/{jurusan_id}/{kelas_id}", [KelasController::class, 'kelasMapel_show']);
+        Route::get("edit/{tingkatan_id}/{jurusan_id}/{kelas_id}", [KelasController::class, 'kelasMapel_edit']);
+        Route::post("getDataGuruByMapel", [KelasController::class, 'kelasMapel_getDataGuruByMapel']);
+        Route::post("update", [KelasController::class, 'kelasMapel_update']);
+        Route::post("import", [KelasController::class, 'kelasMapel_import']);
+    });
 
     // Tahun Ajaran
-    Route::get("/tahun-ajaran", [TahunAjaranController::class, 'index']);
-    Route::get("/tahun-ajaran/add", [TahunAjaranController::class, 'add']);
-    Route::post("/tahun-ajaran/store", [TahunAjaranController::class, 'store']);
-    Route::get("/tahun-ajaran/edit/{tahun_ajaran_id}", [TahunAjaranController::class, 'edit']);
-    Route::post('/tahun-ajaran/update', [TahunAjaranController::class, 'update']);
+    Route::group(['prefix' => "tahun-ajaran"], function () {
+        Route::get("/", [TahunAjaranController::class, 'index']);
+        Route::get("add", [TahunAjaranController::class, 'add']);
+        Route::post("store", [TahunAjaranController::class, 'store']);
+        Route::get("edit/{tahun_ajaran_id}", [TahunAjaranController::class, 'edit']);
+        Route::post('update', [TahunAjaranController::class, 'update']);
+    });
 
     //Batas Waktu 
-    Route::get("/batas-waktu", [BatasWaktuController::class, 'index']);
-    Route::get("/batas-waktu/add", [BatasWaktuController::class, 'add']);
-    Route::post("/batas-waktu/store", [BatasWaktuController::class, 'store']);
-    Route::get("/batas-waktu/edit/{batas_waktu_id}", [BatasWaktuController::class, 'edit']);
-    Route::post("/batas-waktu/update", [BatasWaktuController::class, 'update']);
+    Route::group(['prefix' => "batas-waktu"], function () {
+        Route::get("/", [BatasWaktuController::class, 'index']);
+        Route::get("add", [BatasWaktuController::class, 'add']);
+        Route::post("store", [BatasWaktuController::class, 'store']);
+        Route::get("edit/{batas_waktu_id}", [BatasWaktuController::class, 'edit']);
+        Route::post("update", [BatasWaktuController::class, 'update']);
+    });
 
     // Siswa
-    Route::get("/siswa", [SiswaController::class, 'index']);
-    Route::get("/siswa/add", [SiswaController::class, 'add']);
-    Route::post("/siswa/store", [SiswaController::class, 'store']);
-    Route::get("/siswa/edit/{user_id}", [SiswaController::class, 'edit']);
-    Route::post("/siswa/update", [SiswaController::class, 'update']);
-    Route::post("/siswa/import", [SiswaController::class, 'import']);
-    Route::post("/siswa/nonaktifkan-siswa", [SiswaController::class, 'nonaktifkanSiswa']);
+    Route::group(['prefix' => "siswa"], function () {
+        Route::get("/", [SiswaController::class, 'index']);
+        Route::get("add", [SiswaController::class, 'add']);
+        Route::post("store", [SiswaController::class, 'store']);
+        Route::get("edit/{user_id}", [SiswaController::class, 'edit']);
+        Route::post("update", [SiswaController::class, 'update']);
+        Route::post("import", [SiswaController::class, 'import']);
+        Route::post("nonaktifkan-siswa", [SiswaController::class, 'nonaktifkanSiswa']);
+    });
+
 
     // Siswa Naik Kelass
     Route::get("/siswa-naik-kelas", [SiswaController::class, 'naikKelas']);
@@ -159,11 +168,13 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::post("/ketuntasan/tuntaskan-siswa", [KetuntasanController::class, 'tuntaskanSiswa']);
 
     //Akun seting
-    Route::get('/akun', [AuthController::class, 'akun']);
-    Route::get("/akun/change-password", [AuthController::class, 'changePasswordPage']);
-    Route::post("/akun/change-password", [AuthController::class, 'changePassword']);
-    Route::get("/akun/change-username", [AuthController::class, 'changeUsernamePage']);
-    Route::post("/akun/change-username", [AuthController::class, 'changeUsername']);
+    Route::group(['prefix' => "akun"], function () {
+        Route::get('/', [AuthController::class, 'akun']);
+        Route::get("change-password", [AuthController::class, 'changePasswordPage']);
+        Route::post("change-password", [AuthController::class, 'changePassword']);
+        Route::get("change-username", [AuthController::class, 'changeUsernamePage']);
+        Route::post("change-username", [AuthController::class, 'changeUsername']);
+    });
 
     Route::get("/reset-password", [AuthController::class, 'resetPassword']);
     Route::post("/getDataAccountByUsername", [AuthController::class, 'getDataAccountByUsername']);
@@ -192,37 +203,49 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::get("/ketuntasan/by-ruang/siswa/{siswa_id}", [KetuntasanController::class, 'byRuangKetuntasan']);
     Route::get("/ketuntasan/by-ruang/siswa/{siswa_id}/edit/{ketuntasan_id}", [KetuntasanController::class, 'byRuangEdit']);
 
-    Route::get("keterlambatan", [KeterlambatanController::class, 'index']);
-    Route::get("/keterlambatan/add", [KeterlambatanController::class, 'add']);
-    Route::post("/keterlambatan/store", [KeterlambatanController::class, 'store']);
-    Route::get("/keterlambatan/edit/{id_terlambat}", [KeterlambatanController::class, 'edit']);
-    Route::post("/keterlambatan/update", [KeterlambatanController::class, 'update']);
-    Route::post("/keterlambatan/cetak", [KeterlambatanController::class, 'cetak']);
-    Route::get("/keterlambatan/add/by-qr", [KeterlambatanController::class, 'addByQr']);
-    Route::post('/keterlambatan/delete', [KeterlambatanController::class, 'delete']);
+    // Keterlambatan
+    Route::group(['prefix' => 'keterlambatan'], function () {
+        Route::get("keterlambatan", [KeterlambatanController::class, 'index']);
+        Route::get("/keterlambatan/add", [KeterlambatanController::class, 'add']);
+        Route::post("/keterlambatan/store", [KeterlambatanController::class, 'store']);
+        Route::get("/keterlambatan/edit/{id_terlambat}", [KeterlambatanController::class, 'edit']);
+        Route::post("/keterlambatan/update", [KeterlambatanController::class, 'update']);
+        Route::post("/keterlambatan/cetak", [KeterlambatanController::class, 'cetak']);
+        Route::get("/keterlambatan/add/by-qr", [KeterlambatanController::class, 'addByQr']);
+        Route::post('/keterlambatan/delete', [KeterlambatanController::class, 'delete']);
+    });
 
 
-    Route::get("/operator", [OperatorController::class, 'index']);
-    Route::get("/operator/add", [OperatorController::class, 'add']);
-    Route::post("/operator/store", [OperatorController::class, 'store']);
-    Route::get("/operator/edit/{id_operator}", [OperatorController::class, 'edit']);
-    Route::post("/operator/update", [OperatorController::class, 'update']);
+    // Operator
+    Route::group(['prefix' => "operator"], function () {
+        Route::get("/", [OperatorController::class, 'index']);
+        Route::get("add", [OperatorController::class, 'add']);
+        Route::post("store", [OperatorController::class, 'store']);
+        Route::get("edit/{id_operator}", [OperatorController::class, 'edit']);
+        Route::post("update", [OperatorController::class, 'update']);
+    });
 
-    Route::match(["get", "post"], "/ujian", [UjianController::class, 'index']);
-    Route::get("/ujian/add", [UjianController::class, 'add']);
-    Route::post("/ujian/store", [UjianController::class, 'store']);
-    Route::get("/ujian/edit/{id}", [UjianController::class, 'edit']);
-    Route::post("/ujian/update", [UjianController::class, 'update']);
-    Route::post("/ujian/cetak-qr", [UjianController::class, 'cetakQr']);
-    Route::post("/ujian/check-siswa", [UjianController::class, 'checkSiswa']);
+    // Ujian
+    Route::group(['prefix' => "ujian"], function () {
+        Route::match(["get", "post"], "/", [UjianController::class, 'index']);
+        Route::get("add", [UjianController::class, 'add']);
+        Route::post("store", [UjianController::class, 'store']);
+        Route::get("edit/{id}", [UjianController::class, 'edit']);
+        Route::post("update", [UjianController::class, 'update']);
+        Route::post("cetak-qr", [UjianController::class, 'cetakQr']);
+        Route::post("check-siswa", [UjianController::class, 'checkSiswa']);
+    });
 
-    Route::match(['get', 'post'], "/ketidakhadiran", [KetidakhadiranController::class, 'index']);
-    Route::get("/ketidakhadiran/add/by-qr");
-    Route::get("/ketidakhadiran/add", [KetidakhadiranController::class, 'add']);
-    Route::post("/ketidakhadiran/store", [KetidakhadiranController::class, 'store']);
-    Route::get("/ketidakhadiran/edit/{id}", [KetidakhadiranController::class, 'edit']);
-    Route::post("/ketidakhadiran/update", [KetidakhadiranController::class, 'update']);
-    Route::get("/ketidakhadiran/add/by-qr", [KetidakhadiranController::class, 'addByQr']);
-    Route::post("/ketidakhadiran/cetak", [KetidakhadiranController::class, 'cetak']);
-    Route::post('/ketidakhadiran/delete', [KetidakhadiranController::class, 'delete']);
+    // Ketidakhadiran
+    Route::group(['prefix' => "ketidakhadiran"], function () {
+        Route::match(['get', 'post'], "/", [KetidakhadiranController::class, 'index']);
+        Route::get("add/by-qr");
+        Route::get("add", [KetidakhadiranController::class, 'add']);
+        Route::post("store", [KetidakhadiranController::class, 'store']);
+        Route::get("edit/{id}", [KetidakhadiranController::class, 'edit']);
+        Route::post("update", [KetidakhadiranController::class, 'update']);
+        Route::get("add/by-qr", [KetidakhadiranController::class, 'addByQr']);
+        Route::post("cetak", [KetidakhadiranController::class, 'cetak']);
+        Route::post('delete', [KetidakhadiranController::class, 'delete']);
+    });
 });
