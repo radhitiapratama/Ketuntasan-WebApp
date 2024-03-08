@@ -158,7 +158,7 @@ class KelasController extends Controller
         return redirect()->back()->with("successStore", "successStore");
     }
 
-    public function edit($kelas_id)
+    public function edit(Request $request, $kelas_id)
     {
         if (!isset($kelas_id)) {
             return redirect()->back();
@@ -330,15 +330,6 @@ class KelasController extends Controller
                 'data' => $data,
             ]);
         }
-
-        // $sql_kelas = Kelas::with([
-        //     'jurusan' => function ($query) {
-        //         $query->select("jurusan_id", 'nama_jurusan')
-        //             ->where("status", 1);
-        //     }
-        // ])
-        //     ->where("status", 1)
-        //     ->get();
 
         $sql_kelas = DB::table("kelas as k")
             ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
@@ -512,6 +503,7 @@ class KelasController extends Controller
             ->where("km.kelas_id", $kelas_id)
             ->where("km.tahun_ajaran_id", $tahun_ajaran->tahun_ajaran_id)
             ->where('m.status', 1)
+            ->where('g.status', 1)
             ->orderByRaw("g.kode_guru ASC")
             ->get();
 
@@ -555,6 +547,7 @@ class KelasController extends Controller
             ->where("km.kelas_id", $kelas_id)
             ->where("km.tahun_ajaran_id", $tahun->tahun_ajaran_id)
             ->where('m.status', 1)
+            ->where("g.status", 1)
             ->get();
 
         $sql_guruMapel = DB::table('guru_mapel as gm')
@@ -619,6 +612,8 @@ class KelasController extends Controller
         }
 
         $kode_guru_mapel = $request->kode_guru_mapel;
+
+        // cek apakah ada kode guru mapel yang sama 
         $duplicate = count($kode_guru_mapel) != count(array_unique($kode_guru_mapel));
 
         if ($duplicate) {
