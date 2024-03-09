@@ -249,8 +249,6 @@ class KetidakhadiranController extends Controller
 
     public function cetak(Request $request)
     {
-        // dd($request->all());
-
         $fileName = "Data Siswa Tidak Hadir " . $request->tgl_start . " - " . $request->tgl_end;
 
         $today_start = date("Y-m-d") . " 00:00:00";

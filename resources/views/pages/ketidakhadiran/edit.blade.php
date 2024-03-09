@@ -12,9 +12,18 @@
     <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
     <script src="{{ asset('js/select2-focus.js') }}"></script>
 
-    <div class="card">
-        <div class="card-body d-flex justify-content-end">
-            <a href="/ketidakhadiran" class="btn-dark">Kembali</a>
+    <div class="card mb-1">
+        <div class="card-body">
+            <div class="row">
+                <div
+                    class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
+                    <h1 class="page-title">Edit ketidakhadiran siswa</h1>
+                    <a href="/ketidakhadiran" class="btn-dark">
+                        <i class="ri-arrow-left-line"></i>
+                        Kembali
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
