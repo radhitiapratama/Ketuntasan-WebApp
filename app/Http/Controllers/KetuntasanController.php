@@ -15,11 +15,7 @@ use App\Models\Mapel;
 use App\Models\Siswa;
 use App\Models\Utils;
 use Barryvdh\DomPDF\Facade\Pdf;
-use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\RedirectMiddleware;
 use Illuminate\Support\Facades\Auth;
-use Psy\CodeCleaner\FunctionReturnInWriteContextPass;
-use Psy\Command\WhereamiCommand;
 
 class KetuntasanController extends Controller
 {
@@ -416,6 +412,7 @@ class KetuntasanController extends Controller
         // [1] => kelas_id
         $kelasArr = explode("|", $request->kelas_id);
 
+        // ambil kelas mapel
         $sql_mapel = DB::table('kelas_mapel')
             ->select('kelas_mapel_id')
             ->where('tingkatan', $tingkatan_id)
@@ -432,6 +429,7 @@ class KetuntasanController extends Controller
             return response()->json($dataResponse);
         }
 
+        // ambil data siswa
         $sql_siswa = DB::table("siswa")
             ->select('siswa_id')
             ->where('tingkatan', $tingkatan_id)
@@ -449,6 +447,7 @@ class KetuntasanController extends Controller
             return response()->json($dataResponse);
         }
 
+        // ambil data siswa yang sudah punya ketuntasan
         $sql_siswaKetuntasan = DB::table("ketuntasan as k")
             ->select('k.siswa_id')
             ->join('kelas_mapel as km', 'km.kelas_mapel_id', '=', 'k.kelas_mapel_id')
@@ -474,11 +473,11 @@ class KetuntasanController extends Controller
                     continue;
                 }
 
-                if (auth()->guard("operator")->check()) {
+                if (Auth::guard("operator")->check()) {
                     $created_by = auth()->guard("operator")->user()->user_id;
                 }
 
-                if (auth()->guard("admin")->check()) {
+                if (Auth::guard("admin")->check()) {
                     $created_by = auth()->guard("admin")->user()->user_id;
                 }
 
@@ -576,7 +575,6 @@ class KetuntasanController extends Controller
 
         if ($request->tuntas == 0) {
             $dataUpdate['tgl_tuntas'] = null;
-            $dataUpdate['desc'] = null;
         }
 
         $dataUpdate['tuntas'] = $request->tuntas;
@@ -1525,7 +1523,7 @@ class KetuntasanController extends Controller
 
                     $subData['aksi'] = '
                     <div class="text-center">
-                        <a href="/ketuntasan/by-guru/' . $guru_id . '/' . $mapel_id . '/' . $tingkatan . '/' . $kelas_id . '/edit/' . $row->ketuntasan_id . '"
+                        <a href="/ketuntasan/by-guru/' . $guru_id . '/' . $mapel_id . '/' . $tingkatan . '/' . $kelas_id . '/' . 'edit' . '/' . $row->ketuntasan_id . '"
                         class="setting-edit">
                             <i class="ri-pencil-line"></i>
                         </a>
@@ -1627,30 +1625,6 @@ class KetuntasanController extends Controller
         return view("pages.ketuntasan.byGuru.edit", $dataToView);
     }
 
-    public function byGuruUpdate(Request $request)
-    {
-        $ketuntasan_id = $request->ketuntasan_id;
-        $status = $request->status;
-        $desc = $request->deskripsi;
-
-        $dataUpdate = [];
-
-        if ($status == 0) {
-            $dataUpdate['tgl_tuntas'] = null;
-        } else {
-            $dataUpdate['tgl_tuntas'] = Carbon::now();
-        }
-
-        $dataUpdate['desc'] = $desc;
-        $dataUpdate['tuntas'] =  $status;
-
-        DB::table("ketuntasan")
-            ->where("ketuntasan_id", $ketuntasan_id)
-            ->update($dataUpdate);
-
-        return redirect()->back()->with("success", "success");
-    }
-
     public function cetakByGuru(Request $request)
     {
         $query = DB::table("ketuntasan as k")
@@ -1715,7 +1689,8 @@ class KetuntasanController extends Controller
                 ->where('km.status', 1)
                 ->where('gm.status', 1)
                 ->where('g.status', 1)
-                ->where('m.status', 1);
+                ->where('m.status', 1)
+                ->select('s.nama', 's.siswa_id', 'u.ruang', 'u.sesi');
 
             $count = $query->count();
 

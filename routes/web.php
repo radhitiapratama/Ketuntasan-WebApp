@@ -45,13 +45,15 @@ Route::middleware(['checkAuth'])->group(function () {
     });
 
     // Guru Mapel
-    Route::get("/guru-mapel", [GuruController::class, 'guruMapel']);
-    Route::get("/guru-mapel/add", [GuruController::class, 'guruMapel_add']);
-    Route::post("/guru-mapel/store", [GuruController::class, 'guruMapel_store']);
-    Route::get("/guru-mapel/edit/{guru_mapel_id}", [GuruController::class, 'guruMapel_edit']);
-    Route::post("/guru-mapel/update", [GuruController::class, 'guruMapel_update']);
-    Route::post("/guru-mapels", [GuruController::class, 'getDataMapelByGuru']);
-    Route::post("/guru-mapel/import", [GuruController::class, 'importGuruMapel']);
+    Route::group(['prefix' => "guru-mapel"], function () {
+        Route::get("", [GuruController::class, 'guruMapel']);
+        Route::get("add", [GuruController::class, 'guruMapel_add']);
+        Route::post("store", [GuruController::class, 'guruMapel_store']);
+        Route::get("edit/{guru_mapel_id}", [GuruController::class, 'guruMapel_edit']);
+        Route::post("update", [GuruController::class, 'guruMapel_update']);
+        Route::post("import", [GuruController::class, 'importGuruMapel']);
+        // Route::post("/guru-mapels", [GuruController::class, 'getDataMapelByGuru']);
+    });
 
     // Wali Kelas
     Route::group(['prefix' => "wali-kelas"], function () {
@@ -163,20 +165,19 @@ Route::middleware(['checkAuth'])->group(function () {
         Route::get("by-ruang/siswa/{siswa_id}/edit/{ketuntasan_id}", [KetuntasanController::class, 'byRuangEdit']);
     });
 
+    // Ketuntasan Role Guru
+    Route::group(['prefix' => "guru/ketuntasan"], function () {
+        //param mapel_id,tingkatan.jurusan_id,kelas_id,ketuntasan_id
+        Route::match(['get', 'post'], 'kelas', [KetuntasanController::class, 'guru_kelas']);
+        Route::match(['get', 'post'], 'kelas/siswa', [KetuntasanController::class, 'guru_siswa']);
+        Route::match(['get', 'post'], 'kelas/siswa/edit', [KetuntasanController::class, 'guru_edit']);
+    });
 
-    // Ketuntasan Guru
-
-    //param mapel_id,tingkatan.jurusan_id,kelas_id,ketuntasan_id
-    Route::match(['get', 'post'], 'guru/ketuntasan/kelas', [KetuntasanController::class, 'guru_kelas']);
-    Route::match(['get', 'post'], 'guru/ketuntasan/kelas/siswa', [KetuntasanController::class, 'guru_siswa']);
-    Route::match(['get', 'post'], 'guru/ketuntasan/kelas/siswa/edit', [KetuntasanController::class, 'guru_edit']);
-
-    Route::get("/guru/wali-kelas", [GuruController::class, 'waliKelas_dataSiswa']);
-    Route::match(['get', 'post'], "/guru/wali-kelas/siswa/detail", [GuruController::class, 'waliKelas_detailKetuntasanSiswa']);
-
-    // End Ketuntasan Guru
-
-
+    // Ketuntasan Guru Wali Kelas
+    Route::group(['prefix' => "guru/wali-kelas"], function () {
+        Route::get("", [GuruController::class, 'waliKelas_dataSiswa']);
+        Route::match(['get', 'post'], "siswa/detail", [GuruController::class, 'waliKelas_detailKetuntasanSiswa']);
+    });
 
     //Akun seting
     Route::group(['prefix' => "akun"], function () {
@@ -187,17 +188,10 @@ Route::middleware(['checkAuth'])->group(function () {
         Route::post("change-username", [AuthController::class, 'changeUsername']);
     });
 
+    // Reset-password 
     Route::get("/reset-password", [AuthController::class, 'resetPassword']);
-    Route::post("/getDataAccountByUsername", [AuthController::class, 'getDataAccountByUsername']);
     Route::post("/reset-password", [AuthController::class, 'doResetPassword']);
-
-    // ajax jgn di ubah
-    Route::post("getDataGuruByMapel", [GuruController::class, 'getDataGuruByMapel']);
-
-    Route::get("dashboard/kelas/siswas", [SiswaController::class, 'getDataSiswaByKelas']);
-    Route::post("getGuruMapelByGuruMapelId", [GuruController::class, 'getGuruMapelByGuruMapelId']);
-
-
+    Route::post("/getDataAccountByUsername", [AuthController::class, 'getDataAccountByUsername']);
 
     // Keterlambatan
     Route::group(['prefix' => 'keterlambatan'], function () {
@@ -243,4 +237,10 @@ Route::middleware(['checkAuth'])->group(function () {
         Route::post("cetak", [KetidakhadiranController::class, 'cetak']);
         Route::post('delete', [KetidakhadiranController::class, 'delete']);
     });
+
+    // ajax jgn di ubah
+    Route::post("getDataGuruByMapel", [GuruController::class, 'getDataGuruByMapel']);
+
+    Route::get("dashboard/kelas/siswas", [SiswaController::class, 'getDataSiswaByKelas']);
+    Route::post("getGuruMapelByGuruMapelId", [GuruController::class, 'getGuruMapelByGuruMapelId']);
 });
