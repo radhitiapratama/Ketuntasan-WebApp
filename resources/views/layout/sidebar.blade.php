@@ -120,14 +120,14 @@
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
                             <a href="{{ url('siswa') }}"
-                                class="nav-link {{ Request::is('siswa', 'siswa/*') ? 'active' : '' }}">
+                                class="nav-link {{ Request::is('siswa', 'siswa/*') && !Request::is('siswa/naik-kelas', 'siswa/naik-kelas/*') ? 'active' : '' }}">
                                 <i class="ri-git-commit-line"></i>
                                 <p>Siswa</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a href="{{ url('siswa-naik-kelas') }}"
-                                class="nav-link {{ Request::is('siswa-naik-kelas', 'siswa-naik-kelas/*') ? 'active' : '' }}">
+                            <a href="{{ url('siswa/naik-kelas') }}"
+                                class="nav-link {{ Request::is('siswa/naik-kelas', 'siswa/naik-kelas/*') ? 'active' : '' }}">
                                 <i class="ri-git-commit-line"></i>
                                 <p>Naik Kelas</p>
                             </a>

@@ -35,7 +35,7 @@
         </div>
     </div>
 
-    <form action="/siswa/do-naik-kelas" method="post" id="form">
+    <form action="/siswa/naik-kelas/do" method="post" id="form">
         @csrf
         <div class="card">
             <div class="card-header">
@@ -129,7 +129,7 @@
                 ordering: false,
                 searchDelay: 1500,
                 ajax: {
-                    url: "{{ url('siswa-naik-kelas') }}",
+                    url: "{{ url('siswa/naik-kelas') }}",
                     data: function(data) {
                         data.tingkatan = $("#tingkatan_id").val();
                         data.kelas_id = $("#kelas_id").val();

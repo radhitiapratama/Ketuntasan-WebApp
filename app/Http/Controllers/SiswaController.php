@@ -179,14 +179,6 @@ class SiswaController extends Controller
 
     public function add()
     {
-        // $sql_kelas = Kelas::with([
-        //     'jurusan' => function ($query) {
-        //         $query->select("jurusan_id", "nama_jurusan")
-        //             ->where("status", 1);
-        //     }
-        // ])->where("status", 1)
-        //     ->get();
-
         $sql_kelas = DB::table("kelas as k")
             ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
             ->where('j.status', 1)
@@ -514,21 +506,11 @@ class SiswaController extends Controller
             ]);
         }
 
-        // $sql_kelas = Kelas::with([
-        //     'jurusan' => function ($query) {
-        //         $query->select("jurusan_id", 'nama_jurusan')
-        //             ->where("status", 1);
-        //     }
-        // ])
-        //     ->where("kelas.status", 1)
-        //     ->get();
-
         $sql_kelas = DB::table("kelas as k")
             ->join('jurusan as j', 'j.jurusan_id', '=', 'k.jurusan_id')
             ->where('j.status', 1)
             ->where('k.status', 1)
             ->get();
-
         $dataToView = [
             'kelases' => $sql_kelas,
             'tingkatans' => $this->tingkatans,
@@ -563,7 +545,7 @@ class SiswaController extends Controller
                 ]);
         }
 
-        return redirect("/siswa-naik-kelas")->with("successNaikKelas", 'successNaikKelas');
+        return redirect("siswa/naik-kelas")->with("successNaikKelas", 'successNaikKelas');
     }
 
     public function import(Request $request)

@@ -129,12 +129,10 @@ Route::middleware(['checkAuth'])->group(function () {
         Route::post("update", [SiswaController::class, 'update']);
         Route::post("import", [SiswaController::class, 'import']);
         Route::post("nonaktifkan-siswa", [SiswaController::class, 'nonaktifkanSiswa']);
+        Route::get("/naik-kelas", [SiswaController::class, 'naikKelas']);
+        Route::post("/naik-kelas/do", [SiswaController::class, 'doNaikKelas']);
     });
 
-
-    // Siswa Naik Kelass
-    Route::get("/siswa-naik-kelas", [SiswaController::class, 'naikKelas']);
-    Route::post("/siswa/do-naik-kelas", [SiswaController::class, 'doNaikKelas']);
 
     // Ketuntasan
     Route::get("/ketuntasan/add", [KetuntasanController::class, 'add']);
