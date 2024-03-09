@@ -20,19 +20,21 @@
     <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
     <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 
-    <div class="card mb-3">
-        <div class="card-body d-flex justify-content-end" style="gap: 20px">
+    <div class="card mb-1">
+        <div class="card-body d-flex">
+            <h1 class="page-title">Data Ketidakhadiran Siswa</h1>
             @if (auth()->guard('admin')->check() ||
-                    (auth()->guard('operator')->check() &&
-                        auth()->guard('operator')->user()->level == 1))
-                <a href="/ketidakhadiran/add/by-qr" class="btn-dark">
-                    <i class="ri-qr-code-line"></i>
-                    Tambah dengan QR Code
-                </a>
-                <a class="btn-dark" href="/ketidakhadiran/add">
-                    <i class="ri-add-line"></i>
-                    Tambah
-                </a>
+                    (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
+                <div class="d-flex ml-auto" style="gap: 20px">
+                    <a href="/ketidakhadiran/add/by-qr" class="btn-dark">
+                        <i class="ri-qr-code-line"></i>
+                        Tambah dengan QR Code
+                    </a>
+                    <a class="btn-dark" href="/ketidakhadiran/add">
+                        <i class="ri-add-line"></i>
+                        Tambah
+                    </a>
+                </div>
             @endif
         </div>
     </div>
@@ -102,8 +104,7 @@
                         <th class="text-center">Alasan</th>
                         <th>Waktu</th>
                         @if (auth()->guard('admin')->check() ||
-                                (auth()->guard('operator')->check() &&
-                                    auth()->guard('operator')->user()->level == 1))
+                                (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
                             <th width="5">Aksi</th>
                         @endif
                     </tr>
@@ -124,8 +125,7 @@
         }
 
         @if (auth()->guard('admin')->check() ||
-                (auth()->guard('operator')->check() &&
-                    auth()->guard('operator')->user()->level == 1))
+                (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
             let table_columns = [{
                     data: "no"
                 },
