@@ -1,6 +1,10 @@
 @extends('layout.main')
 
 @section('content')
+    @php
+        use App\Models\Utils;
+    @endphp
+
     <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
     <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
@@ -10,31 +14,14 @@
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
     <script src="{{ asset('js/select2-focus.js') }}"></script>
 
-    @php
-        function checkTingkatan($tingkatan)
-        {
-            if ($tingkatan == 1) {
-                return 'X';
-            }
-
-            if ($tingkatan == 2) {
-                return 'XI';
-            }
-
-            if ($tingkatan == 3) {
-                return 'XII';
-            }
-        }
-    @endphp
-
-
-
-    <div class="card mb-3">
+    <div class="card mb-1">
         <div class="card-body">
             <div class="row">
-                <div class="col-12 d-flex justify-content-end" style="gap: 20px;">
-
+                <div
+                    class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
+                    <h1 class="page-title">Detail Ketuntasan</h1>
                     <a href="/ketuntasan/by-guru/{{ $guru_id }}" class="btn-dark">
+                        <i class="ri-arrow-left-line"></i>
                         Kembali
                     </a>
                 </div>
@@ -60,7 +47,7 @@
                 <div class="col-12 col-md-4">
                     <div class="form-group">
                         <label for="#">Nama Kelas</label>
-                        <p>{{ checkTingkatan($tingkatan) }} {{ $data_kelas->nama_jurusan }} |
+                        <p>{{ Utils::checkTingkatan($tingkatan) }} {{ $data_kelas->nama_jurusan }} |
                             {{ $data_kelas->nama_kelas }}</p>
                     </div>
                 </div>
@@ -104,13 +91,12 @@
                 <input type="hidden" name="nama_guru_cetak" value="{{ $data_guru->nama }}">
                 <input type="hidden" name="nama_mapel_cetak" value="{{ $data_mapel->nama_mapel }}">
                 <input type="hidden" name="nama_kelas_cetak"
-                    value="{{ checkTingkatan($tingkatan) }} {{ $data_kelas->nama_jurusan }} | {{ $data_kelas->nama_kelas }} ">
+                    value="{{ Utils::checkTingkatan($tingkatan) }} {{ $data_kelas->nama_jurusan }} | {{ $data_kelas->nama_kelas }} ">
                 <button type="submit" class="btn-pdf">Cetak PDF <i class="ri-file-pdf-line"></i></button>
             </form>
         </div>
         @if (auth()->guard('admin')->check() ||
-                (auth()->guard('operator')->check() &&
-                    auth()->guard('operator')->user()->level == 1))
+                (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
             <div class="card-header">
                 <button type="button" class="btn-dark" data-toggle="modal" data-target="#modal-tuntas">
                     <i class="ri-check-line"></i>
@@ -124,8 +110,7 @@
                     <tr>
                         <th class="text-center" width="5">#</th>
                         @if (auth()->guard('admin')->check() ||
-                                (auth()->guard('operator')->check() &&
-                                    auth()->guard('operator')->user()->level == 1))
+                                (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
                             <th class="text-center" width="5">
                                 <input type="checkbox" id="check_all">
                             </th>
@@ -136,8 +121,7 @@
                         <th class="vertical-middle text-center">Tgl Tuntas</th>
                         <th class="vertical-middle text-center">Semester</th>
                         @if (auth()->guard('admin')->check() ||
-                                (auth()->guard('operator')->check() &&
-                                    auth()->guard('operator')->user()->level == 1))
+                                (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
                             <th class="vertical-middle text-center" width="5">Aksi</th>
                         @endif
                     </tr>
@@ -233,8 +217,7 @@
 
     <script>
         @if (auth()->guard('admin')->check() ||
-                (auth()->guard('operator')->check() &&
-                    auth()->guard('operator')->user()->level == 1))
+                (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
             let table_columns = [{
                     data: 'no',
                 },
@@ -320,7 +303,7 @@
                     console.log(res.json);
                 },
                 ajax: {
-                    url: `/ketuntasan/by-guru/${GURU_ID}/${MAPEL_ID}/${TINGKATAN}/${KELAS_ID}'`,
+                    url: `/ketuntasan/by-guru/${GURU_ID}/${MAPEL_ID}/${TINGKATAN}/${KELAS_ID}`,
                     data: function(data) {
                         data.tuntas = $("#tuntas").val();
                         data.semester = $("#semester").val();
@@ -362,7 +345,7 @@
             const checked = $("input[name='ketuntasan_id[]']:checked").length;
             if (checked <= 0) {
                 Swal.fire({
-                    title: "Minimal ada 1 mapel yang di tuntaskan",
+                    title: "Minimal ada 1 siswa yang di tuntaskan",
                     icon: "info",
                 });
 

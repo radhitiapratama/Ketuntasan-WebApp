@@ -10,30 +10,14 @@
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
     <script src="{{ asset('js/select2-focus.js') }}"></script>
 
-    @php
-        // function checkTingkatan($tingkatan)
-        // {
-        //     if ($tingkatan == 1) {
-        //         return 'X';
-        //     }
-
-        //     if ($tingkatan == 2) {
-        //         return 'XI';
-        //     }
-
-        //     if ($tingkatan == 3) {
-        //         return 'XII';
-        //     }
-        // }
-    @endphp
-
-
-
-    <div class="card mb-3">
+    <div class="card mb-1">
         <div class="card-body">
             <div class="row">
-                <div class="col-12 d-flex justify-content-end" style="gap: 20px;">
+                <div
+                    class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
+                    <h1 class="page-title">Detail Ketuntasan</h1>
                     <a href="/ketuntasan/by-ruang" class="btn-dark">
+                        <i class="ri-arrow-left-line"></i>
                         Kembali
                     </a>
                 </div>
@@ -95,8 +79,7 @@
             </form>
         </div> --}}
         @if (auth()->guard('admin')->check() ||
-                (auth()->guard('operator')->check() &&
-                    auth()->guard('operator')->user()->level == 1))
+                (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
             <div class="card-header">
                 <button type="button" class="btn-dark" data-toggle="modal" data-target="#modal-tuntas">
                     <i class="ri-check-line"></i>
@@ -110,8 +93,7 @@
                     <tr>
                         <th class="text-center" width="5">#</th>
                         @if (auth()->guard('admin')->check() ||
-                                (auth()->guard('operator')->check() &&
-                                    auth()->guard('operator')->user()->level == 1))
+                                (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
                             <th class="text-center" width="5">
                                 <input type="checkbox" id="check_all">
                             </th>
@@ -123,8 +105,7 @@
                         <th class="vertical-middle text-center">Tgl Tuntas</th>
                         <th class="vertical-middle text-center">Semester</th>
                         @if (auth()->guard('admin')->check() ||
-                                (auth()->guard('operator')->check() &&
-                                    auth()->guard('operator')->user()->level == 1))
+                                (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
                             <th class="vertical-middle text-center" width="5">Aksi</th>
                         @endif
                     </tr>
@@ -220,8 +201,7 @@
 
     <script>
         @if (auth()->guard('admin')->check() ||
-                (auth()->guard('operator')->check() &&
-                    auth()->guard('operator')->user()->level == 1))
+                (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
             let table_columns = [{
                     data: 'no',
                 },

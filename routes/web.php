@@ -15,6 +15,7 @@ use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\UjianController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\CssSelector\Node\FunctionNode;
 
 Route::middleware(['isGuest'])->group(function () {
     Route::get("/", [AuthController::class, 'index'])->name('login');
@@ -22,6 +23,8 @@ Route::middleware(['isGuest'])->group(function () {
 });
 
 Route::middleware(['checkAuth'])->group(function () {
+    //logout
+    Route::get('/logout', [AuthController::class, 'logout']);
 
     // Superadmin
     Route::group(['prefix' => "superadmin"], function () {
@@ -129,23 +132,36 @@ Route::middleware(['checkAuth'])->group(function () {
         Route::post("update", [SiswaController::class, 'update']);
         Route::post("import", [SiswaController::class, 'import']);
         Route::post("nonaktifkan-siswa", [SiswaController::class, 'nonaktifkanSiswa']);
-        Route::get("/naik-kelas", [SiswaController::class, 'naikKelas']);
-        Route::post("/naik-kelas/do", [SiswaController::class, 'doNaikKelas']);
+        Route::get("naik-kelas", [SiswaController::class, 'naikKelas']);
+        Route::post("naik-kelas/do", [SiswaController::class, 'doNaikKelas']);
     });
 
+    // Ketuntasan 
+    Route::group(['prefix' => "ketuntasan"], function () {
+        Route::get("", [KetuntasanController::class, 'index']);
+        Route::get("add", [KetuntasanController::class, 'add']);
+        Route::post("store", [KetuntasanController::class, 'store']);
+        Route::post("update", [KetuntasanController::class, 'update']);
+        Route::post("tuntaskan-siswa", [KetuntasanController::class, 'tuntaskanSiswa']);
 
-    // Ketuntasan
-    Route::get("/ketuntasan/add", [KetuntasanController::class, 'add']);
-    Route::post("/ketuntasan/store", [KetuntasanController::class, 'store']);
+        Route::post('tuntaskanByGuru', [KetuntasanController::class, 'byGuruTuntaskan']);
 
-    // Ketuntasan Admin
 
-    // param tingkatan,jurusan_id,kelas_id,user_id,ketuntasan_id;
-    Route::match(['get', 'post'], "ketuntasan/siswas", [KetuntasanController::class, 'siswa']);
-    Route::match(['get', 'post'], "ketuntasan/siswas/show", [KetuntasanController::class, 'siswa_show']);
-    Route::match(['get', 'post'], 'ketuntasan/siswas/edit', [KetuntasanController::class, 'edit']);
+        // param tingkatan,jurusan_id,kelas_id,user_id,ketuntasan_id;
+        Route::match(['get', 'post'], "siswas", [KetuntasanController::class, 'siswa']);
+        Route::match(['get', 'post'], "siswas/show", [KetuntasanController::class, 'siswa_show']);
+        Route::match(['get', 'post'], 'siswas/edit', [KetuntasanController::class, 'edit']);
 
-    // End Ketuntasan Admin
+        Route::match(['get', 'post'], "by-guru", [KetuntasanController::class, 'byGuru']);
+        Route::get("by-guru/{guru_id}", [KetuntasanController::class, 'byGuruMapel']);
+        Route::get("by-guru/{guru_id}/{mapel_id}/{tingkatan}/{kelas_id}", [KetuntasanController::class, 'byGuruKetuntasan']);
+        Route::get("by-guru/{guru_id}/{mapel_id}/{tingkatan}/{kelas_id}/edit/{ketuntasan_id}", [KetuntasanController::class, 'byGuruKetuntasanEdit']);
+        Route::post("by-guru/cetak", [KetuntasanController::class, 'cetakByGuru']);
+
+        Route::get("by-ruang", [KetuntasanController::class, 'byRuang']);
+        Route::get("by-ruang/siswa/{siswa_id}", [KetuntasanController::class, 'byRuangKetuntasan']);
+        Route::get("by-ruang/siswa/{siswa_id}/edit/{ketuntasan_id}", [KetuntasanController::class, 'byRuangEdit']);
+    });
 
 
     // Ketuntasan Guru
@@ -160,10 +176,7 @@ Route::middleware(['checkAuth'])->group(function () {
 
     // End Ketuntasan Guru
 
-    //Ketuntasan
-    Route::get("/ketuntasan", [KetuntasanController::class, 'index']);
-    Route::post("ketuntasan/update", [KetuntasanController::class, 'update']);
-    Route::post("/ketuntasan/tuntaskan-siswa", [KetuntasanController::class, 'tuntaskanSiswa']);
+
 
     //Akun seting
     Route::group(['prefix' => "akun"], function () {
@@ -184,35 +197,19 @@ Route::middleware(['checkAuth'])->group(function () {
     Route::get("dashboard/kelas/siswas", [SiswaController::class, 'getDataSiswaByKelas']);
     Route::post("getGuruMapelByGuruMapelId", [GuruController::class, 'getGuruMapelByGuruMapelId']);
 
-    //logout
-    Route::get('/logout', [AuthController::class, 'logout']);
 
-    Route::match(['get', 'post'], "/ketuntasan/by-guru", [KetuntasanController::class, 'byGuru']);
-
-    Route::get("/ketuntasan/by-guru/{guru_id}", [KetuntasanController::class, 'byGuruMapel']);
-    Route::get("/ketuntasan/by-guru/{guru_id}/{mapel_id}/{tingkatan}/{kelas_id}", [KetuntasanController::class, 'byGuruKetuntasan']);
-    Route::get("/ketuntasan/by-guru/{guru_id}/{mapel_id}/{tingkatan}/{kelas_id}/edit/{ketuntasan_id}", [KetuntasanController::class, 'byGuruKetuntasanEdit']);
-    Route::post("ketuntasan/by-guru/cetak", [KetuntasanController::class, 'cetakByGuru']);
-
-    Route::post('ketuntasan/tuntaskanByGuru', [KetuntasanController::class, 'byGuruTuntaskan']);
-    Route::post("/byGuru/updateKetuntasan", [KetuntasanController::class, 'byGuruUpdate']);
-
-    Route::get("/ketuntasan/by-ruang", [KetuntasanController::class, 'byRuang']);
-    Route::get("/ketuntasan/by-ruang/siswa/{siswa_id}", [KetuntasanController::class, 'byRuangKetuntasan']);
-    Route::get("/ketuntasan/by-ruang/siswa/{siswa_id}/edit/{ketuntasan_id}", [KetuntasanController::class, 'byRuangEdit']);
 
     // Keterlambatan
     Route::group(['prefix' => 'keterlambatan'], function () {
-        Route::get("keterlambatan", [KeterlambatanController::class, 'index']);
-        Route::get("/keterlambatan/add", [KeterlambatanController::class, 'add']);
-        Route::post("/keterlambatan/store", [KeterlambatanController::class, 'store']);
-        Route::get("/keterlambatan/edit/{id_terlambat}", [KeterlambatanController::class, 'edit']);
-        Route::post("/keterlambatan/update", [KeterlambatanController::class, 'update']);
-        Route::post("/keterlambatan/cetak", [KeterlambatanController::class, 'cetak']);
-        Route::get("/keterlambatan/add/by-qr", [KeterlambatanController::class, 'addByQr']);
-        Route::post('/keterlambatan/delete', [KeterlambatanController::class, 'delete']);
+        Route::get("", [KeterlambatanController::class, 'index']);
+        Route::get("add", [KeterlambatanController::class, 'add']);
+        Route::post("store", [KeterlambatanController::class, 'store']);
+        Route::get("edit/{id_terlambat}", [KeterlambatanController::class, 'edit']);
+        Route::post("update", [KeterlambatanController::class, 'update']);
+        Route::post("cetak", [KeterlambatanController::class, 'cetak']);
+        Route::get("add/by-qr", [KeterlambatanController::class, 'addByQr']);
+        Route::post('delete', [KeterlambatanController::class, 'delete']);
     });
-
 
     // Operator
     Route::group(['prefix' => "operator"], function () {

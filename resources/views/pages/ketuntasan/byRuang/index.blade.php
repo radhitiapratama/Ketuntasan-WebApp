@@ -12,20 +12,21 @@
 
 
 
-    <div class="card mb-3">
+    <div class="card mb-1">
         <div class="card-body">
             <div class="row">
-                <div class="col-12 d-flex justify-content-end" style="gap: 20px;">
-
-                    <a href="/ketuntasan" class="btn-dark">
+                <div
+                    class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
+                    <h1 class="page-title">Data Ketuntasan berdasarkan Ruang & Sesi</h1>
+                    <a href="{{ url('ketuntasan') }}" class="btn-dark">
+                        <i class="ri-arrow-left-line"></i>
                         Kembali
                     </a>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="row mb-3">
+    <div class="row mb-1">
         <div class="col-12">
             <div class="alert-box alert-success">
                 <div class="alert-icon">

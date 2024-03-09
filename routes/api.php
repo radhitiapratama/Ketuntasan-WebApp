@@ -21,15 +21,19 @@ Route::post("login", [AuthController::class, 'login']); //login
 Route::middleware(["auth:sanctum"])->group(function () {
     Route::get("logout", [AuthController::class, 'logout']);
 
-    Route::get("account", [AuthController::class, 'account']);
-    Route::post("account/change-password", [AuthController::class, 'changePassword']);
-    Route::post("account/change-username", [AuthController::class, 'changeUsername']);
+    Route::group(['prefix' => "account"], function () {
+        Route::get("", [AuthController::class, 'account']);
+        Route::post("change-password", [AuthController::class, 'changePassword']);
+        Route::post("change-username", [AuthController::class, 'changeUsername']);
+    });
 
-    Route::get("ketuntasan", [KetuntasanController::class, 'index']);
-    Route::get("ketuntasan/edit/{ketuntasan_id}", [KetuntasanController::class, 'edit']);
-    Route::post("ketuntasan/update", [KetuntasanController::class, 'update']);
-    Route::post("ketuntasan/tuntaskan", [KetuntasanController::class, 'tuntaskan']);
-    Route::get("ketuntasan/{siswa_id}/detail", [KetuntasanController::class, 'detailKetuntasan']);
+    Route::group(['prefix' => "ketuntasan"], function () {
+        Route::get("", [KetuntasanController::class, 'index']);
+        Route::get("edit/{ketuntasan_id}", [KetuntasanController::class, 'edit']);
+        Route::post("update", [KetuntasanController::class, 'update']);
+        Route::post("tuntaskan", [KetuntasanController::class, 'tuntaskan']);
+        Route::get("{siswa_id}/detail", [KetuntasanController::class, 'detailKetuntasan']);
+    });
 
     Route::get("batas-waktu", [BatasWaktuController::class, 'index']);
     Route::get("wali-kelas/ketuntasan", [KetuntasanController::class, 'waliKelas_ketuntasan']);

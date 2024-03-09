@@ -85,8 +85,7 @@
         </div>
         <div class="card-header">
             <div class="form-group mt-3">
-                @if (auth()->guard('admin')->check() ||
-                        auth()->guard('operator')->user()->level == 1)
+                @if (auth()->guard('admin')->check() || auth()->guard('operator')->user()->level == 1)
                     @if ($status_batasWaktu == 'dalam')
                         <button type="button" class="btn-dark btn-modal-tuntaskan">
                             <i class="ri-check-line"></i>
@@ -118,8 +117,7 @@
                         <thead>
                             <tr style="border-bottom: none !important">
                                 <th width="5px">#</th>
-                                @if (auth()->guard('admin')->check() ||
-                                        auth()->guard('operator')->user()->level == 1)
+                                @if (auth()->guard('admin')->check() || auth()->guard('operator')->user()->level == 1)
                                     <th width="5px" class="text-center"><input type="checkbox" name="check_all"
                                             id="check_all"></th>
                                 @endif
@@ -129,8 +127,7 @@
                                 <th width="20%" class="text-center">Deskripsi</th>
                                 <th width="20%" class="text-center">Tgl Tuntas</th>
                                 <th width="5px" class="text-center">Semester</th>
-                                @if (auth()->guard('admin')->check() ||
-                                        auth()->guard('operator')->user()->level == 1)
+                                @if (auth()->guard('admin')->check() || auth()->guard('operator')->user()->level == 1)
                                     <th width="5px" class="text-center">Aksi</th>
                                 @endif
                             </tr>
@@ -227,8 +224,7 @@
                 columns: [{
                         data: "no"
                     },
-                    @if (auth()->guard('admin')->check() ||
-                            auth()->guard('operator')->user()->level == 1)
+                    @if (auth()->guard('admin')->check() || auth()->guard('operator')->user()->level == 1)
                         {
                             data: "checkbox"
                         },
@@ -250,8 +246,7 @@
                     {
                         data: "semester"
                     },
-                    @if (auth()->guard('admin')->check() ||
-                            auth()->guard('operator')->user()->level == 1)
+                    @if (auth()->guard('admin')->check() || auth()->guard('operator')->user()->level == 1)
                         {
                             data: "settings"
                         },

@@ -2,11 +2,15 @@
 
 @section('content')
     <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <div class="card mb-3">
+
+    <div class="card mb-1">
         <div class="card-body">
             <div class="row">
-                <div class="col-12 d-flex justify-content-end">
+                <div
+                    class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
+                    <h1 class="page-title">Data Ketuntasan berdasarkan guru</h1>
                     <a href="/ketuntasan" class="btn-dark">
+                        <i class="ri-arrow-left-line"></i>
                         Kembali
                     </a>
                 </div>
