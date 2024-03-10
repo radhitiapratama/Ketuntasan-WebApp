@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BatasWaktuController;
 use App\Http\Controllers\GuruController;
+use App\Http\Controllers\HelperController;
 use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\KeterlambatanController;
@@ -238,9 +239,21 @@ Route::middleware(['checkAuth'])->group(function () {
         Route::post('delete', [KetidakhadiranController::class, 'delete']);
     });
 
+    Route::group(['prefix' => "helper"], function () {
+        Route::get("ordered-siswa-by-kelas/{tingkatan}/{jurusan}/{kelas}/{semester}", [HelperController::class, 'getOrderedSiswaByKelas']);
+    });
+
     // ajax jgn di ubah
     Route::post("getDataGuruByMapel", [GuruController::class, 'getDataGuruByMapel']);
 
     Route::get("dashboard/kelas/siswas", [SiswaController::class, 'getDataSiswaByKelas']);
     Route::post("getGuruMapelByGuruMapelId", [GuruController::class, 'getGuruMapelByGuruMapelId']);
+});
+
+Route::get('testing', function () {
+    $arr = ["1", "23", "4", "567", "82", '7', '72', '61', '6'];
+    $start = array_search(567, $arr);
+    $end = array_search(61, $arr);
+    $newArray = array_slice($arr, $start, $end - $start + 1);
+    dd($newArray);
 });

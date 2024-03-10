@@ -19,6 +19,8 @@ return new class extends Migration
                 $table->foreignId("siswa_id")->references("siswa_id")->on("siswa");
                 $table->integer("ruang");
                 $table->integer("sesi");
+                $table->foreignId("tahun_ajaran_id")->references("tahun_ajaran_id")->on("tahun_ajaran");
+                $table->integer("semester");
                 $table->timestamps();
             });
         }

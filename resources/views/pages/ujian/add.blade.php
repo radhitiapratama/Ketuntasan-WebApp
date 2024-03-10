@@ -1,27 +1,14 @@
 @extends('layout.main')
 
 @section('content')
+    @php
+        use App\Models\Utils;
+    @endphp
+
     <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
-
-    @php
-        function checkTingkatan($tingkatan)
-        {
-            if ($tingkatan == 1) {
-                return 'X';
-            }
-
-            if ($tingkatan == 2) {
-                return 'XI';
-            }
-
-            if ($tingkatan == 3) {
-                return 'XII';
-            }
-        }
-    @endphp
 
     <div class="card mb-1">
         <div class="card-body">
@@ -38,10 +25,95 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-6 col-12">
+        <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <div class="row">
+                    <form action="/ujian/store" method="post">
+                        @csrf
+                        <div class="row">
+                            <div class="col-md-2 col-12">
+                                <div class="form-group">
+                                    <label for="#">Ruang</label>
+                                    <select name="ruang" id="ruang" class="form-control ruang" required>
+                                        <option value="">Pilih...</option>
+                                        @foreach ($ruangs as $ruang)
+                                            <option value="{{ $ruang }}">{{ $ruang }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2 col-12">
+                                <div class="form-group">
+                                    <label for="#">Sesi</label>
+                                    <select name="sesi" id="sesi" class="form-control sesi" required>
+                                        <option value="">Pilih...</option>
+                                        @foreach ($sesis as $sesi)
+                                            <option value="{{ $sesi }}">{{ $sesi }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2 col-12">
+                                <div class="form-group">
+                                    <label for="#">Tingkatan</label>
+                                    <select name="tingkatan" id="tingkatan" class="form-control tingkatan" required>
+                                        <option value="">Pilih...</option>
+                                        @foreach ($tingkatans as $key => $value)
+                                            <option value="{{ $key }}">{{ $value }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-12">
+                                <div class="form-group">
+                                    <label for="#">Kelas</label>
+                                    <select name="kelas" id="kelas" class="form-control kelas" required disabled>
+                                        <option value="">Pilih...</option>
+                                        @foreach ($kelases as $kelas)
+                                            <option value="{{ $kelas->jurusan_id }}|{{ $kelas->kelas_id }}">
+                                                {{ $kelas->nama_jurusan }} | {{ $kelas->nama_kelas }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2 col-12">
+                                <div class="form-group">
+                                    <label for="#">Semester</label>
+                                    <select name="semester" id="semester" class="form-control semester" required disabled>
+                                        <option value="">Pilih...</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label for="#">Dari Siswa</label>
+                                    <select name="siswa_start" id="siswa_start" class="form-control " disabled required>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label for="#">Sampai Siswa</label>
+                                    <select name="siswa_end" id="siswa_end" class="form-control siswa_end" disabled
+                                        required>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn-dark">
+                                    Submit
+                                    <i class="ri-check-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    {{-- <div class="row">
                         <div class="col-12">
                             <form action="/ujian/store" method="POST">
                                 @csrf
@@ -51,7 +123,7 @@
                                         <option value="">Pilih...</option>
                                         @foreach ($siswas as $siswa)
                                             <option value="{{ $siswa->siswa_id }}">{{ $siswa->nama }}
-                                                {{ checkTingkatan($siswa->tingkatan) }} {{ $siswa->nama_kelas }}
+                                                {{ Utils::checkTingkatan($siswa->tingkatan) }} {{ $siswa->nama_kelas }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -89,7 +161,7 @@
                                 </button>
                             </form>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>
@@ -113,6 +185,22 @@
                 timerProgressBar: true
             });
         @endif
+
+        @if (session()->has('absen_harus_urut'))
+            Swal.fire({
+                title: "{{ session('absen_harus_urut') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
     </script>
 
     <script>
@@ -121,55 +209,48 @@
             width: "100%"
         }
 
-        $("#siswa").select2(configSelect2);
         $("#ruang").select2(configSelect2);
         $("#sesi").select2(configSelect2);
+        $("#tingkatan").select2(configSelect2);
+        $("#kelas").select2(configSelect2);
+        $("#semester").select2(configSelect2);
+        $("#siswa_start").select2(configSelect2);
+        $("#siswa_end").select2(configSelect2);
 
-        let num = 1;
+        $("#tingkatan").on("change", function() {
+            $("#kelas").removeAttr("disabled")
+        })
 
-        $("#btn-add").click(function() {
-            num++;
-            let template_form = `
-            <div class="input-wrapper d-flex flex-column mt-3">
-                <button type="button" class="btn btn-danger btn-remove ml-auto">X</button>
-                <div class="form-group">
-                    <label for="#">Nama Siswa</label>
-                    <select name="siswa[]" id="siswa-${num}" class="form-control" required>
-                        <option value="">Pilih...</option>
-                        @foreach ($siswas as $siswa)
-                            <option value="{{ $siswa->siswa_id }}">{{ $siswa->nama }}
-                                {{ checkTingkatan($siswa->tingkatan) }} {{ $siswa->nama_kelas }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="#">Ruang</label>
-                    <select name="ruang[]" id="ruang-${num}" class="form-control " required>
-                        <option value="">Pilih...</option>
-                        @foreach ($ruangs as $ruang)
-                            <option value="{{ $ruang }}">{{ $ruang }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="#">Sesi</label>
-                    <select name="sesi[]" id="sesi-${num}" class="form-control " required>
-                        <option value="">Pilih...</option>
-                        @foreach ($sesis as $sesi)
-                            <option value="{{ $sesi }}">{{ $sesi }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            `;
+        $("#kelas").on("change", function() {
+            $("#semester").removeAttr("disabled")
+        })
 
-            $(".form-wrapper").append(template_form);
+        $("#semester").on("change", function() {
+            let tingkatan = $("#tingkatan").val()
+            let arrKelas = $("#kelas").val().split("|")
+            let semester = $("#semester").val();
 
-            $(`#siswa-${num}`).select2(configSelect2);
-            $(`#ruang-${num}`).select2(configSelect2);
-            $(`#sesi-${num}`).select2(configSelect2);
-        });
+
+            $.ajax({
+                type: "GET",
+                url: `{{ url('helper/ordered-siswa-by-kelas/${tingkatan}/${arrKelas[0]}/${arrKelas[1]}/${semester}') }}`,
+                dataType: "json",
+                success: function(response) {
+                    console.log(response)
+                    let html = '<option value="">Pilih...</option>'
+                    for (let i = 0; i < response.length; i++) {
+                        html += `<option value="${response[i].siswa_id}">${response[i].nama}</option>`
+                    }
+
+                    $("#siswa_start").html(html)
+                    $("#siswa_end").html(html)
+
+                    $("#siswa_start").removeAttr("disabled")
+                    $("#siswa_end").removeAttr("disabled")
+                }
+            });
+        })
+
 
         $(document).on("click", ".btn-remove", function(e) {
             let parent = e.target.parentElement.remove();

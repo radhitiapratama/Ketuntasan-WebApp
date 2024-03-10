@@ -2,15 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kelas;
+use App\Models\Siswa;
+use App\Models\TahunAjaran;
+use App\Models\Ujian;
 use App\Models\Utils;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Psy\CodeCleaner\FunctionReturnInWriteContextPass;
 
 class UjianController extends Controller
 {
+    protected $tahun;
+
+    public function __construct()
+    {
+
+        $this->tahun = TahunAjaran::where("superadmin_aktif", 1)->first()->tahun_ajaran_id;
+    }
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -98,19 +110,17 @@ class UjianController extends Controller
 
     public function add()
     {
-        $sql_siswa_ujian = DB::table("ujian")
-            ->select('siswa_id');
-
-        $sql_siswa = DB::table('siswa as s')
-            ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id')
-            ->where('s.status', 1)
-            ->whereNotIn("s.siswa_id", $sql_siswa_ujian)
+        $kelases = Kelas::join("jurusan", 'jurusan.jurusan_id', '=', 'kelas.jurusan_id')
+            ->where("kelas.status", 1)
+            ->where("jurusan.status", 1)
             ->get();
 
         $dataToView = [
-            'siswas' => $sql_siswa,
+            // 'siswas' => $sql_siswa,
             'ruangs' => Utils::$ruangs,
-            'sesis' => Utils::$sesis
+            'sesis' => Utils::$sesis,
+            'tingkatans' => Utils::getTingkatans(),
+            'kelases' => $kelases,
         ];
 
         return view("pages.ujian.add", $dataToView);
@@ -118,30 +128,108 @@ class UjianController extends Controller
 
     public function store(Request $request)
     {
-        $siswa = $request->siswa;
-        $ruang = $request->ruang;
-        $sesi = $request->sesi;
+        $validator = Validator::make($request->all(), [
+            'ruang' => "required",
+            'sesi' => "required",
+            'tingkatan' => "required",
+            'kelas' => "required",
+            'semester' => "required",
+            'siswa_start' => "required",
+            'siswa_end' => "required",
+        ]);
 
-        for ($i = 0; $i < count($siswa); $i++) {
-            $sql_check = DB::table("ujian")
-                ->where('siswa_id', $siswa[$i])
-                ->first();
-
-            if ($sql_check) {
-                continue;
-            }
-
-            DB::table('ujian')
-                ->insert([
-                    'siswa_id' => $siswa[$i],
-                    'ruang' => $ruang[$i],
-                    'sesi' => $sesi[$i],
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                ]);
+        if ($validator->fails()) {
+            return redirect()->back();
         }
 
-        return redirect()->back()->with("success", "Data berhasil di tambahkan");
+        try {
+            $arrKelas = explode("|", $request->kelas);
+            $ruang = $request->ruang;
+            $sesi = $request->sesi;
+            $tingkatan = $request->tingkatan;
+            $jurusan = $arrKelas[0];
+            $kelas = $arrKelas[1];
+            $semester = $request->semester;
+
+            $siswa_has_ujian = Ujian::query()
+                ->with([
+                    'siswa' => function ($query) use ($tingkatan, $jurusan, $kelas) {
+                        $query->where("status", 1)
+                            ->where("tingkatan", $tingkatan)
+                            ->where("jurusan_id", $jurusan)
+                            ->where("kelas_id", $kelas);
+                    }
+                ])
+                ->where('tahun_ajaran_id', $this->tahun)
+                ->where("semester", $semester)->get();
+
+            $siswa = Siswa::where('tingkatan', $tingkatan)
+                ->where("jurusan_id", $jurusan)
+                ->where("kelas_id", $kelas)
+                ->where("status", 1)
+                ->whereNotIn("siswa_id", $siswa_has_ujian->pluck("siswa_id"))
+                ->orderBy("nama", "ASC")
+                ->get()->pluck("siswa_id")->toArray();
+
+            // Olah data siswa yang ingin di insertkan 
+            $start = array_search($request->siswa_start, $siswa);
+            $end = array_search($request->siswa_end, $siswa);
+
+            if ($end < $start) {
+                return redirect()->back()->withInput()->with("absen_harus_urut", "Siswa terkahir tidak boleh lebih kecil dari siswa mulai!");
+            }
+
+            $siswaArray = array_slice($siswa, $start, $end - $start + 1);
+
+            $dataInsert = [];
+
+            DB::beginTransaction();
+
+            foreach ($siswaArray as $s) {
+                $arrTemp = [
+                    'siswa_id' => $s,
+                    'ruang' => $ruang,
+                    'sesi' => $sesi,
+                    'tahun_ajaran_id' => $this->tahun,
+                    'semester' => $semester,
+                    'created_at' => Carbon::now(),
+                ];
+
+                $dataInsert[] = $arrTemp;
+            }
+
+            Ujian::insert($dataInsert);
+
+            DB::commit();
+            return redirect()->back()->with("success", "Data berhasil di tambahkan");
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return redirect()->back();
+        }
+
+        // $siswa = $request->siswa;
+        // $ruang = $request->ruang;
+        // $sesi = $request->sesi;
+
+        // for ($i = 0; $i < count($siswa); $i++) {
+        //     $sql_check = DB::table("ujian")
+        //         ->where('siswa_id', $siswa[$i])
+        //         ->first();
+
+        //     if ($sql_check) {
+        //         continue;
+        //     }
+
+        //     DB::table('ujian')
+        //         ->insert([
+        //             'siswa_id' => $siswa[$i],
+        //             'ruang' => $ruang[$i],
+        //             'sesi' => $sesi[$i],
+        //             'created_at' => Carbon::now(),
+        //             'updated_at' => Carbon::now(),
+        //         ]);
+        // }
+
     }
 
     public function checkSiswa(Request $request)

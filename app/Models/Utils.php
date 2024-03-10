@@ -41,6 +41,12 @@ class Utils
         '3' => "Tanpa Keterangan"
     ];
 
+    public static  $tingkatans = [
+        '1' => "X",
+        '2' => "XI",
+        '3' => "XII",
+    ];
+
     public static function checkTingkatan($tingkatan)
     {
         if ($tingkatan == 1) {
@@ -173,5 +179,10 @@ class Utils
 
             return true;
         }
+    }
+
+    public static function getTingkatans()
+    {
+        return self::$tingkatans;
     }
 }
