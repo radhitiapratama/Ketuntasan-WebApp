@@ -1,7 +1,4 @@
 @extends('layout.main')
-
-
-
 @section('content')
     <link rel="stylesheet" href="{{ asset('plugins/select2/css/select2.min.css') }}">
     <link rel="stylesheet" href="{{ asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
@@ -22,6 +19,24 @@
             </div>
         </div>
     </div>
+
+    <div class="row my-2">
+        <div class="col-12">
+            <div class="alert-box alert-warning">
+                <div class="alert-icon">
+                    <i class="ri-error-warning-line"></i>
+                </div>
+                <div class="alert-body">
+                    <p class="alert-title">Peringatan !</p>
+                    <p class="alert-text">
+                        Jika anda mengubah data tingkatan / kelas siswa maka semua data ketuntasannya di tahun ajaran yang
+                        aktif akan terhapus!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-md-8 col-12">
             <div class="card">
@@ -137,6 +152,22 @@
             });
         @endif
 
+        @if (session()->has('failed_update'))
+            Swal.fire({
+                title: "{{ session('failed_update') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
         @if (session()->has('successUpdate'))
             Swal.fire({
                 title: "Siswa berhasil di update",
@@ -182,11 +213,10 @@
             // [1] => kelas_id
             const arrKelas = $("#kelas_id").val().split("|");
 
-
             if (hide_tingkatan != tingkatan || hide_jurusan != arrKelas[0] || hide_kelas != arrKelas[1]) {
                 Swal.fire({
                     title: 'Peringatan',
-                    text: "Mengubah tingkatan / jurusan / kelas akan berdampak buruk pada akun siswa ketika akan naik kelas ! apakah anda yakin ingin melakukan perubahannya ?",
+                    text: "Jika anda mengubah Tingkatan/Kelas siswa semua data ketuntasan siswa di tahun ajaran yang aktif akan terhapus,apakah anda yakin?",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
@@ -204,7 +234,7 @@
 
             Swal.fire({
                 title: 'Peringatan',
-                text: "Mengubah data siswa yang sudah ditambahkan sangatlah berbahaya kepada data siswa tersebut,apakah anda yakin ingin melakukan perubahan ?",
+                text: "Apakah anda yakin ingin mengupdate data siswa?",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',

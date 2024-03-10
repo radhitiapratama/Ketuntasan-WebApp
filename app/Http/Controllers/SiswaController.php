@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\DB;
 
 use App\Models\Jurusan;
 use App\Models\Kelas;
+use App\Models\Ketuntasan;
 use App\Models\Siswa;
+use App\Models\TahunAjaran;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -16,6 +18,8 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx\Rels;
 
 class SiswaController extends Controller
 {
+    protected $tahun;
+
     protected $statuses = [
         '1' => "Aktif",
         '0' => "Nonaktif",
@@ -26,6 +30,20 @@ class SiswaController extends Controller
         '2' => "XI",
         '3' => "XII",
     ];
+
+    public function __construct()
+    {
+        $this->tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first()->tahun_ajaran_id;
+    }
+
+    public function deleteAllKetuntasanSiswa($siswa_id)
+    {
+        $ketuntasans = Ketuntasan::where("siswa_id", $siswa_id)
+            ->where("tahun_ajaran_id", $this->tahun)
+            ->pluck("ketuntasan_id")->toArray();
+
+        Ketuntasan::destroy($ketuntasans);
+    }
 
     public function index(Request $request)
     {
@@ -306,6 +324,8 @@ class SiswaController extends Controller
 
     public function edit($siswa_id)
     {
+        $this->deleteAllKetuntasanSiswa($siswa_id);
+
         if (!isset($siswa_id)) {
             return redirect()->back();
         }
@@ -348,6 +368,7 @@ class SiswaController extends Controller
 
     public function update(Request $request)
     {
+
         $validator = Validator::make(
             $request->all(),
             [
@@ -374,52 +395,65 @@ class SiswaController extends Controller
             return redirect()->back()->withInput()->withErrors($validator);
         }
 
-        $siswa = Siswa::where("siswa_id", $request->siswa_id)->first();
+        try {
+            $siswa = Siswa::where("siswa_id", $request->siswa_id)->first();
 
-        $dataUpdate = [];
+            DB::beginTransaction();
+            $dataUpdate = [];
 
-        if ($siswa->username != $request->username) {
-            $sql_checkUsername = Siswa::select("siswa_id")
-                ->where("username", $request->username)
-                ->first();
+            // [0] => jurusan_id
+            // [1] => kelas_id
+            $arr = explode("|", $request->kelas_id);
 
-            if ($sql_checkUsername) {
-                return redirect()->back()->with('duplicate_username', 'duplicate_username')->withInput();
+            if ($siswa->tingkatan != $request->tingkatan || $siswa->jurusan_id != $arr[0] || $siswa->kelas_id != $arr[1]) {
+                $this->deleteAllKetuntasanSiswa($request->siswa_id);
             }
 
-            $dataUpdate['username'] = $request->username;
+            if ($siswa->username != $request->username) {
+                // Check username harus unik
+                $sql_checkUsername = Siswa::select("siswa_id")
+                    ->where("username", $request->username)
+                    ->first();
+
+                if ($sql_checkUsername) {
+                    return redirect()->back()->with('duplicate_username', 'duplicate_username')->withInput();
+                }
+
+                $dataUpdate['username'] = $request->username;
+            }
+
+            if ($siswa->tingkatan != $request->tingkatan) {
+                $dataUpdate['tingkatan'] = $request->tingkatan;
+            }
+
+            if ($siswa->jurusan_id != $arr[0] || $siswa->kelas_id != $arr[1]) {
+                $dataUpdate['jurusan_id'] = $arr[0];
+                $dataUpdate['kelas_id'] = $arr[1];
+            }
+
+            if ($siswa->nama != $request->nama) {
+                $dataUpdate['nama'] = $request->nama;
+            }
+
+            if ($siswa->status != $request->status) {
+                $dataUpdate['status'] = $request->status;
+            }
+
+            if (!empty($dataUpdate)) {
+                $dataUpdate['updated_by'] = auth()->guard("admin")->user()->user_id;
+
+                DB::table('siswa')
+                    ->where("siswa_id", $request->siswa_id)
+                    ->update($dataUpdate);
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with("successUpdate", "successUpdate");
+        } catch (\Exception $ex) {
+            DB::rollBack();
+            return redirect()->back()->withInput()->with("failed_update", "Gagal mengupdate data siswa silahkan coba lagi");
         }
-
-        if ($siswa->tingkatan != $request->tingkatan) {
-            $dataUpdate['tingkatan'] = $request->tingkatan;
-        }
-
-        // [0] => jurusan_id
-        // [1] => kelas_id
-        $arr = explode("|", $request->kelas_id);
-
-        if ($siswa->jurusan_id != $arr[0] || $siswa->kelas_id != $arr[1]) {
-            $dataUpdate['jurusan_id'] = $arr[0];
-            $dataUpdate['kelas_id'] = $arr[1];
-        }
-
-        if ($siswa->nama != $request->nama) {
-            $dataUpdate['nama'] = $request->nama;
-        }
-
-        if ($siswa->status != $request->status) {
-            $dataUpdate['status'] = $request->status;
-        }
-
-        if (!empty($dataUpdate)) {
-            $dataUpdate['updated_by'] = auth()->guard("admin")->user()->user_id;
-
-            DB::table('siswa')
-                ->where("siswa_id", $request->siswa_id)
-                ->update($dataUpdate);
-        }
-
-        return redirect()->back()->with("successUpdate", "successUpdate");
     }
 
     public function naikKelas(Request $request)

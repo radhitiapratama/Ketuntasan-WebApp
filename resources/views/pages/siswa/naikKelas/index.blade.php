@@ -17,7 +17,7 @@
             </div>
         </div>
     </div>
-    <div class="row my-3">
+    <div class="row my-1">
         <div class="col-12">
             <div class="alert-box alert-warning">
                 <div class="alert-icon">

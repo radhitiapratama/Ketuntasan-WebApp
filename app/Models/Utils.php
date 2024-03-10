@@ -89,7 +89,14 @@ class Utils
         return $sql->tahun_ajaran_id;
     }
 
-    // @param array: array = type|table?|id?|username
+    /**
+     * @param array => [
+     *      type,
+     *      table?,
+     *      id?
+     *      username
+     * ]
+     */
     public static function validateUsername(array $array)
     {
         if ($array['type'] == "insert") {
@@ -132,6 +139,14 @@ class Utils
         }
     }
 
+    /**
+     * 
+     * @param arrayAssoc => [
+     *      type,
+     *      teacher_code,
+     *      id
+     * ]
+     */
     public static function validateTeacherCode(array $array)
     {
         if ($array['type'] == "insert") {
