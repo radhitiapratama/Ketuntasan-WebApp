@@ -3,6 +3,16 @@
 @section('content')
     <link rel="stylesheet" href="{{ asset('plugins/sweetalert2/sweetalert2.min.css') }}">
     <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+    <div class="card mb-1">
+        <div class="card-body">
+            <div class="row">
+                <div
+                    class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
+                    <h1 class="page-title">Reset Password</h1>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row">
         <div class="col-md-5 col-12">
