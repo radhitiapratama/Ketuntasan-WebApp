@@ -51,6 +51,14 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-12 col-md-3">
+                    <label for="#">Semester</label>
+                    <select name="semester" id="semester" class="form-control">
+                        <option value="">Pilih...</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
             </div>
         </div>
         <div class="card-body">
@@ -233,6 +241,7 @@
                     data: function(data) {
                         data.ruang = $("#ruang").val();
                         data.sesi = $("#sesi").val();
+                        data.semester = $("#semester").val();
                     }
                 },
                 columns: tableColumns
@@ -258,6 +267,7 @@
 
         $("#ruang").select2(configSelect2);
         $("#sesi").select2(configSelect2);
+        $("#semester").select2(configSelect2);
         $("#ruang_cetak").select2(configSelect2Modal);
         $("#sesi_cetak").select2(configSelect2Modal);
         $("#semester_cetak").select2(configSelect2Modal);
@@ -268,6 +278,11 @@
         });
 
         $("#sesi").change(function() {
+            clearDatatable();
+            loadDatatable();
+        });
+
+        $("#semester").change(function() {
             clearDatatable();
             loadDatatable();
         });

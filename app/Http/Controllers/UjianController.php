@@ -27,7 +27,7 @@ class UjianController extends Controller
     {
         if ($request->ajax()) {
             $columnsSearch = ['s.nama', 'u.ruang', 'u.sesi', 'k.nama_kelas'];
-            $table = DB::table("ujian as u");
+            $table = DB::table("ujian as u")->where("u.tahun_ajaran_id", $this->tahun);
 
             if ($request->input("search.value")) {
                 $table->where(function ($q) use ($columnsSearch, $request) {
@@ -49,13 +49,19 @@ class UjianController extends Controller
                 $query->where('u.sesi', $request->sesi);
             }
 
+            if ($request->semester != null) {
+                $query->where("u.semester", $request->semester);
+            }
+
+
             $count = $query->count();
 
             $result = $query->offset($request->start)
                 ->limit($request->length)
-                ->orderBy('u.ruang', 'ASC')
-                ->orderBy('u.sesi', 'ASC')
-                ->orderBy("s.nama", 'ASC')
+                // ->orderBy('u.ruang', 'ASC')
+                // ->orderBy('u.sesi', 'ASC')
+                // ->orderBy("s.nama", 'ASC')
+                ->orderBy("u.id", 'DESC')
                 ->get();
 
             $data = [];
