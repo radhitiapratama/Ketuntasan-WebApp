@@ -13,8 +13,7 @@
                     class="col-12 d-flex justify-content-md-between justify-content-center flex-column flex-md-row align-items-center gap-20">
                     <h1 class="page-title">Data Siswa Ujian</h1>
                     @if (auth()->guard('admin')->check() ||
-                            (auth()->guard('operator')->check() &&
-                                auth()->guard('operator')->user()->level == 1))
+                            (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
                         <a href="/ujian/add" class="btn-dark">
                             <i class="ri-add-circle-fill"></i>
                             Tambah
@@ -66,8 +65,7 @@
                                 <th class="text-center" width="100px">Ruang</th>
                                 <th class="text-center" width="100px">Sesi</th>
                                 @if (auth()->guard('admin')->check() ||
-                                        (auth()->guard('operator')->check() &&
-                                            auth()->guard('operator')->user()->level == 1))
+                                        (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
                                     <th class="text-center" width="5px">Aksi</th>
                                 @endif
                             </tr>
@@ -95,7 +93,17 @@
                     <form action="/ujian/cetak-qr" method="POST" target="_blank">
                         @csrf
                         <div class="row mb-3">
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-4">
+                                <div class="form-group">
+                                    <label for="#">Semester</label>
+                                    <select name="semester_cetak" id="semester_cetak" class="form-control" required>
+                                        <option value="">Pilih...</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
                                 <div class="form-group">
                                     <label for="#">Ruang</label>
                                     <select name="ruang_cetak" id="ruang_cetak" class="form-control" required>
@@ -106,7 +114,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6">
+                            <div class="col-12 col-md-4">
                                 <div class="form-group">
                                     <label for="#">Sesi</label>
                                     <select name="sesi_cetak" id="sesi_cetak" class="form-control" required>
@@ -179,8 +187,7 @@
 
     <script>
         @if (auth()->guard('admin')->check() ||
-                (auth()->guard('operator')->check() &&
-                    auth()->guard('operator')->user()->level == 1))
+                (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
             let tableColumns = [{
                     data: "no"
                 }, {
@@ -253,6 +260,7 @@
         $("#sesi").select2(configSelect2);
         $("#ruang_cetak").select2(configSelect2Modal);
         $("#sesi_cetak").select2(configSelect2Modal);
+        $("#semester_cetak").select2(configSelect2Modal);
 
         $("#ruang").change(function() {
             clearDatatable();

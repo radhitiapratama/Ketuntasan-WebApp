@@ -60,7 +60,7 @@
                     <td class="box">
                         <div class="text">
                             <?php
-                            echo DNS2D::getBarcodeHTML(strval($row->siswa_id), 'QRCODE', 3, 3);
+                            echo DNS2D::getBarcodeHTML(strval($row->id), 'QRCODE', 3, 3);
                             ?>
                             <div class="text">
                                 <h5>{{ $row->nama }}</h5>

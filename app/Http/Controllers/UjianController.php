@@ -288,7 +288,7 @@ class UjianController extends Controller
 
     public function cetakQr(Request $request)
     {
-        if (!isset($request->ruang_cetak) || !isset($request->sesi_cetak)) {
+        if (!isset($request->ruang_cetak) || !isset($request->sesi_cetak) || !isset($request->semester_cetak)) {
             return redirect()->back();
         }
 
@@ -297,6 +297,9 @@ class UjianController extends Controller
             ->join('kelas as k', 'k.kelas_id', '=', 's.kelas_id')
             ->where('u.ruang', $request->ruang_cetak)
             ->where('u.sesi', $request->sesi_cetak)
+            ->where("u.tahun_ajaran_id", $this->tahun)
+            ->where("u.semester", $request->semester_cetak)
+            ->orderBy("s.nama", "ASC")
             ->get();
 
         $fileName = "QR Ruang " . $request->ruang_cetak . " Sesi " . $request->sesi_cetak;
