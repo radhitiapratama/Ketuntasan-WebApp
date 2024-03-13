@@ -15,6 +15,7 @@ use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\UjianController;
 use App\Http\Controllers\UserController;
+use App\Models\Ujian;
 use Illuminate\Support\Facades\Route;
 use Symfony\Component\CssSelector\Node\FunctionNode;
 
@@ -223,7 +224,9 @@ Route::middleware(['checkAuth'])->group(function () {
         Route::get("edit/{id}", [UjianController::class, 'edit']);
         Route::post("update", [UjianController::class, 'update']);
         Route::post("cetak-qr", [UjianController::class, 'cetakQr']);
-        Route::post("check-siswa", [UjianController::class, 'checkSiswa']);
+        // Route::post("check-siswa", [UjianController::class, 'checkSiswa']);
+        Route::get("siswa/semester/{semester}", [UjianController::class, 'getDataSiswaBySemester']);
+        Route::get("/{ujian_id}", [UjianController::class, 'getDataUjianById']);
     });
 
     // Ketidakhadiran
@@ -248,12 +251,4 @@ Route::middleware(['checkAuth'])->group(function () {
 
     Route::get("dashboard/kelas/siswas", [SiswaController::class, 'getDataSiswaByKelas']);
     Route::post("getGuruMapelByGuruMapelId", [GuruController::class, 'getGuruMapelByGuruMapelId']);
-});
-
-Route::get('testing', function () {
-    $arr = ["1", "23", "4", "567", "82", '7', '72', '61', '6'];
-    $start = array_search(567, $arr);
-    $end = array_search(61, $arr);
-    $newArray = array_slice($arr, $start, $end - $start + 1);
-    dd($newArray);
 });

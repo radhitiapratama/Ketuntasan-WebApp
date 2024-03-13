@@ -34,41 +34,42 @@
                         @csrf
 
                         @php
-                            function checkTingkatan($tingkatan)
-                            {
-                                if ($tingkatan == 1) {
-                                    return 'X';
-                                }
-
-                                if ($tingkatan == 2) {
-                                    return 'XI';
-                                }
-
-                                if ($tingkatan == 3) {
-                                    return 'XII';
-                                }
-                            }
+                            use App\Models\Utils;
                         @endphp
+                        <div class="form-group">
+                            <label for="#">Semester</label>
+                            <select name="semester" id="semester" class="form-control">
+                                <option value="">Pilih...</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                            </select>
+                        </div>
 
                         <div class="form-group">
                             <label for="#">Nama Siswa</label>
-                            <select name="siswa" id="siswa" class="form-control" required>
+                            <select name="siswa" id="siswa" class="form-control" required disabled>
                                 <option value="">Pilih...</option>
                                 @foreach ($siswas as $siswa)
                                     <option value="{{ $siswa->siswa_id }}">{{ $siswa->nama }} |
-                                        {{ checkTingkatan($siswa->tingkatan) }} {{ $siswa->nama_kelas }}</option>
+                                        {{ Utils::checkTingkatan($siswa->tingkatan) }} {{ $siswa->nama_kelas }}</option>
                                 @endforeach
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label for="#">Ruang</label>
-                            <input type="text" name="ruang" class="ruang form-control pointer-none" id="ruang"
-                                required tabindex="-1">
-                        </div>
-                        <div class="form-group">
-                            <label for="#">Sesi</label>
-                            <input type="text" name="sesi" class="sesi form-control pointer-none" id="sesi"
-                                required tabindex="-1">
+                        <div class="row">
+                            <div class="col-12 col-md-6">
+                                <div class="form-group">
+                                    <label for="#">Ruang</label>
+                                    <input type="text" name="ruang" class="ruang form-control pointer-none"
+                                        id="ruang" required tabindex="-1" disabled>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="form-group">
+                                    <label for="#">Sesi</label>
+                                    <input type="text" name="sesi" class="sesi form-control pointer-none"
+                                        id="sesi" required tabindex="-1" disabled>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="#">Alasan Terlambat</label>
@@ -126,6 +127,16 @@
     </script>
 
     <script>
+        function checkTingkatan(tingkatan) {
+            if (tingkatan == 1) {
+                return "X"
+            } else if (tingkatan == 2) {
+                return "XI"
+            } else {
+                return "XII"
+            }
+        }
+
         $(document).on('select2:open', () => {
             document.querySelector('.select2-search__field').focus();
         });
@@ -138,17 +149,49 @@
 
         $("#siswa").select2(configSelect);
         $("#tidak_lanjut").select2(configSelect);
+        $("#semester").select2(configSelect);
+
+        $("#semester").change(function() {
+            let semester = $(this).val();
+            console.log(semester)
+
+            if (semester == "") return
+
+            $("#siswa").attr("disabled", true)
+            $("#ruang").attr("disabled", true)
+            $("#sesi").attr("disabled", true)
+            $("#ruang").val("")
+            $("#sesi").val("")
+            $("#siswa").html(`<option value="
+                ">Pilih...</option>`)
+
+            $.ajax({
+                type: "GET",
+                url: `{{ url('ujian/siswa/semester/${semester}') }}`,
+                dataType: "json",
+                success: function(response) {
+                    console.log(response)
+                    let options = '<option value="">Pilih...</option>'
+                    let siswas = response.siswas;
+
+                    for (let i = 0; i < siswas.length; i++) {
+                        options +=
+                            `<option value="${siswas[i].id}">${siswas[i].siswa.nama} | ${checkTingkatan(siswas[i].siswa.tingkatan)} ${siswas[i].siswa.kelas.nama_kelas}</option>`
+                    }
+
+                    $("#siswa").html(options);
+                    $("#siswa").removeAttr("disabled")
+                }
+            });
+        });
 
         $("#siswa").change(function() {
-            let siswa_id = $(this).val();
+            let ujian_id = $(this).val();
             $.ajax({
-                type: "POST",
-                url: "{{ url('ujian/check-siswa') }}",
+                type: "GET",
+                url: `{{ url('ujian/${ujian_id}') }}`,
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
-                },
-                data: {
-                    siswa_id
                 },
                 dataType: "json",
                 success: function(response) {
@@ -172,6 +215,8 @@
 
                     $("#ruang").val(response.data.ruang);
                     $("#sesi").val(response.data.sesi);
+                    $("#ruang").removeAttr("disabled")
+                    $("#sesi").removeAttr("disabled")
                 }
             });
         });

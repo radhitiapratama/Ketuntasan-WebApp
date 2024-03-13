@@ -42,7 +42,7 @@
         <form action="/keterlambatan/cetak" target="_blank" method="post">
             @csrf
             <div class="card-header row mb-3">
-                <div class="col-12 col-md-5">
+                <div class="col-12 col-md-3">
                     <label for="#">Tanggal</label>
                     <input type="text" class="form-control" name="tgl" id="tgl">
                     <input type="hidden" id="tgl_start" name="tgl_start" value="<?= date('Y-m-d') ?>">
@@ -75,6 +75,14 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-12 col-md-2">
+                    <label for="#">Semester</label>
+                    <select name="semester" id="semester" class="form-control">
+                        <option value="">Pilih...</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
             </div>
             <div class="card-header">
                 <button type="submit" class="btn-pdf">
@@ -87,17 +95,18 @@
             <table width="100%" class="table table-bordered" id="tbl-terlambat">
                 <thead>
                     <tr>
-                        <th width="5">#</th>
-                        <th>Siswa</th>
-                        <th>Kelas</th>
-                        <th width="5">Ruang</th>
-                        <th width="5">Sesi</th>
-                        <th>Alasan Terlambat</th>
-                        <th class="text-center">Tidak Lanjut</th>
-                        <th>Waktu</th>
+                        <th class="vertical-middle" width="5">#</th>
+                        <th class="vertical-middle">Siswa</th>
+                        <th class="vertical-middle">Kelas</th>
+                        <th class="vertical-middle" width="5">Ruang</th>
+                        <th class="vertical-middle" width="5">Sesi</th>
+                        <th class="vertical-middle">Alasan Terlambat</th>
+                        <th class="text-center vertical-middle">Tidak Lanjut</th>
+                        <th class="vertical-middle">Waktu</th>
+                        <th class="vertical-middle">Semester</th>
                         @if (auth()->guard('admin')->check() ||
                                 (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
-                            <th width="5" class="text-center">Aksi</th>
+                            <th width="5" class="text-center vertical-middle">Aksi</th>
                         @endif
                     </tr>
                 </thead>
@@ -142,6 +151,9 @@
                 {
                     data: "waktu"
                 }, {
+                    data: "semester"
+                },
+                {
                     data: "aksi"
                 },
             ];
@@ -170,7 +182,10 @@
                 },
                 {
                     data: "waktu"
-                }
+                },
+                {
+                    data: "semester"
+                },
             ];
         @endif
 
@@ -195,6 +210,7 @@
                         data.ruang = $("#ruang").val();
                         data.sesi = $("#sesi").val();
                         data.tidak_lanjut = $("#tidak_lanjut").val();
+                        data.semester = $("#semester").val();
                     }
                 },
                 columns: table_columns,
@@ -222,6 +238,7 @@
 
         $("#ruang").select2(configSelect2);
         $("#sesi").select2(configSelect2);
+        $("#semester").select2(configSelect2);
         $("#tidak_lanjut").select2(configSelect2);
 
         $("#ruang").change(function() {
@@ -244,9 +261,13 @@
             loadDatatable();
         });
 
+        $("#semester").change(function() {
+            clearDatatable();
+            loadDatatable();
+        });
+
         $(document).on("click", ".btn-delete", function() {
             let id = $(this).data("id");
-            console.log(id);
             Swal.fire({
                 title: "Peringatan !",
                 text: "Apakah anda yakin ingin menghapus data?",

@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Psy\CodeCleaner\FunctionReturnInWriteContextPass;
+use SebastianBergmann\CodeUnit\FunctionUnit;
+
+use function PHPUnit\Framework\isNull;
 
 class UjianController extends Controller
 {
@@ -324,5 +327,49 @@ class UjianController extends Controller
         $pdf = Pdf::loadView("pages.ujian.cetak-barcode", $dataToView);
         $pdf->setPaper("A4", "potrait");
         return $pdf->stream($fileName . ".pdf");
+    }
+
+    public function getDataSiswaBySemester($semester)
+    {
+        $siswas = Ujian::with([
+            'siswa' => function ($q1) {
+                $q1->select("siswa_id", 'nama', 'kelas_id', 'tingkatan')
+                    ->where("status", 1)
+                    ->with("kelas", function ($q2) {
+                        $q2->where('status', 1)
+                            ->select("kelas_id", 'nama_kelas');
+                    });
+            },
+        ])
+            ->where("tahun_ajaran_id", $this->tahun)
+            ->where("semester", $semester)
+            ->get();
+
+        return response()->json([
+            'siswas' => $siswas
+        ]);
+    }
+
+    public function getDataUjianById($ujianId)
+    {
+        if (!isset($ujianId)) return response()->json(['status' => false]);
+
+        $ujian = Ujian::with([
+            'siswa' => function ($q1) {
+                $q1->where("status", 1)
+                    ->select("siswa_id", "user_id", 'username', 'nama', 'tingkatan', 'jurusan_id', 'kelas_id', 'role', 'status');
+            }
+        ])
+            ->where("id", $ujianId)->first();
+
+        if (is_null($ujian)) return response()->json([
+            'status' => false,
+            'message' => "Data ujian tidak ada"
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'data' => $ujian
+        ]);
     }
 }

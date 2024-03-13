@@ -2,16 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Keterlambatan;
+use App\Models\TahunAjaran;
+use App\Models\Ujian;
 use App\Models\Utils;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Auth\Events\Validated;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\Calculation\Database\DVar;
 use Svg\Tag\Rect;
 
 class KeterlambatanController extends Controller
 {
+    protected $tahun;
+
+    public function __construct()
+    {
+        $this->tahun = TahunAjaran::where("superadmin_aktif", 1)->first()->tahun_ajaran_id;
+    }
+
     public function index(Request $request)
     {
         $today_start = date("Y-m-d") . " 00:00:00";
@@ -40,6 +52,7 @@ class KeterlambatanController extends Controller
                 ->join('siswa as s', 's.siswa_id', '=', 'u.siswa_id')
                 ->join('kelas as ks', 'ks.kelas_id', '=', 's.kelas_id')
                 ->where('k.status', 1)
+                ->where("u.tahun_ajaran_id", $this->tahun)
                 ->where('k.created_at', '>=', $today_start)
                 ->where('k.created_at', '<=', $today_end);
 
@@ -55,12 +68,16 @@ class KeterlambatanController extends Controller
                 $query->where('k.tidak_lanjut', $request->tidak_lanjut);
             }
 
+            if ($request->semester != null) {
+                $query->where("u.semester", $request->semester);
+            }
+
             $count = $query->count();
 
             $result = $query->offset($request->start)
                 ->limit($request->length)
                 ->orderBy('k.id', 'DESC')
-                ->orderBy('k.tidak_lanjut', 'ASC')
+                // ->orderBy('k.tidak_lanjut', 'ASC')
                 ->get();
 
             $data = [];
@@ -102,6 +119,11 @@ class KeterlambatanController extends Controller
                             </span>
                         </div>';
                     }
+
+                    $subData['semester'] = '
+                    <div class="text-center">
+                    ' . $row->semester . '
+                    </div>';
 
                     $subData['alasan'] = $row->alasan_terlambat;
                     $subData['tidak_lanjut'] = $tidak_lanjut;
@@ -160,22 +182,31 @@ class KeterlambatanController extends Controller
 
     public function store(Request $request)
     {
-        $sql_ujian = DB::table('ujian')
-            ->where('siswa_id', $request->siswa)
-            ->first();
+        $validator = Validator::make($request->all(), [
+            'siswa' => "required",
+            'ruang' => "required",
+            'sesi' => "required",
+            'alasan' => "required",
+            'tidak_lanjut' => "required",
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator->errors());
+        }
+
+        $sql_ujian = Ujian::where("id", $request->siswa)->first();
 
         if (!$sql_ujian) {
             return redirect()->back()->withInput()->with("siswa_notfound", "Data siswa belum terdaftar di data ujian");
         }
 
-        DB::table("keterlambatan")
-            ->insert([
-                'ujian_id' => $sql_ujian->id,
-                'alasan_terlambat' => $request->alasan,
-                'tidak_lanjut' => $request->tidak_lanjut,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
+        Keterlambatan::insert([
+            'ujian_id' => $request->siswa,
+            'alasan_terlambat' => $request->alasan,
+            'tidak_lanjut' => $request->tidak_lanjut,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ]);
 
         return redirect()->back()->with("success", "Data Siswa terlambat berhasil di tambahkan");
     }
@@ -187,22 +218,15 @@ class KeterlambatanController extends Controller
         }
 
         $sql_terlambat = DB::table('keterlambatan as k')
-            ->select('s.nama', 's.siswa_id', 'k.*', 'u.ruang', 'u.sesi')
+            ->select('s.nama', 's.siswa_id', 'k.*', 'u.ruang', 'u.sesi', 'u.semester')
             ->join('ujian as u', 'u.id', '=', 'k.ujian_id')
             ->join('siswa as s', 's.siswa_id', '=', 'u.siswa_id')
             ->join('kelas as ks', 'ks.kelas_id', '=', 's.kelas_id')
             ->where('k.id', $id_terlambat)
             ->first();
 
-        $sql_siswa = DB::table("siswa")
-            ->select('siswa_id', 'nama')
-            ->get();
-
         $dataToView = [
             'data_terlambat' => $sql_terlambat,
-            'siswas' => $sql_siswa,
-            'sesis' => Utils::$sesis,
-            'ruangs' => Utils::$ruangs,
             'tidak_lanjuts' => Utils::$tidak_lanjuts
         ];
 
@@ -211,17 +235,19 @@ class KeterlambatanController extends Controller
 
     public function update(Request $request)
     {
-        // dd($request->all());
-        $sql_ujian = DB::table("ujian")
-            ->where('siswa_id', $request->siswa)
-            ->first();
+        $validator = Validator::make($request->all(), [
+            'alasan' => "required",
+            'tidak_lanjut' => "required",
+        ]);
 
-        DB::table("keterlambatan")
-            ->where('id', $request->id)
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator->errors())->withInput();
+        }
+
+        Keterlambatan::where("id", $request->id)
             ->update([
-                'ujian_id' => $sql_ujian->id,
                 'alasan_terlambat' => $request->alasan,
-                'tidak_lanjut' => $request->tidak_lanjut,
+                'tidak_lanjut' => $request->tidak_lanjut
             ]);
 
         return redirect()->back()->with("success", "Data berhasil di update");
@@ -288,13 +314,8 @@ class KeterlambatanController extends Controller
 
     public function delete(Request $request)
     {
-        $id = $request->id;
-        DB::table("keterlambatan")
-            ->where('id', $id)
-            ->update([
-                'status' => 0,
-            ]);
-
+        Keterlambatan::where("id", $request->id)
+            ->update(['status' => 0]);
         return response()->json([
             'status' => true,
         ]);
