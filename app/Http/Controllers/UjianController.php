@@ -85,6 +85,11 @@ class UjianController extends Controller
                         ' . $row->sesi . '
                     </div>
                     ';
+                    $subData['semester'] = '
+                    <div class="text-center">
+                        ' . $row->semester . '
+                    </div>
+                    ';
                     $subData['aksi'] = '
                     <div class="text-center">
                         <a href="/ujian/edit/' . $row->id . '" class="setting-edit m-auto">

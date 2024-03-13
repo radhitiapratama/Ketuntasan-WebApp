@@ -72,6 +72,7 @@
                                 <th width="100px">Kelas</th>
                                 <th class="text-center" width="100px">Ruang</th>
                                 <th class="text-center" width="100px">Sesi</th>
+                                <th class="text-center" width="100px">Semester</th>
                                 @if (auth()->guard('admin')->check() ||
                                         (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
                                     <th class="text-center" width="5px">Aksi</th>
@@ -206,6 +207,8 @@
                     data: "ruang"
                 }, {
                     data: "sesi"
+                }, {
+                    data: "semester"
                 },
                 {
                     data: "aksi"
