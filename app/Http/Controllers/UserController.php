@@ -106,7 +106,10 @@ class UserController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        if (!Utils::validateUsername($request->username)) {
+        if (!Utils::validateUsername([
+            'type' => "insert",
+            'username' => $request->username
+        ])) {
             return redirect()->back()->with("duplicate_username", "duplicate_username")->withInput();
         }
 
