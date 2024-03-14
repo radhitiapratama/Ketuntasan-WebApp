@@ -33,8 +33,17 @@
                     <form action="/ketidakhadiran/store" method="POST">
                         @csrf
                         <div class="form-group">
+                            <label for="#">Semester</label>
+                            <select name="semester" id="semester" class="form-control">
+                                <option value="">Pilih...</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
                             <label for="#">Nama Siswa</label>
-                            <select name="siswa" id="siswa" class="form-control" required>
+                            <select name="siswa" id="siswa" class="form-control" required disabled>
                                 <option value="">Pilih...</option>
                                 @foreach ($siswas as $siswa)
                                     <option value="{{ $siswa->siswa_id }}">{{ $siswa->nama }} |
@@ -43,24 +52,34 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label for="#">Ruang</label>
-                            <input type="text" name="ruang" class="ruang form-control pointer-none" disabled
-                                id="ruang" required tabindex="-1">
-                        </div>
-                        <div class="form-group">
-                            <label for="#">Sesi</label>
-                            <input type="text" name="sesi" class="sesi form-control pointer-none" id="sesi"
-                                required disabled tabindex="-1">
+                        <div class="row">
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label for="#">Ruang</label>
+                                    <input type="text" name="ruang" class="ruang form-control pointer-none" disabled
+                                        id="ruang" required tabindex="-1">
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12">
+                                <div class="form-group">
+                                    <label for="#">Sesi</label>
+                                    <input type="text" name="sesi" class="sesi form-control pointer-none"
+                                        id="sesi" required disabled tabindex="-1">
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="#">Alasan Terlambat</label>
                             <select name="alasan" id="alasan" class="form-control" required>
                                 <option value="">Pilih...</option>
                                 @foreach ($alasans as $key => $value)
-                                    <option value="{{ $key }}">{{ $value }}</option>
+                                    <option value="{{ $key }}" @selected(old('alasan') == $key)>{{ $value }}
+                                    </option>
                                 @endforeach
                             </select>
+                            @error('alasan')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
                         </div>
                         <button type="submit" class="btn-dark">Submit</button>
                     </form>
@@ -105,6 +124,16 @@
     </script>
 
     <script>
+        function checkTingkatan(tingkatan) {
+            if (tingkatan == 1) {
+                return "X"
+            } else if (tingkatan == 2) {
+                return "XI"
+            } else {
+                return "XII"
+            }
+        }
+
         $(document).on('select2:open', () => {
             document.querySelector('.select2-search__field').focus();
         });
@@ -115,19 +144,51 @@
             width: "100%"
         }
 
+        $("#semester").select2(configSelect);
         $("#siswa").select2(configSelect);
         $("#alasan").select2(configSelect);
 
-        $("#siswa").change(function() {
-            let siswa_id = $(this).val();
+        $("#semester").change(function() {
+            let semester = $(this).val();
+            console.log(semester)
+
+            if (semester == "") return
+
+            $("#siswa").attr("disabled", true)
+            $("#ruang").attr("disabled", true)
+            $("#sesi").attr("disabled", true)
+            $("#ruang").val("")
+            $("#sesi").val("")
+            $("#siswa").html(`<option value="
+                ">Pilih...</option>`)
+
             $.ajax({
-                type: "POST",
-                url: "{{ url('ujian/check-siswa') }}",
+                type: "GET",
+                url: `{{ url('ujian/siswa/semester/${semester}') }}`,
+                dataType: "json",
+                success: function(response) {
+                    console.log(response)
+                    let options = '<option value="">Pilih...</option>'
+                    let siswas = response.siswas;
+
+                    for (let i = 0; i < siswas.length; i++) {
+                        options +=
+                            `<option value="${siswas[i].id}">${siswas[i].siswa.nama} | ${checkTingkatan(siswas[i].siswa.tingkatan)} ${siswas[i].siswa.kelas.nama_kelas}</option>`
+                    }
+
+                    $("#siswa").html(options);
+                    $("#siswa").removeAttr("disabled")
+                }
+            });
+        })
+
+        $("#siswa").change(function() {
+            let ujian_id = $(this).val();
+            $.ajax({
+                type: "GET",
+                url: `{{ url('ujian/${ujian_id}') }}`,
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
-                },
-                data: {
-                    siswa_id
                 },
                 dataType: "json",
                 success: function(response) {
@@ -146,13 +207,13 @@
                             timer: 5000,
                             timerProgressBar: true
                         });
-                        $("#ruang").val("");
-                        $("#sesi").val("");
                         return;
                     }
 
                     $("#ruang").val(response.data.ruang);
                     $("#sesi").val(response.data.sesi);
+                    $("#ruang").removeAttr("disabled")
+                    $("#sesi").removeAttr("disabled")
                 }
             });
         });

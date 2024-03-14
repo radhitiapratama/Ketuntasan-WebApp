@@ -36,36 +36,47 @@
                         <input type="hidden" name="id" value="{{ $data_tidakhadir->id }}">
                         <div class="form-group">
                             <label for="#">Nama Siswa</label>
-                            <select name="siswa" id="siswa" class="form-control" required>
-                                <option value="">Pilih...</option>
-                                @foreach ($siswas as $siswa)
-                                    <option value="{{ $siswa->siswa_id }}" @selected($siswa->siswa_id == $data_tidakhadir->siswa_id)>
-                                        {{ $siswa->nama }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <input type="text" name="siswa" id="siswa" class="form-control pointer-none" disabled
+                                value="{{ old('siswa', $data_tidakhadir->nama) }}" required>
                         </div>
-                        <div class="form-group">
-                            <label for="#">Ruang</label>
-                            <input type="text" name="ruang" id="ruang" class="form-control pointer-none" disabled
-                                value="{{ old('ruang', $data_tidakhadir->ruang) }}" required>
+                        <div class="row">
+                            <div class="col-md-4 col-12">
+                                <div class="form-group">
+                                    <label for="#">Ruang</label>
+                                    <input type="text" name="ruang" id="ruang" class="form-control pointer-none"
+                                        disabled value="{{ old('ruang', $data_tidakhadir->ruang) }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-12">
+                                <div class="form-group">
+                                    <label for="#">Sesi</label>
+                                    <input type="text" name="sesi" id="sesi" class="form-control pointer-none"
+                                        disabled value="{{ old('sesi', $data_tidakhadir->sesi) }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-12">
+                                <div class="form-group">
+                                    <label for="#">Semester</label>
+                                    <input type="text" name="semester" id="semester" class="form-control pointer-none"
+                                        disabled value="{{ old('sesi', $data_tidakhadir->semester) }}" required>
+                                </div>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="#">Sesi</label>
-                            <input type="text" name="sesi" id="sesi" class="form-control pointer-none" disabled
-                                value="{{ old('sesi', $data_tidakhadir->sesi) }}" required>
-                        </div>
+
                         <div class="form-group">
                             <div class="form-group">
                                 <label for="#">Alasan</label>
                                 <select name="alasan" id="alasan" class="form-control" required>
                                     <option value="">Pilih....</option>
                                     @foreach ($alasans as $key => $value)
-                                        <option value="{{ $key }}" @selected($key == $data_tidakhadir->alasan)>
+                                        <option value="{{ $key }}" @selected(old('alasan', $data_tidakhadir->alasan) == $key)>
                                             {{ $value }}
                                         </option>
                                     @endforeach
                                 </select>
+                                @error('alasan')
+                                    <small class="text-danger">{{ $message }}</small>
+                                @enderror
                             </div>
                         </div>
                         <button type="submit" class="btn-dark">Update</button>
@@ -100,7 +111,6 @@
             width: "100%"
         }
 
-        $("#siswa").select2(configSelect);
         $("#alasan").select2(configSelect);
 
         $("#siswa").change(function() {

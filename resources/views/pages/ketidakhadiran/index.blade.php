@@ -43,7 +43,7 @@
         <form action="/ketidakhadiran/cetak" target="_blank" method="post">
             @csrf
             <div class="card-header row mb-3">
-                <div class="col-12 col-md-5">
+                <div class="col-12 col-md-3">
                     <div class="form-group">
                         <label for="#">Tanggal</label>
                         <input type="text" class="form-control" name="tgl" id="tgl">
@@ -84,6 +84,16 @@
                         </select>
                     </div>
                 </div>
+                <div class="col-12 col-md-2">
+                    <div class="form-group">
+                        <label for="#">Semester</label>
+                        <select name="semester" id="semester" class="form-control">
+                            <option value="">Pilih...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="card-header">
                 <button type="submit" class="btn-pdf">
@@ -101,11 +111,12 @@
                         <th>Kelas</th>
                         <th width="5">Ruang</th>
                         <th width="5">Sesi</th>
-                        <th class="text-center">Alasan</th>
+                        <th width="5" class="text-center">Alasan</th>
                         <th>Waktu</th>
+                        <th width="5">Semester</th>
                         @if (auth()->guard('admin')->check() ||
                                 (auth()->guard('operator')->check() && auth()->guard('operator')->user()->level == 1))
-                            <th width="5">Aksi</th>
+                            <th width="5" class="text-center">Aksi</th>
                         @endif
                     </tr>
                 </thead>
@@ -148,6 +159,9 @@
                     data: "waktu"
                 },
                 {
+                    data: "semester"
+                },
+                {
                     data: "aksi"
                 },
             ];
@@ -174,6 +188,9 @@
                 {
                     data: "waktu"
                 },
+                {
+                    data: "semester"
+                },
             ];
         @endif
 
@@ -198,6 +215,7 @@
                         data.ruang = $("#ruang").val();
                         data.sesi = $("#sesi").val();
                         data.alasan = $("#alasan").val();
+                        data.semester = $("#semester").val();
                     }
                 },
                 columns: table_columns,
@@ -226,6 +244,7 @@
         $("#ruang").select2(configSelect2);
         $("#sesi").select2(configSelect2);
         $("#alasan").select2(configSelect2);
+        $("#semester").select2(configSelect2);
 
         $("#ruang").change(function() {
             clearDatatable();
@@ -243,6 +262,11 @@
         });
 
         $("#alasan").change(function() {
+            clearDatatable();
+            loadDatatable();
+        });
+
+        $("#semester").change(function() {
             clearDatatable();
             loadDatatable();
         });

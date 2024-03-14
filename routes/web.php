@@ -232,7 +232,6 @@ Route::middleware(['checkAuth'])->group(function () {
     // Ketidakhadiran
     Route::group(['prefix' => "ketidakhadiran"], function () {
         Route::match(['get', 'post'], "/", [KetidakhadiranController::class, 'index']);
-        Route::get("add/by-qr");
         Route::get("add", [KetidakhadiranController::class, 'add']);
         Route::post("store", [KetidakhadiranController::class, 'store']);
         Route::get("edit/{id}", [KetidakhadiranController::class, 'edit']);

@@ -42,15 +42,28 @@
                             <label for="#">Nama Siswa</label>
                             <input type="text" class="form-control pointer-none" id="siswa" disabled tabindex="-1">
                         </div>
-                        <div class="form-group">
-                            <label for="#">Ruang</label>
-                            <input type="text" class="ruang form-control pointer-none" id="ruang" required
-                                tabindex="-1" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label for="#">Sesi</label>
-                            <input type="text" class="sesi form-control pointer-none" id="sesi" required
-                                tabindex="-1" disabled>
+                        <div class="row">
+                            <div class="col-md-4 col-12">
+                                <div class="form-group">
+                                    <label for="#">Ruang</label>
+                                    <input type="text" class="ruang form-control pointer-none" id="ruang" required
+                                        tabindex="-1" disabled>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-12">
+                                <div class="form-group">
+                                    <label for="#">Sesi</label>
+                                    <input type="text" class="sesi form-control pointer-none" id="sesi" required
+                                        tabindex="-1" disabled>
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-12">
+                                <div class="form-group">
+                                    <label for="#">Semester</label>
+                                    <input type="text" class="semester form-control pointer-none" id="semester" required
+                                        tabindex="-1" disabled>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="#">Alasan</label>
@@ -118,14 +131,12 @@
 
         function checkSiswa(e) {
             e.preventDefault();
+            let ujianID = e.target.value
             $.ajax({
-                type: "POST",
-                url: "{{ url('ujian/check-siswa') }}",
+                type: "GET",
+                url: `{{ url('ujian/${ujianID}') }}`,
                 headers: {
                     'X-CSRF-TOKEN': csrfToken,
-                },
-                data: {
-                    siswa_id: $("input[name='scan_qr']").val(),
                 },
                 dataType: "json",
                 success: function(response) {
@@ -147,13 +158,12 @@
                         return;
                     }
 
-                    $("#siswa").val(response.data.nama);
+                    $("#siswa").val(response.data.siswa.nama);
                     $("#ruang").val(response.data.ruang);
                     $("#sesi").val(response.data.sesi);
+                    $("#semester").val(response.data.semester);
 
-                    $("input[name='siswa']").val(response.data.siswa_id);
-                    $("input[name='ruang']").val(response.data.ruang);
-                    $("input[name='sesi']").val(response.data.sesi);
+                    $("input[name='siswa']").val(response.data.id);
 
                     $("#scan_qr").val("");
                     $("#alasan").focus();

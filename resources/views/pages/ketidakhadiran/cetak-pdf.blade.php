@@ -62,6 +62,7 @@
                 <th width="5">Sesi</th>
                 <th>Alasan</th>
                 <th>Waktu</th>
+                <th width="5">Semester</th>
             </tr>
         </thead>
         <tbody>
@@ -81,15 +82,14 @@
                         <td class="text-center">{{ $row->sesi }}</td>
                         <td>{{ $alasan }}</td>
                         <td>{{ date('d-m-Y H:m:s', strtotime($row->created_at)) }}</td>
+                        <td class="text-center">{{ $row->semester }}</td>
                     </tr>
                 @endforeach
             @else
                 <tr>
-                    <td colspan="7" class="text-center">Tidak ada data Siswa tidak hadir</td>
+                    <td colspan="8" class="text-center">Tidak ada data Siswa tidak hadir</td>
                 </tr>
             @endif
-
-
         </tbody>
     </table>
 </body>

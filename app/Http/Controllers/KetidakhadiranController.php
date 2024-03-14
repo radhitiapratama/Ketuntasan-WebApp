@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Ketidakhadiran;
+use App\Models\TahunAjaran;
 use App\Models\Utils;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -13,6 +15,13 @@ use Symfony\Component\CssSelector\Node\FunctionNode;
 
 class KetidakhadiranController extends Controller
 {
+    protected $tahun;
+
+    public function __construct()
+    {
+        $this->tahun = TahunAjaran::where("superadmin_aktif", 1)->first()->tahun_ajaran_id;
+    }
+
     public function index(Request $request)
     {
         $today_start = date("Y-m-d") . " 00:00:00";
@@ -42,7 +51,8 @@ class KetidakhadiranController extends Controller
                 ->join('kelas as ks', 'ks.kelas_id', '=', 's.kelas_id')
                 ->where('k.status', 1)
                 ->where('k.created_at', '>=', $today_start)
-                ->where('k.created_at', '<=', $today_end);
+                ->where('k.created_at', '<=', $today_end)
+                ->where("u.tahun_ajaran_id", $this->tahun);
 
             if ($request->ruang != null) {
                 $query->where('u.ruang', $request->ruang);
@@ -54,6 +64,10 @@ class KetidakhadiranController extends Controller
 
             if ($request->alasan != null) {
                 $query->where('k.alasan', $request->alasan);
+            }
+
+            if ($request->semester != null) {
+                $query->where('u.semester', $request->semester);
             }
 
             $count = $query->count();
@@ -115,6 +129,11 @@ class KetidakhadiranController extends Controller
                        ';
                     }
 
+                    $subData['semester'] = '
+                    <div class="text-center">
+                    ' . $row->semester . '
+                    </div>';
+
                     $subData['waktu'] = date("d-m-Y H:m:s", strtotime($row->created_at));
 
                     $subData['aksi'] = '
@@ -173,25 +192,15 @@ class KetidakhadiranController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back();
+            return redirect()->back()->withInput()->withErrors($validator->errors());
         }
 
-        $sql_ujian = DB::table("ujian")
-            ->where('siswa_id', $request->siswa)
-            ->first();
-
-        if (!$sql_ujian) {
-            return redirect()->back();
-        }
-
-        DB::table("ketidakhadiran")
-            ->insert([
-                'ujian_id' => $sql_ujian->id,
-                'alasan' => $request->alasan,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
-
+        Ketidakhadiran::insert([
+            'ujian_id' => $request->siswa,
+            'alasan' => $request->alasan,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now()
+        ]);
 
         return redirect()->back()->with("success", "Data berhasil di tambahkan");
     }
@@ -203,7 +212,7 @@ class KetidakhadiranController extends Controller
         }
 
         $sql_tidakhadir = DB::table('ketidakhadiran as k')
-            ->select('s.nama', 's.siswa_id', 'k.*', 'u.ruang', 'u.sesi')
+            ->select('s.nama', 's.siswa_id', 'k.*', 'u.ruang', 'u.sesi', 'u.semester')
             ->join('ujian as u', 'u.id', '=', 'k.ujian_id')
             ->join('siswa as s', 's.siswa_id', '=', 'u.siswa_id')
             ->join('kelas as ks', 'ks.kelas_id', '=', 's.kelas_id')
@@ -225,15 +234,18 @@ class KetidakhadiranController extends Controller
 
     public function update(Request $request)
     {
-        $sql_ujian = DB::table("ujian")
-            ->where('siswa_id', $request->siswa)
-            ->first();
+        $validator = Validator::make($request->all(), [
+            'id' => "required",
+            'alasan' => "required"
+        ]);
 
-        DB::table("ketidakhadiran")
-            ->where('id', $request->id)
+        if ($validator->fails()) {
+            return redirect()->back()->withInput()->withErrors($validator->errors());
+        }
+
+        Ketidakhadiran::where("id", $request->id)
             ->update([
-                'ujian_id' => $sql_ujian->id,
-                'alasan' => $request->alasan,
+                'alasan' => $request->alasan
             ]);
 
         return redirect()->back()->with("success", "Data berhasil di update");
@@ -266,7 +278,8 @@ class KetidakhadiranController extends Controller
             ->join('kelas as ks', 'ks.kelas_id', '=', 's.kelas_id')
             ->where('k.status', 1)
             ->where('k.created_at', '>=', $today_start)
-            ->where('k.created_at', '<=', $today_end);
+            ->where('k.created_at', '<=', $today_end)
+            ->where("u.tahun_ajaran_id", $this->tahun);
 
         if ($request->ruang != null) {
             $sql_tidakhadir->where('u.ruang', $request->ruang);
@@ -280,7 +293,11 @@ class KetidakhadiranController extends Controller
             $sql_tidakhadir->where('k.alasan', $request->alasan);
         }
 
-        $result = $sql_tidakhadir->orderBy('k.created_at', 'ASC')->get();
+        if ($request->semester != null) {
+            $sql_tidakhadir->where("u.semester", $request->semester);
+        }
+
+        $result = $sql_tidakhadir->orderBy('k.id', 'ASC')->get();
 
         $dataToView = [
             'tgl_start' => date("d-m-Y", strtotime($today_start)),
@@ -298,12 +315,8 @@ class KetidakhadiranController extends Controller
 
     public function delete(Request $request)
     {
-        $id = $request->id;
-        DB::table("ketidakhadiran")
-            ->where('id', $id)
-            ->update([
-                'status' => 0,
-            ]);
+        Ketidakhadiran::where("id", $request->id)
+            ->update(['status' =>  0]);
 
         return response()->json([
             'status' => true,
