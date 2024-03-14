@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\Calculation\Database\DVar;
+use Psy\Command\WhereamiCommand;
 use Svg\Tag\Rect;
 
 class KeterlambatanController extends Controller
@@ -255,8 +256,6 @@ class KeterlambatanController extends Controller
 
     public function cetak(Request $request)
     {
-        // dd($request->all());
-
         $fileName = "Data Siswa Terlambat " . $request->tgl_start . " - " . $request->tgl_end;
 
         $today_start = date("Y-m-d") . " 00:00:00";
@@ -274,7 +273,8 @@ class KeterlambatanController extends Controller
             ->join('kelas as ks', 'ks.kelas_id', '=', 's.kelas_id')
             ->where('k.status', 1)
             ->where('k.created_at', '>=', $today_start)
-            ->where('k.created_at', '<=', $today_end);
+            ->where('k.created_at', '<=', $today_end)
+            ->where("u.tahun_ajaran_id", $this->tahun);
 
         if ($request->ruang != null) {
             $sql_keterlambatan->where('u.ruang', $request->ruang);
@@ -286,6 +286,10 @@ class KeterlambatanController extends Controller
 
         if ($request->tidak_lanjut != null) {
             $sql_keterlambatan->where('k.tidak_lanjut', $request->tidak_lanjut);
+        }
+
+        if ($request->semester != null) {
+            $sql_keterlambatan->where("u.semester", $request->semester);
         }
 
         $result = $sql_keterlambatan->orderBy('k.created_at', 'ASC')->get();
