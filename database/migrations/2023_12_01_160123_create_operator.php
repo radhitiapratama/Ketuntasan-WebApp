@@ -17,7 +17,7 @@ return new class extends Migration
             Schema::create('operator', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId("user_id")->references("user_id")->on("users");
-                $table->string("username");
+                $table->string("username")->unique();
                 $table->string("nama");
                 $table->string("password");
                 $table->integer("status")->default(1);

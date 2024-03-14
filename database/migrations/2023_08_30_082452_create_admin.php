@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('admin', function (Blueprint $table) {
             $table->id("admin_id");
             $table->foreignId("user_id")->references("user_id")->on("users");
-            $table->string("username");
+            $table->string("username")->unique();
             $table->string("nama");
             $table->string("password");
             $table->integer("role");
