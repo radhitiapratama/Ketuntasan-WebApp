@@ -64,4 +64,19 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Admin::class, 'user_id', 'user_id');
     }
+
+    public function guru()
+    {
+        return $this->belongsTo(Guru::class, 'user_id', 'user_id');
+    }
+
+    public function siswa()
+    {
+        return $this->belongsTo(Siswa::class, 'user_id', 'user_id');
+    }
+
+    public function operator()
+    {
+        return $this->belongsTo(Operator::class, 'user_id', 'user_id');
+    }
 }

@@ -17,6 +17,7 @@ use App\Imports\GuruMapelImport;
 use App\Imports\waliKelasImport;
 use App\Models\Utils;
 use Dflydev\DotAccessData\Util;
+use Illuminate\Database\QueryException;
 use Psy\Command\WhereamiCommand;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -124,7 +125,7 @@ class GuruController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            "username" => "required",
+            "username" => "required|unique:guru,username",
             'nama_guru' => "required",
             'password' => "required|min:6",
             'kode_guru' => "required|numeric"
@@ -141,13 +142,6 @@ class GuruController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        if (!Utils::validateUsername([
-            'type' => 'insert',
-            'username' => $request->username,
-        ])) {
-            return redirect()->back()->withInput()->with("duplicate_username", "Username sudah digunakan!");
-        }
-
         if (!Utils::validateTeacherCode([
             'type' => "insert",
             'teacher_code' => $request->kode_guru,
@@ -155,24 +149,33 @@ class GuruController extends Controller
             return redirect()->back()->withInput()->with("duplicate_teacher_code", "Kode Guru sudah digunakan!");
         }
 
-        $user = User::create([
-            'created_by' => auth()->guard("admin")->user()->user_id
-        ]);
+        try {
+            DB::beginTransaction();
 
-        $lastInsertId = $user->user_id;
+            $user = User::create([
+                'created_by' => auth()->guard("admin")->user()->user_id
+            ]);
 
-        Guru::create([
-            'user_id' => $lastInsertId,
-            'username' => $request->username,
-            'nama' => $request->nama_guru,
-            'password' => Hash::make($request->password),
-            'kode_guru' => $request->kode_guru,
-            'status' => 1,
-            'role' => 2,
-            'created_by' => auth()->guard("admin")->user()->user_id
-        ]);
+            $lastInsertId = $user->user_id;
 
-        return redirect()->back()->with("successStore", "successStore");
+            Guru::create([
+                'user_id' => $lastInsertId,
+                'username' => $request->username,
+                'nama' => $request->nama_guru,
+                'password' => Hash::make($request->password),
+                'kode_guru' => $request->kode_guru,
+                'status' => 1,
+                'role' => 2,
+                'created_by' => auth()->guard("admin")->user()->user_id
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with("successStore", "successStore");
+        } catch (QueryException $ex) {
+            DB::rollBack();
+            return redirect()->back()->withInput();
+        }
     }
 
     public function edit($guru_id)

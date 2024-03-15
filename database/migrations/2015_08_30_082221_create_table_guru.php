@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string("nama");
             $table->string("password");
             $table->integer("role");
-            $table->integer("kode_guru");
+            $table->integer("kode_guru")->unique();
             $table->integer("status")->default(1);
             $table->timestamps();
             $table->integer("created_by")->nullable();

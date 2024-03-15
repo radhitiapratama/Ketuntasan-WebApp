@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Utils;
+use Exception;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -106,29 +107,30 @@ class UserController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        if (!Utils::validateUsername([
-            'type' => "insert",
-            'username' => $request->username
-        ])) {
+        try {
+            DB::beginTransaction();
+            $user = User::create([
+                'created_by' => auth()->guard("admin")->user()->user_id,
+            ]);
+
+            $lastUserId = $user->user_id;
+
+            Admin::create([
+                'user_id' => $lastUserId,
+                'username' => $request->username,
+                'nama' => $request->nama,
+                'password' => Hash::make($request->password),
+                'role' => 1,
+                'status' => 1,
+                'created_by' => auth()->guard("admin")->user()->user_id,
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()->with("successStore", "successStore");
+        } catch (Exception $ex) {
+            DB::rollBack();
             return redirect()->back()->with("duplicate_username", "duplicate_username")->withInput();
         }
-
-        $user = User::create([
-            'created_by' => auth()->guard("admin")->user()->user_id,
-        ]);
-
-        $lastUserId = $user->user_id;
-
-        Admin::create([
-            'user_id' => $lastUserId,
-            'username' => $request->username,
-            'nama' => $request->nama,
-            'password' => Hash::make($request->password),
-            'role' => 1,
-            'status' => 1,
-            'created_by' => auth()->guard("admin")->user()->user_id,
-        ]);
-
-        return redirect()->back()->with("successStore", "successStore");
     }
 }

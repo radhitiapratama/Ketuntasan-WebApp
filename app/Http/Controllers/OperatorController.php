@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Utils;
 use Carbon\Carbon;
 use Dflydev\DotAccessData\Util;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -54,29 +55,36 @@ class OperatorController extends Controller
             'type' => "insert",
             'username' => $request->username
         ])) {
-            return redirect()->back()->withInput()->with("duplicate", "Username sudah di gunakan!");
         }
 
-        $user_id = DB::table("users")
-            ->insertGetId([
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-                'created_by' => Auth::guard("admin")->user()->user_id,
-            ]);
 
-        DB::table("operator")
-            ->insert([
-                'user_id' => $user_id,
-                'username' => $username,
-                'nama' => $request->nama,
-                'password' => Hash::make($request->password),
-                'status' => 1,
-                'level' => $request->level,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]);
+        try {
+            DB::beginTransaction();
+            $user_id = DB::table("users")
+                ->insertGetId([
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                    'created_by' => Auth::guard("admin")->user()->user_id,
+                ]);
 
-        return redirect()->back()->with("success", "Data berhasil di tambahkan");
+            DB::table("operator")
+                ->insert([
+                    'user_id' => $user_id,
+                    'username' => $username,
+                    'nama' => $request->nama,
+                    'password' => Hash::make($request->password),
+                    'status' => 1,
+                    'level' => $request->level,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]);
+
+            DB::commit();
+            return redirect()->back()->with("success", "Data berhasil di tambahkan");
+        } catch (QueryException $ex) {
+            DB::rollBack();
+            return redirect()->back()->withInput()->with("duplicate", "Username sudah di gunakan!");
+        }
     }
 
     public function edit($id)
