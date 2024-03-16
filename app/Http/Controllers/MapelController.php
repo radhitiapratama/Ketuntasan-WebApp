@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Mapel;
 use App\Imports\MapelImport;
 use Illuminate\Auth\Events\Validated;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class MapelController extends Controller
@@ -52,7 +53,7 @@ class MapelController extends Controller
 
             $result = $query->offset($request->start)
                 ->limit($request->length)
-                ->orderBy("mapel_id", 'ASC')
+                ->orderBy("nama_mapel", 'ASC')
                 ->get();
 
             $data = [];
@@ -133,12 +134,10 @@ class MapelController extends Controller
             return redirect()->back()->withInput()->withErrors($validator);
         }
 
-        $data_insert = [
-            'nama_mapel' => $request->input("nama_mapel"),
-        ];
-
-        DB::table("mapel")
-            ->insert($data_insert);
+        Mapel::create([
+            'nama_mapel' => $request->nama_mapel,
+            'created_by' => Auth::guard("admin")->user()->user_id
+        ]);
 
         return redirect()->back()->with("successStore", "successStore");
     }
@@ -185,6 +184,8 @@ class MapelController extends Controller
         $dataUpdate = [];
         $sql_mapel = Mapel::where("mapel_id", $request->mapel_id)->first();
 
+        if ($sql_mapel == null) return redirect()->back();
+
         if ($sql_mapel->nama_mapel != $request->nama_mapel) {
             $sql_check = Mapel::select("mapel_id")->where("nama_mapel", $request->nama_mapel)->first();
             if ($sql_check) {
@@ -197,9 +198,10 @@ class MapelController extends Controller
             $dataUpdate['status'] = $request->status;
         }
 
-        DB::table("mapel")
-            ->where('mapel_id', '=', $request->mapel_id)
-            ->update($dataUpdate);
+        if ($dataUpdate != []) {
+            Mapel::where("mapel_id", $request->mapel_id)
+                ->update($dataUpdate);
+        }
 
         return redirect()->back()->with('successUpdate', "successUpdate");
     }
