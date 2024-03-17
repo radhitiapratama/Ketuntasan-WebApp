@@ -53,7 +53,7 @@ class MapelController extends Controller
 
             $result = $query->offset($request->start)
                 ->limit($request->length)
-                ->orderBy("nama_mapel", 'ASC')
+                ->orderBy("mapel_id", 'ASC')
                 ->get();
 
             $data = [];

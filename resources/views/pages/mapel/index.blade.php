@@ -21,9 +21,11 @@
         </div>
     </div>
 
+    {{-- {{ dd($errors) }} --}}
+
     <div class="card mb-1">
         <div class="card-body">
-            <div class="row">
+            <div class="row mb-1">
                 <div class="col-12 d-flex gap-20">
                     <button type="button" class="btn-excel" data-toggle="modal" data-target="#import_modal">
                         <i class="ri-file-excel-2-line"></i>
@@ -34,6 +36,15 @@
                         Download Template
                     </a>
                 </div>
+            </div>
+            <div class="row">
+                @if ($errors->has('excel_file'))
+                    @foreach ($errors->get('excel_file') as $message)
+                        <div class="col-12">
+                            <small class="text-danger">{{ $message }}</small>
+                        </div>
+                    @endforeach
+                @endif
             </div>
         </div>
     </div>
@@ -145,6 +156,38 @@
         @if (session()->has('max_rows'))
             Swal.fire({
                 title: "{{ session('max_rows') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('duplicate_mapel_name'))
+            Swal.fire({
+                title: "{{ session('duplicate_mapel_name') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('import_failed'))
+            Swal.fire({
+                title: "{{ session('import_failed') }}",
                 icon: "error",
                 iconColor: 'white',
                 customClass: {
