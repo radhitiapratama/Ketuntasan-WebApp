@@ -385,7 +385,7 @@ class GuruController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'message' => "failed",
+                'status' => false,
             ]);
         }
 
@@ -438,7 +438,7 @@ class GuruController extends Controller
                     'mapel_id' => $mapel_id[$i],
                     'kode_guru_mapel' => $sql_count + 1,
                     'status' => 1,
-                    'created_by' => auth()->guard("admin")->user()->user_id
+                    'created_by' => Auth::guard("admin")->user()->user_id
                 ]);
             }
         }

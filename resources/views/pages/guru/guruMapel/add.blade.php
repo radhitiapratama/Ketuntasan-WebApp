@@ -89,6 +89,12 @@
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
     <script src="{{ asset('plugins/sweetalert2/sweetalert2.min.js') }}"></script>
     <script>
+        const configSelect2 = {
+            theme: 'bootstrap4',
+            width: '100%',
+            placeholder: "Pilih..."
+        }
+
         function showLoading() {
             Swal.fire({
                 title: "Sedang memprosess,",
@@ -108,17 +114,8 @@
             document.querySelector('.select2-search__field').focus();
         });
 
-        $(".select-guru").select2({
-            theme: 'bootstrap4',
-            width: '100%',
-            placeholder: "Pilih..."
-        })
-
-        $(`#mapel_id_1`).select2({
-            theme: "bootstrap4",
-            width: "100%",
-            placeholder: "Pilih..."
-        });
+        $(".select-guru").select2(configSelect2)
+        $(`#mapel_id_1`).select2(configSelect2);
 
         const csrfToken = $("meta[name='csrf-token']").attr('content');
 
@@ -134,11 +131,7 @@
             newElement.find("select").attr("name", "mapel_id[]");
             newElement.appendTo(".mapel-wrapper");
 
-            $(`#mapel_id_${mapelLen}`).select2({
-                theme: "bootstrap4",
-                width: "100%",
-                placeholder: 'Pilih...',
-            });
+            $(`#mapel_id_${mapelLen}`).select2(configSelect2);
         });
 
         $("#btn-submit").click(function(e) {
@@ -204,7 +197,7 @@
                 success: function(response) {
                     hideLoading();
 
-                    if (response.message == "failed") {
+                    if (response.status == false) {
                         Swal.fire({
                             title: "Mapel tidak boleh kosong",
                             icon: "error",
