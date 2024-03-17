@@ -512,10 +512,8 @@ class GuruController extends Controller
 
         if ($sql_guruMapel->mapel_id != $request->mapel_id) {
             // check apakah ada mapel duplicate
-            $sql_checkDuplicate_mapel = DB::table('guru_mapel')
-                ->where("guru_id", $request->guru_id)
-                ->where("mapel_id", $request->mapel_id)
-                ->first();
+            $sql_checkDuplicate_mapel = GuruMapel::where("guru_id", $request->guru_id)
+                ->where("mapel_id", $request->mapel_id)->first();
 
             if ($sql_checkDuplicate_mapel) {
                 DB::rollBack();
@@ -525,17 +523,17 @@ class GuruController extends Controller
             $dataUpdate["mapel_id"] = $request->mapel_id;
         }
 
-        if ($sql_guruMapel->status != $request->mapel_id) {
+        if ($sql_guruMapel->status != $request->status) {
             $dataUpdate['status'] = $request->status;
         }
 
         if (!empty($dataUpdate)) {
-            $dataUpdate['updated_by'] = auth()->guard("admin")->user()->user_id;
+            $dataUpdate['updated_by'] = Auth::guard("admin")->user()->user_id;
             GuruMapel::where('guru_mapel_id', $request->guru_mapel_id)
                 ->update($dataUpdate);
+            DB::commit();
         }
 
-        DB::commit();
 
         return redirect()->back()->with("successUpdate", "successUpdate")->withInput();
     }
