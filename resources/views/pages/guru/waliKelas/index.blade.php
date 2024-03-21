@@ -153,9 +153,9 @@
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
 
     <script>
-        @if (session()->has('success_import'))
+        @if (session()->has('import_success'))
             Swal.fire({
-                title: '{{ session('success_import') }}',
+                title: '{{ session('import_success') }}',
                 icon: "success",
                 iconColor: 'white',
                 customClass: {
@@ -169,9 +169,9 @@
             });
         @endif
 
-        @if (session()->has('failed_import'))
+        @if (session()->has('import_failed'))
             Swal.fire({
-                title: '{{ session('failed_import') }}',
+                title: '{{ session('import_failed') }}',
                 icon: "error",
                 iconColor: 'white',
                 customClass: {
@@ -185,9 +185,9 @@
             });
         @endif
 
-        @if (session()->has('user_null'))
+        @if (session()->has('guru_null'))
             Swal.fire({
-                title: '{{ session('user_null') }}',
+                title: '{{ session('guru_null') }}',
                 icon: "error",
                 iconColor: 'white',
                 customClass: {
@@ -217,9 +217,9 @@
             });
         @endif
 
-        @if (session()->has('kode_kelas_null'))
+        @if (session()->has('kelas_null'))
             Swal.fire({
-                title: '{{ session('kode_kelas_null') }}',
+                title: '{{ session('kelas_null') }}',
                 icon: "error",
                 iconColor: 'white',
                 customClass: {
@@ -251,7 +251,23 @@
 
         @if (session()->has('validation_failed'))
             Swal.fire({
-                title: '{{ session('max_count') }}',
+                title: '{{ session('validation_failed') }}',
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('wali_kelas_duplicate'))
+            Swal.fire({
+                title: '{{ session('wali_kelas_duplicate') }}',
                 icon: "error",
                 iconColor: 'white',
                 customClass: {

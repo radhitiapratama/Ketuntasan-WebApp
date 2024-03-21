@@ -58,6 +58,8 @@ class Utils
         if ($tingkatan == 3) {
             return "XII";
         }
+
+        return null;
     }
 
     public static function checkTidakLanjut($string)

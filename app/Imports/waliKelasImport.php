@@ -2,23 +2,39 @@
 
 namespace App\Imports;
 
+use App\Models\Guru;
+use App\Models\Kelas;
 use Carbon\Carbon;
 use App\Models\TahunAjaran;
+use App\Models\WaliKelas;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithStartRow;
-
+use PhpOffice\PhpSpreadsheet\Calculation\Category;
 
 class waliKelasImport implements ToCollection, WithStartRow
 {
     use Importable;
 
-    /**
-     * @param Collection $collection
-     */
+    protected $guru;
+    protected $kelas;
+    protected $wali_kelas;
+    protected $tahun;
+    protected $wali_kelas_excel;
+
+    public function __construct()
+    {
+        $this->tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first()->tahun_ajaran_id;
+        $this->guru = Guru::select("kode_guru", "guru_id")->get();
+        $this->kelas = Kelas::select("kelas_id", "jurusan_id")->get();
+        $this->wali_kelas = WaliKelas::where("tahun_ajaran_id", $this->tahun)->get();
+    }
+
     public function collection(Collection $rows)
     {
         $validator =  Validator::make(
@@ -46,28 +62,6 @@ class waliKelasImport implements ToCollection, WithStartRow
             return;
         }
 
-        $tahun = TahunAjaran::select("tahun_ajaran_id")
-            ->where("superadmin_aktif", 1)
-            ->first();
-
-        $sql_guru = DB::table("guru")
-            ->select('guru_id', 'kode_guru')
-            ->get()->toArray();
-
-        $arr_guruId = array_column($sql_guru, 'guru_id');
-        $arr_kode_guru = array_column($sql_guru, "kode_guru");
-
-        $sql_kelas = DB::table("kelas")
-            ->select('kelas_id', 'jurusan_id')
-            ->get()->toArray();
-
-        $arr_kelasId = array_column($sql_kelas, "kelas_id");
-        $arr_jurusanId = array_column($sql_kelas, 'jurusan_id');
-
-        // $stringsReplace = [
-        //     '[', ']'
-        // ];
-
         $dataWaliKelas = [];
 
         DB::beginTransaction();
@@ -75,148 +69,111 @@ class waliKelasImport implements ToCollection, WithStartRow
         foreach ($rows as $row) {
             $kode_guru = $row[0];
             $kelas_id = $row[2];
+            $tingkatan_romawi = strtoupper($row[1]);
 
-            if (!in_array($kode_guru, $arr_kode_guru)) {
-                session()->flash("user_null", "Gagal!, Kode Guru " . $kode_guru . " tidak di temukan");
+            $tingkatan = $this->checkTingkatan(strtoupper($row[1]));
+            $check_kode_guru = $this->guru->where("kode_guru", $kode_guru)->first();
+            $check_kode_kelas = $this->kelas->where("kelas_id", $kelas_id)->first();
+            $check_wali_kelas = $this->wali_kelas->where("guru_id", $check_kode_guru->guru_id)
+                ->where("kelas_id", $kelas_id)->first();
+
+            $check_wali_kelas_excel = collect($this->wali_kelas_excel)->filter(function ($item) use ($kode_guru, $kelas_id) {
+                return $item['kode_guru'] == $kode_guru && $item['kelas_id'] == $kelas_id;
+            })->first();
+
+            if ($check_kode_guru == null) {
                 DB::rollBack();
-                return;
+                return redirect()->back()->with("guru_null", 'Kode Guru ' . $kode_guru . ' tidak ditemukan!');
             }
 
-            $tingkatan = null;
-
-            if (strtoupper($row[1]) == "X") {
-                $tingkatan = 1;
+            if ($check_kode_kelas == null) {
+                DB::rollBack();
+                return redirect()->back()->with("kelas_null", 'Kode Kelas ' . $kelas_id . ' tidak ditemukan!');
             }
 
-            if (strtoupper($row[1]) == "XI") {
-                $tingkatan = 2;
+            if ($check_wali_kelas != null) {
+                DB::rollBack();
+                return redirect()->back()->with("wali_kelas_duplicate", "Gagal silahkan cek kembali data yang ingin di import!");
             }
 
-            if (strtoupper($row[1]) == "XII") {
-                $tingkatan = 3;
+            if ($check_wali_kelas_excel != null) {
+                DB::rollBack();
+                return redirect()->back()->with("wali_kelas_duplicate", "Gagal silahkan cek kembali data yang ingin di import!");
             }
 
             if ($tingkatan == null) {
-                session()->flash("invalid_tingkatan", strtoupper($row[1]) . " bukan termasuk tingkatan !");
                 DB::rollBack();
-                return;
+                return redirect()->back()->with("invalid_tingkatan", strtoupper($row[1]) . " bukan termasuk tingkatan !");
             }
 
-            if (!in_array($kelas_id, $arr_kelasId)) {
-                session()->flash("kode_kelas_null", "Gagal!,Kode Kelas " . $kelas_id . " tidak di temukan");
-                DB::rollBack();
-                return;
-            }
-
-            $guru_id = array_search($kode_guru, $arr_kode_guru);
-            $guru_id = $arr_guruId[$guru_id];
-
-            $jurusan_id = array_search($kelas_id, $arr_kelasId);
-            $jurusan_id = $arr_jurusanId[$jurusan_id];
-
-            $sql_check = DB::table("wali_kelas")
-                ->select('wali_kelas_id')
-                ->where('tingkatan', $tingkatan)
-                ->where('jurusan_id', $jurusan_id)
-                ->where('kelas_id', $kelas_id)
-                ->where('guru_id', $guru_id)
-                ->where('tahun_ajaran_id', $tahun->tahun_ajaran_id)
-                ->first();
-
-            if ($sql_check) {
-                continue;
-            }
+            $this->wali_kelas_excel[] = [
+                'kode_guru' => $kode_guru,
+                'kelas_id' => $kelas_id,
+                'tingkatan' => $tingkatan_romawi,
+            ];
 
             $dataWaliKelas[] = [
                 'tingkatan' => $tingkatan,
-                'jurusan_id' => $jurusan_id,
+                'jurusan_id' => $check_kode_kelas->jurusan_id,
                 'kelas_id' => $kelas_id,
-                'guru_id' => $guru_id,
-                'tahun_ajaran_id' => $tahun->tahun_ajaran_id,
+                'guru_id' => $check_kode_guru->guru_id,
+                'tahun_ajaran_id' => $this->tahun,
                 'status' => 1,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
-                'created_by' => auth()->guard("admin")->user()->user_id
+                'created_by' => Auth::guard("admin")->user()->user_id
             ];
         }
 
-        DB::table("wali_kelas")
-            ->insert($dataWaliKelas);
+        $check_waliKelas_kode_guru_excel = $this->array_has_duplicate(array_column($this->wali_kelas_excel, "kode_guru"));
 
-        DB::commit();
+        if ($check_waliKelas_kode_guru_excel == true) {
+            DB::rollBack();
+            $array_duplicate = $this->get_array_duplicate($this->wali_kelas_excel, "kode_guru");
+            return redirect()->back()->with("wali_kelas_duplicate", 'Gagal Kode Guru ' . $array_duplicate . ' sudah jadi wali kelas!');
+        }
 
-
-        // foreach ($rows as $row) {
-        //     $kode_guru = str_replace($stringsReplace, "", $row[0]);
-        //     $kelas_id = str_replace($stringsReplace, "", $row[2]);
-
-        //     $sql_guru = Guru::select("guru_id")->where("kode_guru", $kode_guru)->first();
-
-        //     if (!$sql_guru) {
-        //         session()->flash("user_null", "Gagal!, Kode Guru " . $kode_guru . " tidak di temukan");
-        //         DB::rollBack();
-        //         return;
-        //     }
-
-        //     $tingkatan = null;
-
-        //     if (strtoupper($row[1]) == "X") {
-        //         $tingkatan = 1;
-        //     }
-
-        //     if (strtoupper($row[1]) == "XI") {
-        //         $tingkatan = 2;
-        //     }
-
-        //     if (strtoupper($row[1]) == "XII") {
-        //         $tingkatan = 3;
-        //     }
-
-        //     if ($tingkatan == null) {
-        //         session()->flash("invalid_tingkatan", strtoupper($row[1]) . " bukan termasuk tingkatan !");
-        //         DB::rollBack();
-        //         return;
-        //     }
-
-
-        //     $sql_kelas = Kelas::select("kelas_id", 'jurusan_id')->where("kelas_id", $kelas_id)->first();
-
-        //     if (!$sql_kelas) {
-        //         session()->flash("kode_kelas_null", "Gagal!,Kode Kelas " . $kelas_id . " tidak di temukan");
-        //         DB::rollBack();
-        //         return;
-        //     }
-
-        //     $sql_check = DB::table("wali_kelas")
-        //         ->where("tingkatan", $tingkatan)
-        //         ->where("jurusan_id", $sql_kelas->jurusan_id)
-        //         ->where("kelas_id", $kelas_id)
-        //         ->where("guru_id", $sql_guru->guru_id)
-        //         ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
-        //         ->first();
-
-        //     if ($sql_check) {
-        //         continue;
-        //     }
-
-        //     DB::table("wali_kelas")
-        //         ->insert([
-        //             'tingkatan' => $tingkatan,
-        //             'jurusan_id' => $sql_kelas->jurusan_id,
-        //             'kelas_id' => $sql_kelas->kelas_id,
-        //             'guru_id' => $sql_guru->guru_id,
-        //             'tahun_ajaran_id' => $tahun->tahun_ajaran_id,
-        //             'status' => 1,
-        //             'created_at' => Carbon::now(),
-        //             'updated_at' => Carbon::now(),
-        //             'created_by' => auth()->guard("admin")->user()->user_id
-        //         ]);
-        // }
-
+        try {
+            WaliKelas::insert($dataWaliKelas);
+            DB::commit();
+            return redirect()->back()->with("import_success", "Wali kelas berhasil di import!");
+        } catch (QueryException $ex) {
+            DB::rollBack();
+            dd($ex);
+            return redirect()->back()->with("import_failed", "Import wali kelas gagal,silahkan cek kembali datanya!");
+        }
     }
 
     public function startRow(): int
     {
         return 3;
+    }
+
+    public function array_has_duplicate($array)
+    {
+        return count($array) !== count(array_unique($array));
+    }
+
+    public function get_array_duplicate($array, $column_name)
+    {
+        $arr = array_column($array, $column_name);
+        return current(array_diff_assoc($arr, array_unique($arr)));
+    }
+
+    public function checkTingkatan($tingkatan)
+    {
+        if (strtoupper($tingkatan) == "X") {
+            return 1;
+        }
+
+        if (strtoupper($tingkatan) == "XI") {
+            return 2;
+        }
+
+        if (strtoupper($tingkatan) == "XII") {
+            return 3;
+        }
+
+        return null;
     }
 }
