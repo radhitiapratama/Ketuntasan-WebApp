@@ -22,10 +22,10 @@
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <div class="row justify-content-center">
-                <div class="col-md-6 col-12">
+    <div class="row">
+        <div class="col-md-6 col-12">
+            <div class="card">
+                <div class="card-body">
                     <form action="/kelas/update" method="POST" id="form">
                         @csrf
                         <input type="hidden" name="kelas_id" value="{{ $kelas->kelas_id }}">
@@ -70,6 +70,7 @@
             </div>
         </div>
     </div>
+
 
 
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>

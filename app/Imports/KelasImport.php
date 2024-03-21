@@ -6,20 +6,33 @@ use App\Models\Kelas;
 use App\Models\Jurusan;
 use Carbon\Carbon;
 use Carbon\Doctrine\CarbonDoctrineType;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithStartRow;
+use Illuminate\Support\Str;
+use Symfony\Component\CssSelector\Node\FunctionNode;
 
 class KelasImport implements ToCollection, WithStartRow
 {
     use Importable;
 
-    /**
-     * @param Collection $collection
-     */
+    protected $jurusans;
+    protected $kelases;
+    protected $kelas_excel;
+
+
+    public function __construct()
+    {
+        $this->jurusans = Jurusan::select("jurusan_id", 'nama_jurusan')->get();
+        $this->kelases = DB::table("kelas")->select(DB::raw("LOWER(nama_kelas) as nama_kelas"))
+            ->get();
+    }
+
     public function collection(Collection $rows)
     {
         $validator =   Validator::make(
@@ -43,50 +56,57 @@ class KelasImport implements ToCollection, WithStartRow
             return;
         }
 
-        $sql_jurusan = DB::table("jurusan")
-            ->select('jurusan_id')
-            ->get()->toArray();
-
-        $arr_jurusan = array_column($sql_jurusan, 'jurusan_id');
-
-        $sql_kelas = DB::table("kelas")
-            ->select('nama_kelas')
-            ->get()->toArray();
-
-        $arr_namaKelas = array_column($sql_kelas, "nama_kelas");
-
         $data_kelas = [];
-
+        $num = 0;
         DB::beginTransaction();
 
         foreach ($rows as $row) {
+            $num++;
             $jurusan_id = $row[0];
-            $nama_kelas = strtoupper($row[1]);
+            $nama_kelas = strtolower($row[1]);
 
-            if (!in_array($jurusan_id, $arr_jurusan)) {
-                session()->flash("jurusan_null", "Gagal! Kode Jurusan " . $jurusan_id . " tidak di temukan");
+            $jurusan_exist = $this->jurusans->where("jurusan_id", $jurusan_id)->first();
+            $kelas_exist  = $this->kelases->where("nama_kelas", $nama_kelas)->first();
+            $kelas_excel_exist = collect($this->kelas_excel)->where("nama_kelas", $nama_kelas)->first();
+
+            if ($jurusan_exist == null) {
+                DB::rollback();
+                return redirect()->back()->with("jurusan_null", "Kode Jurusan {$jurusan_id} tidak ditemukan!");
+            }
+
+            if ($kelas_exist != null) {
                 DB::rollBack();
-                return;
+                return redirect()->back()->with("kelas_duplicate", "Nama kelas " . $row[1] . " sudah digunakan!");
             }
 
-            if (in_array($nama_kelas, $arr_namaKelas)) {
-                continue;
+            if ($kelas_excel_exist != null) {
+                DB::rollBack();
+                return redirect()->back()->with("kelas_duplicate", "Nama kelas " . $row[1] . " sudah digunakan!",);
             }
+
+            $this->kelas_excel[] = [
+                'num' => $num,
+                'nama_kelas' => $nama_kelas
+            ];
 
             $data_kelas[] = [
                 'jurusan_id' => $jurusan_id,
-                'nama_kelas' => $nama_kelas,
+                'nama_kelas' => $row[1],
                 'status' => 1,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
-                'created_by' => auth()->guard("admin")->user()->user_id
+                'created_by' => Auth::guard("admin")->user()->user_id
             ];
         }
 
-        DB::table("kelas")
-            ->insert($data_kelas);
-
-        DB::commit();
+        try {
+            Kelas::insert($data_kelas);
+            DB::commit();
+            return redirect()->back()->with("import_success", "Kelas berhasil di import");
+        } catch (QueryException $ex) {
+            DB::rollBack();
+            return redirect()->back()->with("import_failed", "Import gagal silahkan cek kembali datanya!");
+        }
     }
 
     public function startRow(): int

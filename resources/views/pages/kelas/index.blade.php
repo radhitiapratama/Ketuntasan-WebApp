@@ -124,9 +124,9 @@
     <script src="{{ asset('plugins/select2/js/select2.min.js') }}"></script>
 
     <script>
-        @if (session()->has('success_import'))
+        @if (session()->has('import_success'))
             Swal.fire({
-                title: "{{ session('success_import') }}",
+                title: "{{ session('import_success') }}",
                 icon: "success",
                 iconColor: 'white',
                 customClass: {
@@ -156,9 +156,41 @@
             });
         @endif
 
+        @if (session()->has('kelas_duplicate'))
+            Swal.fire({
+                title: "{{ session('kelas_duplicate') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
         @if (session()->has('max_row'))
             Swal.fire({
                 title: "{{ session('max_row') }}",
+                icon: "error",
+                iconColor: 'white',
+                customClass: {
+                    popup: 'colored-toast'
+                },
+                toast: true,
+                position: 'top-right',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true
+            });
+        @endif
+
+        @if (session()->has('import_failed'))
+            Swal.fire({
+                title: "{{ session('import_failed') }}",
                 icon: "error",
                 iconColor: 'white',
                 customClass: {
