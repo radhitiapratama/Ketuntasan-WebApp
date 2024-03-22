@@ -23,7 +23,7 @@
 
     <div class="card mb-1">
         <div class="card-body">
-            <div class="row">
+            <div class="row mb-1">
                 <div class="col-12 d-flex gap-20">
                     <button type="button" class="btn-excel" data-toggle="modal" data-target="#import_modal">
                         <i class="ri-file-excel-2-line"></i>
@@ -35,6 +35,15 @@
                     </a>
                 </div>
             </div>
+            @if ($errors->has('excel_file'))
+                <div class="row">
+                    @foreach ($errors->get('excel_file') as $message)
+                        <div class="col-12">
+                            <small class="text-danger">{{ $message }}</small>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 
@@ -159,9 +168,9 @@
     <script src="{{ asset('plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
 
     <script>
-        @if (session()->has('successImport'))
+        @if (session()->has('import_success'))
             Swal.fire({
-                title: "{{ session('successImport') }}",
+                title: "{{ session('import_success') }}",
                 icon: "success",
                 iconColor: 'white',
                 customClass: {
@@ -175,57 +184,9 @@
             });
         @endif
 
-        @if (session()->has('max_count'))
+        @if (session()->has('import_failed'))
             Swal.fire({
-                title: "{{ session('max_count') }}",
-                icon: "error",
-                iconColor: 'white',
-                customClass: {
-                    popup: 'colored-toast'
-                },
-                toast: true,
-                position: 'top-right',
-                showConfirmButton: false,
-                timer: 5000,
-                timerProgressBar: true
-            });
-        @endif
-
-        @if (session()->has('kode_kelas_null'))
-            Swal.fire({
-                title: "{{ session('kode_kelas_null') }}",
-                icon: "error",
-                iconColor: 'white',
-                customClass: {
-                    popup: 'colored-toast'
-                },
-                toast: true,
-                position: 'top-right',
-                showConfirmButton: false,
-                timer: 5000,
-                timerProgressBar: true
-            });
-        @endif
-
-        @if (session()->has('invalid_tingkatan'))
-            Swal.fire({
-                title: "{{ session('invalid_tingkatan') }}",
-                icon: "error",
-                iconColor: 'white',
-                customClass: {
-                    popup: 'colored-toast'
-                },
-                toast: true,
-                position: 'top-right',
-                showConfirmButton: false,
-                timer: 5000,
-                timerProgressBar: true
-            });
-        @endif
-
-        @if (session()->has('validation_failed'))
-            Swal.fire({
-                title: "{{ session('validation_failed') }}",
+                title: "{{ session('import_failed') }}",
                 icon: "error",
                 iconColor: 'white',
                 customClass: {
