@@ -74,12 +74,7 @@ class waliKelasImport implements ToCollection, WithStartRow
             $tingkatan = $this->checkTingkatan(strtoupper($row[1]));
             $check_kode_guru = $this->guru->where("kode_guru", $kode_guru)->first();
             $check_kode_kelas = $this->kelas->where("kelas_id", $kelas_id)->first();
-            $check_wali_kelas = $this->wali_kelas->where("guru_id", $check_kode_guru->guru_id)
-                ->where("kelas_id", $kelas_id)->first();
 
-            $check_wali_kelas_excel = collect($this->wali_kelas_excel)->filter(function ($item) use ($kode_guru, $kelas_id) {
-                return $item['kode_guru'] == $kode_guru && $item['kelas_id'] == $kelas_id;
-            })->first();
 
             if ($check_kode_guru == null) {
                 DB::rollBack();
@@ -90,6 +85,13 @@ class waliKelasImport implements ToCollection, WithStartRow
                 DB::rollBack();
                 return redirect()->back()->with("kelas_null", 'Kode Kelas ' . $kelas_id . ' tidak ditemukan!');
             }
+
+            $check_wali_kelas = $this->wali_kelas->where("guru_id", $check_kode_guru->guru_id)
+                ->where("kelas_id", $kelas_id)->first();
+
+            $check_wali_kelas_excel = collect($this->wali_kelas_excel)->filter(function ($item) use ($kode_guru, $kelas_id) {
+                return $item['kode_guru'] == $kode_guru && $item['kelas_id'] == $kelas_id;
+            })->first();
 
             if ($check_wali_kelas != null) {
                 DB::rollBack();
