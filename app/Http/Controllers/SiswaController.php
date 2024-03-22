@@ -95,7 +95,7 @@ class SiswaController extends Controller
             $result = $query
                 ->offset($request->start)
                 ->limit($request->length)
-                ->orderByRaw("s.nama ASC,s.siswa_id ASC,s.status ASC")
+                ->orderBy("siswa_id", "DESC")
                 ->get();
 
             $dataResponse = [];
