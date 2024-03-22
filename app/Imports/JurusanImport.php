@@ -63,7 +63,7 @@ class JurusanImport implements ToCollection, WithStartRow
             }
 
             if ($jurusan_excel_exist != null) {
-                return redirect()->back()->with("jurusan_duplicate", 'Jurusan ' . $jurusan_excel_exist->nama_jurusan . ' sudah di gunakan!');
+                return redirect()->back()->with("jurusan_duplicate", 'Jurusan ' . $jurusan_excel_exist['nama_jurusan'] . ' sudah di gunakan!');
             }
 
             $this->jurusans_excel[] = [
