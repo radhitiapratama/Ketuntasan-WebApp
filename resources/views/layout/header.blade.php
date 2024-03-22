@@ -1,16 +1,10 @@
-    @if (auth()->guard('admin')->check())
+    @if (Auth::guard('admin')->check() || Auth::guard('operator')->check())
         @php
-            $tahun = DB::table('tahun_ajaran')
-                ->select('tahun_ajaran')
-                ->where('superadmin_aktif', 1)
-                ->first();
+            $tahun = DB::table('tahun_ajaran')->select('tahun_ajaran')->where('superadmin_aktif', 1)->first();
         @endphp
     @else
         @php
-            $tahun = DB::table('tahun_ajaran')
-                ->select('tahun_ajaran')
-                ->where('user_aktif', 1)
-                ->first();
+            $tahun = DB::table('tahun_ajaran')->select('tahun_ajaran')->where('user_aktif', 1)->first();
         @endphp
     @endif
 
