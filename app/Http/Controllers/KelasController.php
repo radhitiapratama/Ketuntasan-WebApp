@@ -666,7 +666,7 @@ class KelasController extends Controller
         );
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            return redirect()->back()->withErrors($validator->errors())->withInput();
         }
 
         $fileName = $request->file("excel_file");

@@ -37,7 +37,7 @@
 
     <div class="card mb-1">
         <div class="card-body">
-            <div class="row">
+            <div class="row mb-1">
                 <div class="col-12 d-flex gap-20">
                     <button type="button" class="btn-excel" data-toggle="modal" data-target="#import_modal">
                         <i class="ri-file-excel-2-line"></i>
@@ -49,6 +49,15 @@
                     </a>
                 </div>
             </div>
+            @if ($errors->has('excel_file'))
+                <div class="row">
+                    @foreach ($errors->get('excel_file') as $message)
+                        <div class="col-12">
+                            <small class="text-danger">{{ $message }}</small>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </div>
 

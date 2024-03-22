@@ -838,7 +838,7 @@ class GuruController extends Controller
         );
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            return redirect()->back()->withErrors($validator->errors())->withInput();
         }
 
         $file = $request->file("excel_file");
@@ -1164,12 +1164,19 @@ class GuruController extends Controller
 
     public function waliKelas_import(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'excel_file' => "required|mimes:xlsx"
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'excel_file' => "required|mimes:xlsx",
+            ],
+            [
+                'excel_file.mimes' => 'Extensi file yg di import wajib .xlsx',
+                'excel_file.required' => "File yg ingin di import wajib di isi"
+            ]
+        );
 
         if ($validator->fails()) {
-            return redirect()->back()->with("failed_import", 'Gagal! extensi file yg di import harus .xlsx');
+            return redirect()->back()->withErrors($validator->errors())->withInput();
         }
 
         $fileName = $request->file("excel_file");
