@@ -2,6 +2,7 @@
 
 namespace App\Imports;
 
+use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Models\GuruMapel;
 use App\Models\User;
 use App\Models\Kelas;
@@ -9,6 +10,7 @@ use App\Models\KelasMapel;
 use App\Models\Mapel;
 use App\Models\TahunAjaran;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -16,13 +18,30 @@ use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use PDO;
 
 class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
 {
     use Importable;
-    /**
-     * @param Collection $collection
-     */
+
+    protected $kelas;
+    protected $kelas_mapel;
+    protected $tahun;
+    protected $guru_mapel;
+    protected $kelas_mapel_excel;
+
+    public function __construct()
+    {
+        $this->tahun = TahunAjaran::select("tahun_ajaran_id")->where('superadmin_aktif', 1)->first()->tahun_ajaran_id;
+        $this->kelas = Kelas::select("kelas_id", "jurusan_id")->get();
+        $this->kelas_mapel = KelasMapel::with([
+            'guru_mapel' => function ($q1) {
+                $q1->select("guru_id", "kode_guru_mapel", "guru_mapel_id");
+            }
+        ])->get();
+        $this->guru_mapel = GuruMapel::select("guru_mapel_id", "guru_id", 'kode_guru_mapel')->get();
+    }
+
     public function collection(Collection $rows)
     {
         $validator =  Validator::make(
@@ -41,107 +60,86 @@ class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
 
 
         if ($validator->fails()) {
-            return redirect()->back()->with("validator_failed", "Gagal ! Terjadi kesalahan import");
+            return redirect()->back()->with("import_failed", "Gagal ! Terjadi kesalahan import");
         }
 
         if (count($rows) > 200) {
-            session()->flash("max_row", "Gagal! Row yg di import tidak boleh lebih dari 200");
+            session()->flash("import_failed", "Gagal! Row yg di import tidak boleh lebih dari 200");
             return;
         }
 
-        // $stringReplace = [
-        //     '[', ']',
-        // ];
-
-        $tahun = TahunAjaran::select("tahun_ajaran_id")->where("superadmin_aktif", 1)->first();
-
-        $sql_kelas = DB::table("kelas")
-            ->select("kelas_id", "jurusan_id")
-            ->get()->toArray();
-
-        $arr_kelasId = array_column($sql_kelas, "kelas_id");
-        $arr_jurusanId = array_column($sql_kelas, "jurusan_id");
-
         $dataKelasMapel = [];
-
         DB::beginTransaction();
 
         foreach ($rows as $row) {
             $kode_guru_mapel = str_replace(".", ",", $row[2]);
             $kelas_id = $row[1];
+            $tingkatan = $this->checkTingkatan($row[0]);
 
-            $tingkatan = null;
+            $check_kelas = $this->kelas->where("kelas_id", $kelas_id)->first();
+            $check_guru_mapel = null;
+            $check_kelas_mapel_excel = collect($this->kelas_mapel_excel)->where("kelas_id", $kelas_id)
+                ->where("kode_guru_mapel", $kode_guru_mapel)
+                ->first();
 
-            if (strtoupper($row[0]) == "X") {
-                $tingkatan = 1;
-            }
-
-            if (strtoupper($row[0]) == "XI") {
-                $tingkatan = 2;
-            }
-
-
-            if (strtoupper($row[0]) == "XII") {
-                $tingkatan = 3;
-            }
-
-            if ($tingkatan == null) {
-                session()->flash("invalid_tingkatan", "Gagal! " . strtoupper($row[0]) . ' bukan termasuk tingkatan');
-                DB::rollBoack();
-                return;
-            }
-
-            if (!in_array($kelas_id, $arr_kelasId)) {
-                session()->flash("kode_kelas_null", "Gagal! " . $kelas_id . ' tidak di temukan');
+            // cek data kelas_mapel dari excel duplicate
+            if ($check_kelas_mapel_excel != null) {
                 DB::rollBack();
-                return;
+                return redirect()->back()->with("import_failed", "Gagal terdapat data yang duplikasi silahkan cek kembali datanya!");
+            }
+
+            // cek tingkatan
+            if ($tingkatan == null) {
+                DB::rollBoack();
+                return redirect()->back()->with("import_failed", "Gagal! " . strtoupper($row[0]) . ' bukan termasuk tingkatan');
+            }
+
+            // cek kelas_id ada / tidak
+            if ($check_kelas == null) {
+                DB::rollBack();
+                return redirect()->back()->with("import_failed", "Gagal! kode kelas " . $kelas_id . " tidak di temukan!");
             }
 
             $arr_kodeGuruMapel = explode(",", $kode_guru_mapel);
-
-            $jurusan_id = array_search($kelas_id, $arr_kelasId);
-            $jurusan_id = $arr_jurusanId[$jurusan_id];
-
             if (count($arr_kodeGuruMapel) > 1) {
-                $sql_guruMapelId = DB::table("guru_mapel as gm")
-                    ->select('gm.guru_mapel_id')
-                    ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
-                    ->where("g.guru_id", $arr_kodeGuruMapel[0])
-                    ->where('gm.kode_guru_mapel', $arr_kodeGuruMapel[1])
+                $check_guru_mapel = $this->guru_mapel->where("guru_id", $arr_kodeGuruMapel[0])
+                    ->where("kode_guru_mapel", $arr_kodeGuruMapel[1])
                     ->first();
             } else {
-                $sql_guruMapelId = DB::table("guru_mapel as gm")
-                    ->select("gm.guru_mapel_id")
-                    ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
-                    ->where('g.guru_id', $arr_kodeGuruMapel[0])
-                    ->where('gm.kode_guru_mapel', null)
-                    ->first();
+                $check_guru_mapel = $this->guru_mapel->where("guru_id", $arr_kodeGuruMapel[0])->first();
             }
 
-            if (empty($sql_guruMapelId)) {
-                session()->flash("guru_mapel_id_null", "Gagal ! Kode Guru Mapel tidak ditemukan");
+            // cek apakah kode_guru_mapel ada / tidak
+            if ($check_guru_mapel == null) {
                 DB::rollBack();
-                return;
+                return redirect()->back()->with("import_failed", "Gagal! Kode guru mapel " . $kode_guru_mapel . " tidak ditemukan!");
             }
 
-            $sql_checkKelasMapel = KelasMapel::select("kelas_mapel_id")
+            $check_kelas_mapel = $this->kelas_mapel
                 ->where("tingkatan", $tingkatan)
-                ->where('jurusan_id', $jurusan_id)
                 ->where("kelas_id", $kelas_id)
-                ->where("guru_mapel_id", $sql_guruMapelId->guru_mapel_id)
-                ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
+                ->where("guru_mapel_id", $check_guru_mapel->guru_mapel_id)
+                ->where("tahun_ajaran_id", $this->tahun)
                 ->first();
 
-            if ($sql_checkKelasMapel) {
-                continue;
+            // cek apakah ada data kelas_mapel yang duplicate dari database
+            if ($check_kelas_mapel != null) {
+                DB::rollBack();
+                return redirect()->back()->with("import_failed", "Gagal terdapat data yang duplikasi silahkan cek kembali datanya!");
             }
+
+            // tampung data kelas_mapel dari excel ke array
+            $this->kelas_mapel_excel[] = [
+                'kelas_id' => $kelas_id,
+                'kode_guru_mapel' => $kode_guru_mapel,
+            ];
 
             $dataKelasMapel[] = [
                 'tingkatan' => $tingkatan,
-                'jurusan_id' => $jurusan_id,
+                'jurusan_id' => $check_kelas->jurusan_id,
                 'kelas_id' => $kelas_id,
-                'guru_mapel_id' => $sql_guruMapelId->guru_mapel_id,
-                'tahun_ajaran_id' => $tahun->tahun_ajaran_id,
+                'guru_mapel_id' => $check_guru_mapel->guru_mapel_id,
+                'tahun_ajaran_id' => $this->tahun,
                 'status' => 1,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
@@ -149,105 +147,35 @@ class KelasMapelImport implements ToCollection, WithStartRow, SkipsEmptyRows
             ];
         }
 
-        DB::table("kelas_mapel")
-            ->insert($dataKelasMapel);
-
-        DB::commit();
-
-        // foreach ($rows as $row) {
-        //     $kode_guru_mapel = str_replace(".", ',', $row[1]);
-
-        //     $kelas_id = str_replace($stringReplace, "", $row[1]);
-
-        //     // [0] => kode_guru
-        //     // [1] => kode_guru_mapel 
-        //     $arr_kodeGuruMapel = explode(",", str_replace($stringReplace, "", $row[2]));
-
-        //     $row_tingkatan = strtoupper($row[0]);
-
-        //     $tingkatan = null;
-        //     if ($row_tingkatan == "X") {
-        //         $tingkatan = 1;
-        //     }
-
-        //     if ($row_tingkatan == "XI") {
-        //         $tingkatan = 2;
-        //     }
-
-        //     if ($row_tingkatan == "XII") {
-        //         $tingkatan = 3;
-        //     }
-
-        //     // Check tingkatan
-        //     if ($tingkatan == null) {
-        //         session()->flash("invalid_tingkatan", "Gagal! " . $row_tingkatan . ' bukan termasuk tingkatan');
-        //         DB::rollBoack();
-        //         return;
-        //     }
-
-        //     $sql_kelas = Kelas::select("kelas_id", "jurusan_id")
-        //         ->where("kelas_id", $kelas_id)
-        //         ->first();
-
-        //     // Check kelas
-        //     if (!$sql_kelas) {
-        //         session()->flash("kode_kelas_null", "Gagal! " . $kelas_id . ' tidak di temukan');
-        //         DB::rollBack();
-        //         return;
-        //     }
-
-        //     if (count($arr_kodeGuruMapel) > 1) {
-        //         $sql_guruMapelId = DB::table('guru_mapel as gm')
-        //             ->select('gm.guru_mapel_id')
-        //             ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
-        //             ->where("g.kode_guru", $arr_kodeGuruMapel[0])
-        //             ->where("gm.kode_guru_mapel", $arr_kodeGuruMapel[1])
-        //             ->first();
-        //     } else {
-        //         $sql_guruMapelId = DB::table('guru_mapel as gm')
-        //             ->select('gm.guru_mapel_id')
-        //             ->join('guru as g', 'g.guru_id', '=', 'gm.guru_id')
-        //             ->where("g.kode_guru", $arr_kodeGuruMapel[0])
-        //             ->where("gm.kode_guru_mapel", null)
-        //             ->first();
-        //     }
-
-        //     if (empty($sql_guruMapelId)) {
-        //         session()->flash("guru_mapel_id_null", "Gagal ! Kode Guru Mapel tidak ditemukan");
-        //         DB::rollBack();
-        //         return;
-        //     }
-
-        //     $sql_checkKelasMapel = KelasMapel::select("kelas_mapel_id")
-        //         ->where("tingkatan", $tingkatan)
-        //         ->where('jurusan_id', $sql_kelas->jurusan_id)
-        //         ->where("kelas_id", $kelas_id)
-        //         ->where("guru_mapel_id", $sql_guruMapelId->guru_mapel_id)
-        //         ->where("tahun_ajaran_id", $tahun->tahun_ajaran_id)
-        //         ->first();
-
-        //     if ($sql_checkKelasMapel) {
-        //         continue;
-        //     }
-
-        //     KelasMapel::create(
-        //         [
-        //             'tingkatan' => $tingkatan,
-        //             'jurusan_id' => $sql_kelas->jurusan_id,
-        //             'kelas_id' => $kelas_id,
-        //             'guru_mapel_id' => $sql_guruMapelId->guru_mapel_id,
-        //             'tahun_ajaran_id' => $tahun->tahun_ajaran_id,
-        //             'status' => 1,
-        //             'created_by' => auth()->guard("admin")->user()->user_id,
-        //         ]
-        //     );
-        // }
-
-        DB::commit();
+        try {
+            KelasMapel::insert($dataKelasMapel);
+            DB::commit();
+            return redirect()->back()->with("import_success", "Data Kelas Mapel berhasil di Import!");
+        } catch (QueryException $ex) {
+            DB::rollBack();
+            return redirect()->back()->with("import_failed", "Gagal terjadi kesalahan saat mengimport silahkan cek kembali datanya!");
+        }
     }
 
     public function startRow(): int
     {
         return 3;
+    }
+
+    public function checkTingkatan($tingkatan)
+    {
+        if (strtoupper($tingkatan) == "X") {
+            return 1;
+        }
+
+        if (strtoupper($tingkatan) == "XI") {
+            return 2;
+        }
+
+        if (strtoupper($tingkatan) == "XII") {
+            return 3;
+        }
+
+        return null;
     }
 }

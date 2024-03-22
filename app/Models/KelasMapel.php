@@ -30,6 +30,11 @@ class KelasMapel extends Model
         return $this->belongsTo(Jurusan::class, 'jurusan_id');
     }
 
+    public function guru_mapel()
+    {
+        return $this->belongsTo(GuruMapel::class, "guru_mapel_id", "guru_mapel_id");
+    }
+
     public function guru_mapel_user()
     {
         return $this->hasManyThrough(User::class, GuruMapel::class, 'mapel_id', 'user_id', 'mapel_id', 'user_id');
