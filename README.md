@@ -40,3 +40,5 @@
 2. Untuk menaikkan siswa ketingkatan selanjutnya pada tahun ajaran baru,data siswa yg wajib di tingkatkan terlebih dahulu adalah tingkatan tertinggi (XII),supaya data siswa yg sudah di tingkatkan tidak tercampur dengan data siswa yang belum di tingkatkan
 
 3. Jika data ketuntasan siswa sudah di buat lalu ada mapel dari kelas siswa tersebut yang ingin di hapus, maka cukup nonaktifkan <b> Data Kelas mapelnya saja </b>
+
+4. Jika mengupdate data siswa <b>(Tingkatan/Kelas)</b> maka semua data ketuntasan siswa di tahun ajaran tersebut akan terhapus!
